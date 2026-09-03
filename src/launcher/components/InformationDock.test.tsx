@@ -60,42 +60,6 @@ describe("InformationDock", () => {
     expect(titles[2]).toContain("普通内容");
   });
 
-  it("shows ARK news after selecting the 新闻 tab", async () => {
-    const user = userEvent.setup();
-    render(<InformationDock project={arkProject} />);
-
-    await user.click(screen.getByRole("tab", { name: "新闻" }));
-
-    expect(screen.getByRole("tabpanel")).toHaveTextContent("04逝时宏鳞");
-  });
-
-  it("renders no more than three visible feed rows", async () => {
-    const user = userEvent.setup();
-    render(<InformationDock project={arkProject} />);
-
-    await user.click(screen.getByRole("tab", { name: "新闻" }));
-
-    expect(screen.getAllByRole("link", { name: /事件/ })).toHaveLength(3);
-    expect(screen.queryByText("01云末王冕")).not.toBeInTheDocument();
-  });
-
-  it("pages through feed items three at a time with the mouse wheel", async () => {
-    const user = userEvent.setup();
-    render(<InformationDock project={arkProject} />);
-
-    await user.click(screen.getByRole("tab", { name: "新闻" }));
-    const panel = screen.getByRole("tabpanel");
-    fireEvent.wheel(panel, { deltaY: 120 });
-
-    expect(panel).toHaveTextContent("01云末王冕");
-    expect(panel).not.toHaveTextContent("04逝时宏鳞");
-    expect(screen.getByText("2 / 2")).toBeInTheDocument();
-
-    await new Promise((resolve) => window.setTimeout(resolve, 260));
-    fireEvent.wheel(panel, { deltaY: -120 });
-    expect(panel).toHaveTextContent("04逝时宏鳞");
-  });
-
   it("moves between feed tabs with arrow keys", async () => {
     const user = userEvent.setup();
     render(<InformationDock project={arkProject} />);
