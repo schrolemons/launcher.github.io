@@ -105,6 +105,7 @@ export default function InformationDock({ project }: { project: LauncherProject 
           <Swiper
             key={project.id}
             modules={[Autoplay, A11y, Navigation]}
+            loop
             navigation
             autoplay={reducedMotion ? false : { delay: 5000, disableOnInteraction: false }}
             a11y={{ enabled: true }}

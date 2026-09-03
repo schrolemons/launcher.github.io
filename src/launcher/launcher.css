@@ -221,8 +221,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .information-dock__cover-placeholder { height: 100%; min-height: 0; min-width: 0; }
 .information-dock__cover { background: rgba(5, 7, 11, 0.72); border-right: 1px solid rgba(255, 255, 255, 0.12); overflow: hidden; position: relative; }
 .information-dock__cover::after { border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); content: ""; inset: 0; pointer-events: none; position: absolute; z-index: 2; }
-.information-dock__cover img { display: block; height: 100%; object-fit: cover; transition: transform 600ms ease; width: 100%; }
-.information-dock__cover:hover img { transform: scale(1.025); }
+.information-dock__cover img { display: block; height: 100%; object-fit: cover; width: 100%; }
 .information-dock__slide-link { display: block; height: 100%; }
 .information-dock__cover .swiper-button-prev,
 .information-dock__cover .swiper-button-next { --swiper-navigation-size: 0.85rem; backdrop-filter: blur(10px); background: rgba(4, 6, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 50%; color: #fff; height: 2rem; margin-top: -1rem; opacity: 0; transition: opacity 160ms ease, border-color 160ms ease, color 160ms ease; width: 2rem; }
@@ -299,7 +298,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .launcher-mobile-block p:last-child { color: rgba(245, 247, 250, 0.66); }
 .launcher-desktop-root,
 .launcher-loading { min-height: 100svh; }
-.launcher-loading { align-items: center; display: flex; justify-content: center; }
+.launcher-loading {
+  align-items: center;
+  animation: launcher-loading-pulse 1.4s ease-in-out infinite;
+  color: rgba(245, 247, 250, 0.82);
+  display: flex;
+  font-size: 0.85rem;
+  justify-content: center;
+  letter-spacing: 0.18em;
+}
 
 @keyframes launcher-window-enter { from { opacity: 0; transform: translateY(18px) scale(0.992); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes launcher-media-enter { from { opacity: 0; scale: 1.025; } to { opacity: 1; scale: 1; } }
@@ -310,6 +317,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes launcher-ambient-breathe { from { opacity: 0.26; scale: 1.1; } to { opacity: 0.42; scale: 1.16; } }
 @keyframes launcher-scan-drift { from { background-position: 0 0, 0 0; } to { background-position: 0 48px, 0 0; } }
 @keyframes launcher-control-breathe { 0%, 100% { box-shadow: 0 0.6rem 1.4rem rgba(0, 0, 0, 0.22); } 50% { box-shadow: 0 0.6rem 1.4rem rgba(0, 0, 0, 0.22), 0 0 1rem var(--accent-soft); } }
+@keyframes launcher-loading-pulse { 0%, 100% { opacity: 0.42; } 50% { opacity: 1; } }
 
 @media (max-width: 899.98px) { .launcher-desktop-root { display: none; } }
 @media (min-width: 900px) { .launcher-mobile-block { display: none; } }

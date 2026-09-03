@@ -7,29 +7,17 @@ const emptyFeeds = () => ({
 });
 
 // 资讯/新闻条目与左侧轮播图统一占位外链。后续按条目替换为各自的实际外部链接即可，顺序即下方数组顺序。
-const PLACEHOLDER_HREF = "https://blog.sch-nie.com/";
+const PLACEHOLDER_HREF = "https://www.sch-nie.com/";
 
 const arkFeeds = {
   announcement: [
     { title: "最新公告", date: "2026-03-23", href: PLACEHOLDER_HREF, tag: "公告" },
   ],
   news: [
-    { title: "04逝时宏鳞", date: "2025-11-17", href: PLACEHOLDER_HREF, tag: "事件" },
-    { title: "02旧神荒圃", date: "2025-11-17", href: PLACEHOLDER_HREF, tag: "事件" },
-    { title: "05-1重返故都", date: "2025-11-17", href: PLACEHOLDER_HREF, tag: "事件" },
-    { title: "01云末王冕", date: "2025-11-17", href: PLACEHOLDER_HREF, tag: "事件" },
-    { title: "03初醒之刻", date: "2097-11-17", href: PLACEHOLDER_HREF, tag: "事件" },
-    { title: "05-2星源绘逢", date: "2097-11-17", href: PLACEHOLDER_HREF, tag: "事件" },
+    
   ],
   information: [
-    { title: "草引囚徒", date: "2025-11-17", href: PLACEHOLDER_HREF, tag: "微故事" },
-    { title: "风落和鸣", date: "2025-11-17", href: PLACEHOLDER_HREF, tag: "微故事" },
-    { title: "雷云之梦", date: "2025-11-17", href: PLACEHOLDER_HREF, tag: "微故事" },
-    { title: "土奏琴璃", date: "2025-11-17", href: PLACEHOLDER_HREF, tag: "微故事" },
-    { title: "水渊蚀源", date: "2097-11-17", href: PLACEHOLDER_HREF, tag: "微故事" },
-    { title: "01借以神名", date: "2097-11-17", href: PLACEHOLDER_HREF, tag: "世界观" },
-    { title: "03虹九重构", date: "2097-11-17", href: PLACEHOLDER_HREF, tag: "世界观" },
-    { title: "02终态行旅", date: "2097-11-17", href: PLACEHOLDER_HREF, tag: "世界观" },
+   
   ],
 } satisfies LauncherProject["feeds"];
 
@@ -38,14 +26,14 @@ export const launcherProjects = [
     id: "ark",
     name: "SCHNIE:ARK",
     code: "ARK",
-    description: "POWERED BY SCHROLEMONS",
+    description: "第九边缘：方舟",
     url: "https://ark.sch-nie.com/",
     actionLabel: "进入方舟",
     accent: "#f4ee00",
     accentSoft: "rgba(244, 238, 0, 0.22)",
     media: {
-      kind: "hls",
-      src: "/videos/PV04_landscape/PV04_landscape.m3u8",
+      kind: "video",
+      src: "/videos/ark.mp4",
       poster: "/images/index-bg.jpg",
       autoplay: true,
       muted: true,
@@ -67,7 +55,7 @@ export const launcherProjects = [
     actionLabel: "阅读博客",
     accent: "#22bff2",
     accentSoft: "rgba(34, 191, 242, 0.22)",
-    media: { kind: "image", src: "/info-swiper/Blog.jpg" },
+    media: { kind: "image", src: "/images/04-media/2-2.png" },
     slides: [],
     feeds: emptyFeeds(),
   },
@@ -80,7 +68,7 @@ export const launcherProjects = [
     actionLabel: "抵达零点",
     accent: "#ff8a3d",
     accentSoft: "rgba(255, 138, 61, 0.22)",
-    media: { kind: "image", src: "/images/layout-bg.jpg" },
+    media: { kind: "image", src: "/images/04-media/be.png" },
     slides: [],
     feeds: emptyFeeds(),
   },
@@ -93,7 +81,7 @@ export const launcherProjects = [
     actionLabel: "探索世界",
     accent: "#b9a0ff",
     accentSoft: "rgba(185, 160, 255, 0.22)",
-    media: { kind: "image", src: "/info-swiper/UserDocumentation.jpg" },
+    media: { kind: "image", src: "/images/04-media/2-3.png" },
     slides: [],
     feeds: emptyFeeds(),
   },

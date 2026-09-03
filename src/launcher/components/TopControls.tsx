@@ -39,7 +39,7 @@ export default function TopControls({ projectUrl, muted, paused, playable, sound
         >
           <LauncherIcon name={muted ? "muted" : "volume"} />
         </button>
-        <button aria-label={paused ? "播放" : "暂停"} className="launcher-control" disabled={!playable} onClick={onTogglePaused} title={playable ? undefined : "当前项目为静态背景，或浏览器不支持 HLS"} type="button">
+        <button aria-label={paused ? "播放" : "暂停"} className="launcher-control" disabled={!playable} onClick={onTogglePaused} title={playable ? undefined : "当前项目为静态背景，或浏览器不支持视频"} type="button">
           <LauncherIcon name={paused ? "play" : "pause"} />
         </button>
         <button aria-label="全屏" className="launcher-control" onClick={() => void toggleFullscreen()} type="button">

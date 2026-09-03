@@ -3,7 +3,7 @@ export type FeedKind = "announcement" | "news" | "information";
 
 export type ProjectMedia =
   | { kind: "image"; src: string; poster?: string; position?: string }
-  | { kind: "video" | "hls"; src: string; poster: string; position?: string; autoplay: boolean; muted: boolean };
+  | { kind: "video"; src: string; poster: string; position?: string; autoplay: boolean; muted: boolean };
 
 export interface FeedItem {
   title: string;

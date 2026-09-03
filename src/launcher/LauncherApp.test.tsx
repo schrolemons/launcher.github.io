@@ -50,6 +50,7 @@ describe("LauncherApp", () => {
       screen.getByRole("button", { name: /选择 ZERO/ }),
       screen.getByRole("button", { name: /选择 WORLD/ }),
       screen.getByRole("button", { name: "取消静音" }),
+      screen.getByRole("button", { name: "暂停" }),
       screen.getByRole("button", { name: "全屏" }),
       screen.getByRole("link", { name: "用户文档" }),
       screen.getByRole("link", { name: "第九宇宙" }),

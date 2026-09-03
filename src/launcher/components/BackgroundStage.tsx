@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import Hls from "hls.js";
 import type { LauncherProject } from "../types";
 
 type BackgroundStageProps = {
@@ -12,63 +11,45 @@ type BackgroundStageProps = {
 export default function BackgroundStage({ project, paused, muted, onPlaybackAvailabilityChange }: BackgroundStageProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [posterFailed, setPosterFailed] = useState(false);
-  const [unsupported, setUnsupported] = useState(false);
   const [ready, setReady] = useState(false);
   const media = project.media;
-  const isVideo = media.kind === "video" || media.kind === "hls";
-  const isHls = media.kind === "hls";
+  const isVideo = media.kind === "video";
 
   // 是否有可播放的媒体，用于启用/禁用顶部的播放、暂停按钮。
   useEffect(() => {
-    onPlaybackAvailabilityChange(isVideo && !unsupported);
-  }, [isVideo, onPlaybackAvailabilityChange, unsupported]);
+    onPlaybackAvailabilityChange(isVideo);
+  }, [isVideo, onPlaybackAvailabilityChange]);
 
-  // 建立媒体源：HLS 走 hls.js（MSE），Safari 原生 HLS 或普通视频直接赋值 src。
+  // 普通 MP4 视频直接赋值 src，元数据就绪后开始播放。
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !isVideo) return;
 
-    let hls: Hls | undefined;
     const markReady = () => setReady(true);
-
-    if (isHls) {
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        // Safari 原生 HLS
-        video.src = media.src;
-        video.addEventListener("loadedmetadata", markReady, { once: true });
-      } else if (Hls.isSupported()) {
-        // 其它浏览器使用 hls.js + MSE
-        hls = new Hls();
-        hls.loadSource(media.src);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, markReady);
-      } else {
-        setUnsupported(true);
-      }
-    } else {
-      video.src = media.src;
-      video.addEventListener("loadedmetadata", markReady, { once: true });
-    }
+    video.src = media.src;
+    video.addEventListener("loadedmetadata", markReady, { once: true });
 
     return () => {
       video.removeEventListener("loadedmetadata", markReady);
-      hls?.off(Hls.Events.MANIFEST_PARSED, markReady);
-      hls?.destroy();
       video.pause();
     };
-  }, [isVideo, isHls, media]);
+  }, [isVideo, media]);
 
   // 自动播放：确保 muted/playsinline，就绪后调用 play()；若被浏览器策略拦截则在首次交互后重试。
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !isVideo || unsupported) return;
+    if (!video || !isVideo) return;
 
     video.muted = muted;
     // React 只设置 muted 属性（property），不渲染 muted HTML 属性；部分浏览器依赖该属性放行静音自动播放。
     if (muted) video.setAttribute("muted", "");
     else video.removeAttribute("muted");
 
-    if (paused || !ready) return;
+    if (paused) {
+      video.pause();
+      return;
+    }
+    if (!ready) return;
 
     const tryPlay = () => {
       const result = video.play();
@@ -87,19 +68,15 @@ export default function BackgroundStage({ project, paused, muted, onPlaybackAvai
       window.removeEventListener("keydown", resume);
       window.removeEventListener("touchstart", resume);
     };
-  }, [isVideo, muted, paused, ready, unsupported]);
+  }, [isVideo, muted, paused, ready]);
 
   if (posterFailed) {
     return <div className="launcher-stage__media launcher-stage__media--gradient" aria-label={`${project.code} 背景`}><span>{project.code}</span></div>;
-  }
-
-  if (unsupported && media.kind !== "image") {
-    return <img className="launcher-stage__media" src={media.poster} alt={`${project.code} 背景`} style={{ objectPosition: media.position }} onError={() => setPosterFailed(true)} />;
   }
 
   if (media.kind === "image") {
     return <img className="launcher-stage__media" src={media.src} alt={`${project.code} 背景`} style={{ objectPosition: media.position }} onError={() => setPosterFailed(true)} />;
   }
 
-  return <video key={project.id} ref={videoRef} className="launcher-stage__media" data-testid="launcher-video" src={media.kind === "video" ? media.src : undefined} poster={media.poster} muted loop playsInline style={{ objectPosition: media.position }} />;
+  return <video key={project.id} ref={videoRef} className="launcher-stage__media" data-testid="launcher-video" src={media.src} poster={media.poster} muted loop playsInline style={{ objectPosition: media.position }} />;
 }

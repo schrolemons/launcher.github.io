@@ -10,8 +10,8 @@ describe("launcher configuration", () => {
       "world",
     ]);
     expect(getProjectById("ark").media).toMatchObject({
-      kind: "hls",
-      src: "/videos/PV04_landscape/PV04_landscape.m3u8",
+      kind: "video",
+      src: "/videos/ark.mp4",
       autoplay: true,
       muted: true,
     });
