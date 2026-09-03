@@ -1,0 +1,214 @@
+---
+// ----------
+// 字体来源：https://web.hycdn.cn/arknights/official/_next/static/css/28ff681e70564115.css
+// ----------
+
+// TODO: USE THIS!
+const base = import.meta.env.BASE_URL
+---
+
+<style lang="scss" is:global>
+  /* 和 astro.config.mjs 中的 base 值一样，默认为 `/` */
+  $base: "/";
+
+  @font-face {
+    font-family: Bender-Regular;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Bender-Regular"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Bender-Regular.02637c42.woff2 */
+    url("#{$base}fonts/Bender-Regular.woff2") format("woff2"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Bender-Regular.803e4358.woff */
+    url("#{$base}fonts/Bender-Regular.woff") format("woff"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Bender-Regular.0605f735.ttf */
+    url("#{$base}/fonts/Bender-Regular.ttf") format("truetype"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Bender-Regular.45df2362.eot */
+    url("#{$base}/fonts/Bender-Regular.eot") format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: Bender-Bold;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Bender-Bold"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Bender-Bold.2ec7a8ea.woff2 */
+    url("#{$base}fonts/Bender-Bold.woff2") format("woff2"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Bender-Bold.d5da9205.woff */
+    url("#{$base}fonts/Bender-Bold.woff") format("woff"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Bender-Bold.8dd8b366.ttf) */
+    url("#{$base}fonts/Bender-Bold.ttf") format("truetype"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Bender-Bold.05a1fbbc.eot */
+    url("#{$base}fonts/Bender-Bold.eot") format("embedded-opentype")
+  }
+
+  // TODO: 使用字体资源包 https://fontsource.org/fonts/oswald
+
+  @font-face {
+    font-family: Oswald-Medium;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Oswald-Medium"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Oswald-Medium.42fb848a.woff2 */
+    url("#{$base}fonts/Oswald-Medium.woff2") format("woff2"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Oswald-Medium.1d90efbb.woff */
+    url("#{$base}fonts/Oswald-Medium.woff") format("woff"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Oswald-Medium.38ab91ca.ttf */
+    url("#{$base}fonts/Oswald-Medium.ttf") format("truetype"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Oswald-Medium.ce221386.eot */
+    url("#{$base}fonts/Oswald-Medium.eot") format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: Oswald-DemiBold;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Oswald-DemiBold"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Oswald-DemiBold.9d1a345e.woff2 */
+    url("#{$base}fonts/Oswald-DemiBold.woff2") format("woff2"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Oswald-DemiBold.64fc79cc.woff */
+    url("#{$base}fonts/Oswald-DemiBold.woff") format("woff"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Oswald-DemiBold.c5fb2987.ttf */
+    url("#{$base}fonts/Oswald-DemiBold.ttf") format("truetype"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Oswald-DemiBold.87a03b4f.eot */
+    url("#{$base}fonts/Oswald-DemiBold.eot") format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: Novecentosanswide-Medium;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Novecentosanswide-Medium"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-Medium.76589ca6.woff2 */
+    url("#{$base}fonts/Novecentosanswide-Medium.woff2") format("woff2"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-Medium.83ae0b55.woff */
+    url("#{$base}fonts/Novecentosanswide-Medium.woff") format("woff"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-Medium.191c6f67.ttf */
+    url("#{$base}fonts/Novecentosanswide-Medium.ttf") format("truetype"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-Medium.0b998944.eot */
+    url("#{$base}fonts/Novecentosanswide-Medium.eot") format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: Novecentosanswide-DemiBold;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Novecentosanswide-DemiBold"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-DemiBold.5bc9caf4.woff2 */
+    url("#{$base}fonts/Novecentosanswide-DemiBold.woff2") format("woff2"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-DemiBold.57070a14.woff */
+    url("#{$base}fonts/Novecentosanswide-DemiBold.woff") format("woff"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-DemiBold.a80324c4.ttf */
+    url("#{$base}fonts/Novecentosanswide-DemiBold.ttf") format("truetype"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-DemiBold.c2ca7a03.eot */
+    url("#{$base}fonts/Novecentosanswide-DemiBold.eot") format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: Novecentosanswide-Bold;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Novecentosanswide-Bold"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-Bold.bec3fb9c.woff2 */
+    url("#{$base}fonts/Novecentosanswide-Bold.woff2") format("woff2"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-Bold.1feb1efc.woff */
+    url("#{$base}fonts/Novecentosanswide-Bold.woff") format("woff"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-Bold.59b740a4.ttf */
+    url("#{$base}fonts/Novecentosanswide-Bold.ttf") format("truetype"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-Bold.9ce8377f.eot */
+    url("#{$base}fonts/Novecentosanswide-Bold.eot") format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: Novecentosanswide-UltraBold;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Novecentosanswide-UltraBold"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-UltraBold.acb3c240.woff2) */
+    url("#{$base}fonts/Novecentosanswide-UltraBold.woff2") format("woff2"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-UltraBold.eccb50df.woff)  */
+    url("#{$base}fonts/Novecentosanswide-UltraBold.woff") format("woff"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-UltraBold.c2218305.ttf) f */
+    url("#{$base}fonts/Novecentosanswide-UltraBold.ttf") format("truetype"),
+      /* https://web.hycdn.cn/arknights/official/_next/static/media/Novecentosanswide-UltraBold.767c4550.eot) f */
+    url("#{$base}fonts/Novecentosanswide-UltraBold.eot") format("embedded-opentype")
+  }
+
+  /**
+   * TODO: 使用思源黑体字体资源包 https://fontsource.org/fonts/noto-sans
+   *
+   * 思源字体由 Google 和 Adobe 联合开发与发行，中文名称统一称为思源字体。
+   * Google 将思源字体归入旗下 Noto 字体家族，因此思源黑体的名字为 Noto Sans CJK，思源宋体的名字为 Noto Serif CJK；
+   * Adobe 将思源字体归入旗下 Source 字体家族，因此思源黑体的名字为 Source Han Sans，思源宋体的名字为 Source Han Serif。
+   *
+   * 以下字体都是修剪过的思源黑体，只包含部分汉字，不能直接使用。
+   */
+
+  /*
+  @font-face {
+    font-family: "SDK_Sans-Regular";
+    src: url(https://web.hycdn.cn/hg_web_sdk/lib/assets/SDK_Sans-Regular.c6b5b003ed8e789bf221.ttf);
+    src: url(https://web.hycdn.cn/hg_web_sdk/lib/assets/SDK_Sans-Regular.1655e928f93d662e390e.eot?#iefix) format("embedded-opentype"),
+    url(https://web.hycdn.cn/hg_web_sdk/lib/assets/SDK_Sans-Regular.0c958b383c2ade69bfbb.woff) format("woff"),
+    url(https://web.hycdn.cn/hg_web_sdk/lib/assets/SDK_Sans-Regular.c6b5b003ed8e789bf221.ttf) format("truetype"),
+    url(https://web.hycdn.cn/hg_web_sdk/lib/assets/SDK_Sans-Regular.460c91b08dffeb5e6199.svg) format("svg");
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: SourceHanSans-Regular;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("SourceHanSans-Regular"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Regular.0ad5e5e5.woff2) format("woff2"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Regular.80be6cdf.woff) format("woff"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Regular.fd1b84b9.ttf) format("truetype"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Regular.4607dbf3.eot) format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: SourceHanSans-Bold;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("SourceHanSans-Bold"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Bold.d8094af6.woff2) format("woff2"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Bold.00a5fd1c.woff) format("woff"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Bold.8cf9c3b7.ttf) format("truetype"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Bold.60200f83.eot) format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: SourceHanSans-Heavy;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("SourceHanSans-Heavy"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Heavy.7b1847e4.woff2) format("woff2"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Heavy.f38da138.woff) format("woff"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Heavy.fdf5d557.ttf) format("truetype"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Heavy.25ef6290.eot) format("embedded-opentype")
+  }
+
+  @font-face {
+    font-family: SourceHanSans-Medium;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("SourceHanSans-Medium"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Medium.d96063b6.woff2) format("woff2"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Medium.1f03626c.woff) format("woff"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Medium.4928c109.ttf) format("truetype"),
+    url(https://web.hycdn.cn/arknights/official/_next/static/media/SourceHanSans-Medium.17658411.eot) format("embedded-opentype")
+  }
+  */
+</style>

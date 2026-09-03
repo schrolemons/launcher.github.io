@@ -1,0 +1,15 @@
+---
+import LauncherLayout from "../layouts/LauncherLayout.astro";
+import DesktopLauncher from "../launcher/DesktopLauncher";
+---
+
+<LauncherLayout title="SCHNIE // PROJECT LAUNCHER" description="SCH-NIE 项目启动器">
+  <div class="launcher-mobile-block" aria-labelledby="desktop-only-title">
+    <p class="launcher-mobile-block__eyebrow">SCHNIE // ACCESS GATE</p>
+    <h1 id="desktop-only-title">请使用桌面设备访问</h1>
+    <p>启动器目前面向宽屏设备开放。</p>
+  </div>
+  <div class="launcher-desktop-root">
+    <DesktopLauncher client:only="react" />
+  </div>
+</LauncherLayout>
