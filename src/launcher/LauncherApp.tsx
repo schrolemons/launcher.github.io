@@ -64,8 +64,29 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
         <ProjectRail projects={launcherProjects} activeId={activeId} onSelect={selectProject} />
         <main className="launcher-stage">
           <div className="launcher-stage__ambient" style={{ "--ambient-image": `url(${displayedProject.media.poster ?? displayedProject.media.src})` } as CSSProperties} />
-          <BackgroundStage key={`media-${displayedProject.id}`} project={displayedProject} paused={mediaPaused} muted={muted} onPlaybackAvailabilityChange={setHasPlayableMedia} />
-          {displayedProject.audio ? <audio key={`audio-${displayedProject.id}`} ref={audioRef} data-testid="launcher-audio" src={displayedProject.audio.src} loop={displayedProject.audio.loop} preload="auto" /> : null}
+          {launcherProjects.map((project) => (
+            <BackgroundStage
+              key={`media-${project.id}`}
+              project={project}
+              paused={mediaPaused || project.id !== activeId}
+              muted={muted}
+              visible={project.id === activeId}
+              onPlaybackAvailabilityChange={project.id === activeId ? setHasPlayableMedia : () => {}}
+            />
+          ))}
+          {launcherProjects.map((project) =>
+            project.audio ? (
+              <audio
+                key={`audio-${project.id}`}
+                ref={project.id === activeId ? audioRef : undefined}
+                data-testid="launcher-audio"
+                src={project.audio.src}
+                loop={project.audio.loop}
+                preload="auto"
+                style={{ display: project.id === activeId ? undefined : "none" }}
+              />
+            ) : null
+          )}
           <div className="launcher-stage__vignette" />
           <div className="launcher-stage__readability" />
           <div className="launcher-stage__content" data-playable-media={hasPlayableMedia}>
