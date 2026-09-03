@@ -38,7 +38,7 @@ export type LauncherTool = {
   id: string;
   label: string;
   description: string;
-  icon: "monitor" | "github" | "wechat" | "link";
+  icon: "monitor" | "github" | "wechat" | "qq" | "link";
 } & (
   | { mode: "link"; href: string; qrImage?: never }
   | { mode: "qr"; href?: never; qrImage: string }
