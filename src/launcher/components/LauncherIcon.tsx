@@ -1,6 +1,6 @@
 type LauncherIconProps = {
   className?: string;
-  name?: "close" | "fullscreen" | "github" | "info" | "link" | "monitor" | "muted" | "outbound" | "pause" | "play" | "volume" | "wechat";
+  name?: "close" | "fullscreen" | "github" | "info" | "link" | "monitor" | "muted" | "outbound" | "pause" | "play" | "qq" | "volume" | "wechat";
 };
 
 function IconDrawing({ name }: { name: NonNullable<LauncherIconProps["name"]> }) {
@@ -14,6 +14,7 @@ function IconDrawing({ name }: { name: NonNullable<LauncherIconProps["name"]> })
     case "outbound": return <><path d="M8 16L16.5 7.5" /><path d="M10 7.5h6.5V14" /></>;
     case "pause": return <><path d="M9 6v12" /><path d="M15 6v12" /></>;
     case "play": return <path d="M8 5.5l10 6.5-10 6.5v-13z" />;
+    case "qq": return <><ellipse cx="12" cy="14" rx="7" ry="8" /><path d="M5 14c0-2 .8-3.5 2-4.5" /><path d="M19 14c0-2-.8-3.5-2-4.5" /><circle cx="10" cy="14" r="1" fill="currentColor" /><circle cx="14" cy="14" r="1" fill="currentColor" /><path d="M12 21v-3" /><path d="M8 21l1-1.5h6l1 1.5" /></>;
     case "volume": return <><path d="M4 10v4h3l4 3V7l-4 3H4z" /><path d="M15 9c1.7 1.7 1.7 4.3 0 6" /><path d="M18 6.5c3 3 3 8 0 11" /></>;
     case "wechat": return <><path d="M13.5 15.5c-1.1.6-2.4.9-3.8.9-4 0-7.2-2.5-7.2-5.7S5.7 5 9.7 5s7.2 2.5 7.2 5.7c0 .4-.1.8-.2 1.2" /><path d="M5.4 15.2l-1 2.3 2.8-1" /><path d="M13.8 12c3.7 0 6.7 2.2 6.7 5 0 1-.4 2-1.1 2.8l.8 1.9-2.3-.8c-1.1.6-2.5 1-4.1 1-3.7 0-6.7-2.2-6.7-5" /><path d="M7.7 9h.01M11.8 9h.01M13 16h.01M16.7 16h.01" /></>;
     case "link":

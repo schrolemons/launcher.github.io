@@ -106,6 +106,23 @@ export const launcherTools: LauncherTool[] = [
     // Future WeChat asset example: qrImage: "/launcher/tools/wechat-qr.svg",
     qrImage: "/launcher/tools/monitor-qr.svg",
   },
+  {
+    id: "qq",
+    label: "QQ",
+    description: "加入 SCHNIE 官方 QQ 群",
+    icon: "qq",
+    mode: "both",
+    href: "https://qm.qq.com/q/BviRiChyAE",
+    qrImage: "/launcher/tools/qq-qr.svg",
+  },
+  {
+    id: "wechat-official",
+    label: "微信公众号",
+    description: "关注 SCHNIE 微信公众号",
+    icon: "wechat",
+    mode: "qr",
+    qrImage: "/launcher/tools/wechat-official-qr.svg",
+  },
 ];
 
 export function getProjectById(id: ProjectId): LauncherProject {
