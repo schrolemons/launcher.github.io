@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { LauncherProject, ProjectId } from "../types";
 
 type ProjectRailProps = {
@@ -15,16 +16,18 @@ export default function ProjectRail({ projects, activeId, onSelect }: ProjectRai
       </div>
       <div className="launcher-rail__projects">
         {projects.map((project) => (
-          <button
-            className="launcher-rail__project"
-            type="button"
-            key={project.id}
-            aria-label={`选择 ${project.code}`}
-            aria-pressed={project.id === activeId}
-            onClick={() => onSelect(project.id)}
-          >
-            {project.code}
-          </button>
+          <Fragment key={project.id}>
+            {project.id === "zero" && <div className="launcher-rail__divider" aria-hidden="true" />}
+            <button
+              className="launcher-rail__project"
+              type="button"
+              aria-label={`选择 ${project.code}`}
+              aria-pressed={project.id === activeId}
+              onClick={() => onSelect(project.id)}
+            >
+              {project.code}
+            </button>
+          </Fragment>
         ))}
       </div>
     </nav>

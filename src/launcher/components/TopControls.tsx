@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LauncherIcon from "./LauncherIcon";
 
 type TopControlsProps = {
@@ -16,7 +16,18 @@ type TopControlsProps = {
 
 export default function TopControls({ projectUrl, muted, paused, playable, soundAvailable = playable, mediaMode, mediaToggleable, onToggleMuted, onTogglePaused, onToggleMediaMode }: TopControlsProps) {
   const [fullscreenError, setFullscreenError] = useState("");
+  const [pausedHint, setPausedHint] = useState(false);
   const hostname = new URL(projectUrl).hostname;
+
+  useEffect(() => {
+    if (!(paused && playable && mediaMode === "video")) {
+      setPausedHint(false);
+      return;
+    }
+
+    const id = window.setTimeout(() => setPausedHint(true), 5000);
+    return () => window.clearTimeout(id);
+  }, [paused, playable, mediaMode]);
 
   async function toggleFullscreen() {
     try {
@@ -42,7 +53,7 @@ export default function TopControls({ projectUrl, muted, paused, playable, sound
         >
           <LauncherIcon name={muted ? "muted" : "volume"} />
         </button>
-        <button aria-label={paused ? "播放" : "暂停"} className="launcher-control" disabled={!playable} onClick={onTogglePaused} title={playable ? undefined : "当前项目为静态背景，或浏览器不支持视频"} type="button">
+        <button aria-label={paused ? "播放" : "暂停"} className={`launcher-control${pausedHint ? " launcher-control--hint" : ""}`} disabled={!playable} onClick={onTogglePaused} title={playable ? undefined : "当前项目为静态背景，或浏览器不支持视频"} type="button">
           <LauncherIcon name={paused ? "play" : "pause"} />
         </button>
         {mediaToggleable ? (

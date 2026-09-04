@@ -70,16 +70,16 @@ export default function BackgroundStage({ project, paused, muted, visible, media
     };
   }, [isVideo, muted, paused, ready, visible]);
 
+  const mediaClassName = `launcher-stage__media${visible ? " launcher-stage__media--active" : ""}`;
   const style: React.CSSProperties = {
     objectPosition: media.position,
-    display: visible ? undefined : "none",
   };
 
   if (isVideo) {
     return (
       <video
         ref={videoRef}
-        className="launcher-stage__media"
+        className={mediaClassName}
         data-testid="launcher-video"
         poster={media.poster}
         muted
@@ -93,7 +93,7 @@ export default function BackgroundStage({ project, paused, muted, visible, media
   if (posterFailed) {
     return (
       <div
-        className="launcher-stage__media launcher-stage__media--gradient"
+        className={`${mediaClassName} launcher-stage__media--gradient`}
         aria-label={`${project.code} 背景`}
         style={style}
       >
@@ -105,7 +105,7 @@ export default function BackgroundStage({ project, paused, muted, visible, media
   const staticSrc = media.kind === "video" ? media.poster : media.src;
   return (
     <img
-      className="launcher-stage__media"
+      className={mediaClassName}
       src={staticSrc}
       alt={`${project.code} 背景`}
       style={style}

@@ -10,6 +10,9 @@ import TopControls from "./components/TopControls";
 import type { LauncherProject, ProjectId } from "./types";
 import "./launcher.css";
 
+// 滚轮切换只在这些项目之间循环，ZERO 作为特殊项目不参与滚轮导航
+const scrollableProjects = launcherProjects.filter((project) => project.id !== "zero");
+
 export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["feeds"] }) {
   const [activeId, setActiveId] = useState<ProjectId>(() => {
     const param = new URLSearchParams(window.location.search).get("project");
@@ -20,23 +23,137 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
   const [mediaMode, setMediaMode] = useState<"video" | "image">("video");
   const [hasPlayableMedia, setHasPlayableMedia] = useState(false);
   const [openToolId, setOpenToolId] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
+  const fadeRef = useRef<number | null>(null);
+  const prevAudioIdRef = useRef<ProjectId | null>(null);
   const windowRef = useRef<HTMLDivElement>(null);
   const wheelLockTimer = useRef<number | undefined>(undefined);
   const activeProject = getProjectById(activeId);
   const displayedProject = activeProject.id === "ark" && arkFeeds ? { ...activeProject, feeds: arkFeeds } : activeProject;
 
+  // 音频始终与背景视频同节奏播放：扬声器关闭时静音播放，开启时出声。
+  // 切换项目/开关扬声器时通过音量渐变实现淡入淡出，但保持 audio 持续 play，不破坏音视频对齐。
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (mediaPaused || muted || mediaMode === "image") audio.pause();
-  }, [mediaPaused, muted, mediaMode]);
+    const shouldPlay = displayedProject.media.kind === "video" && mediaMode === "video" && !mediaPaused;
+
+    // 取消上一次尚未完成的渐变，避免多个 rAF 循环叠加造成混响
+    if (fadeRef.current != null) {
+      cancelAnimationFrame(fadeRef.current);
+      fadeRef.current = null;
+    }
+
+    const prevId = prevAudioIdRef.current;
+    prevAudioIdRef.current = activeId;
+
+    // 暂停既非当前也非“上一次”的音频，防止快速切换时遗留的音频继续播放
+    launcherProjects.forEach((project) => {
+      if (project.id === activeId || project.id === prevId) return;
+      const el = audioRefs.current[project.id];
+      if (el) {
+        el.pause();
+        el.muted = true;
+        el.volume = 1;
+      }
+    });
+
+    const activeEl = audioRefs.current[activeId];
+    const prevEl = prevId && prevId !== activeId ? audioRefs.current[prevId] : null;
+
+    // 暂停/图片模式下不渐变，立即暂停以保持与视频对齐
+    if (!shouldPlay) {
+      if (activeEl) {
+        activeEl.pause();
+        activeEl.muted = muted;
+        activeEl.volume = 1;
+      }
+      if (prevEl) {
+        prevEl.pause();
+        prevEl.muted = true;
+        prevEl.volume = 1;
+      }
+      return;
+    }
+
+    // active：保持播放（对齐视频）；prev：淡出后暂停
+    const tracks = [];
+    if (activeEl) tracks.push({ el: activeEl, wasAudible: !activeEl.muted, willBeAudible: !muted, keepPlaying: true });
+    if (prevEl) tracks.push({ el: prevEl, wasAudible: !prevEl.muted, willBeAudible: false, keepPlaying: false });
+
+    const finalize = (track: { el: HTMLAudioElement; keepPlaying: boolean; willBeAudible: boolean }) => {
+      if (track.keepPlaying) {
+        track.el.muted = !track.willBeAudible;
+        track.el.volume = 1;
+        const result = track.el.play();
+        if (result && typeof result.catch === "function") result.catch(() => {});
+      } else {
+        track.el.pause();
+        track.el.muted = true;
+        track.el.volume = 1;
+      }
+    };
+
+    // 无听感变化的直接落位（如静音下切换项目）
+    tracks.filter((track) => track.wasAudible === track.willBeAudible).forEach(finalize);
+
+    const fadeOutTracks = tracks.filter((track) => track.wasAudible && !track.willBeAudible);
+    const fadeInTracks = tracks.filter((track) => !track.wasAudible && track.willBeAudible);
+
+    // 淡入轨先静音播放，保持与视频进度一致，待淡出完成后再渐入
+    fadeInTracks.forEach((track) => {
+      track.el.muted = true;
+      track.el.volume = 1;
+      const result = track.el.play();
+      if (result && typeof result.catch === "function") result.catch(() => {});
+    });
+
+    // 先淡出，再淡入（两阶段顺序执行）
+    const FADE_MS = 420;
+    const phases = [];
+    if (fadeOutTracks.length) phases.push({ tracks: fadeOutTracks, to: 0 });
+    if (fadeInTracks.length) phases.push({ tracks: fadeInTracks, to: 1 });
+
+    if (phases.length === 0) return;
+
+    let phaseIndex = 0;
+    const runPhase = () => {
+      if (phaseIndex >= phases.length) return;
+
+      const phase = phases[phaseIndex];
+      const startVolume = phase.tracks.map((track) => (track.el.muted ? 0 : track.el.volume));
+
+      // 渐变期间用 volume 控制响度，因此先取消 muted 并确保播放
+      phase.tracks.forEach((track) => {
+        track.el.muted = false;
+        const result = track.el.play();
+        if (result && typeof result.catch === "function") result.catch(() => {});
+      });
+
+      const startTime = performance.now();
+      const step = (now: number) => {
+        const progress = Math.min(1, (now - startTime) / FADE_MS);
+        phase.tracks.forEach((track, index) => {
+          track.el.volume = startVolume[index] + (phase.to - startVolume[index]) * progress;
+        });
+
+        if (progress < 1) {
+          fadeRef.current = requestAnimationFrame(step);
+          return;
+        }
+
+        fadeRef.current = null;
+        phase.tracks.forEach(finalize);
+        phaseIndex += 1;
+        runPhase();
+      };
+
+      fadeRef.current = requestAnimationFrame(step);
+    };
+
+    runPhase();
+  }, [activeId, displayedProject.media.kind, mediaMode, mediaPaused, muted]);
 
   const selectProject = useCallback((projectId: ProjectId) => {
     setActiveId(projectId);
-    setMediaPaused(false);
-    setMediaMode("video");
-    audioRef.current?.pause();
     setOpenToolId(null);
 
     const url = new URL(window.location.href);
@@ -54,12 +171,14 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
       if (target?.closest(".information-dock, .launcher-tool-popover__backdrop, .launcher-tool-popover__zoom, .launcher-tool-popover")) return;
       if (Math.abs(event.deltaY) < 8 || wheelLockTimer.current !== undefined) return;
 
-      const index = launcherProjects.findIndex((project) => project.id === activeId);
-      const nextIndex = Math.min(launcherProjects.length - 1, Math.max(0, index + (event.deltaY > 0 ? 1 : -1)));
+      const index = scrollableProjects.findIndex((project) => project.id === activeId);
+      if (index < 0) return; // ZERO 不参与滚轮切换
+
+      const nextIndex = Math.min(scrollableProjects.length - 1, Math.max(0, index + (event.deltaY > 0 ? 1 : -1)));
       if (nextIndex === index) return;
 
       event.preventDefault();
-      selectProject(launcherProjects[nextIndex].id);
+      selectProject(scrollableProjects[nextIndex].id);
       wheelLockTimer.current = window.setTimeout(() => {
         wheelLockTimer.current = undefined;
       }, 360);
@@ -69,29 +188,11 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
     return () => node.removeEventListener("wheel", onWheel);
   }, [activeId, selectProject]);
 
-  const toggleMuted = () => {
-    const nextMuted = !muted;
-    setMuted(nextMuted);
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (nextMuted) audio.pause();
-    else void audio.play().catch(() => setMuted(true));
-  };
+  const toggleMuted = () => setMuted((value) => !value);
 
-  const togglePaused = () => {
-    const nextPaused = !mediaPaused;
-    setMediaPaused(nextPaused);
-    const audio = audioRef.current;
-    if (!audio || muted) return;
-    if (nextPaused) audio.pause();
-    else void audio.play().catch(() => setMuted(true));
-  };
+  const togglePaused = () => setMediaPaused((value) => !value);
 
-  const toggleMediaMode = () => {
-    const nextMode = mediaMode === "video" ? "image" : "video";
-    setMediaMode(nextMode);
-    if (nextMode === "image") audioRef.current?.pause();
-  };
+  const toggleMediaMode = () => setMediaMode((mode) => (mode === "video" ? "image" : "video"));
 
   return (
     <div
@@ -120,12 +221,14 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
             project.audio ? (
               <audio
                 key={`audio-${project.id}`}
-                ref={project.id === activeId ? audioRef : undefined}
+                ref={(el) => {
+                  audioRefs.current[project.id] = el;
+                }}
                 data-testid="launcher-audio"
                 src={project.audio.src}
                 loop={project.audio.loop}
                 preload="auto"
-                style={{ display: project.id === activeId ? undefined : "none" }}
+                muted
               />
             ) : null
           )}
