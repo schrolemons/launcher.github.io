@@ -7,11 +7,14 @@ type TopControlsProps = {
   paused: boolean;
   playable: boolean;
   soundAvailable?: boolean;
+  mediaMode: "video" | "image";
+  mediaToggleable: boolean;
   onToggleMuted: () => void;
   onTogglePaused: () => void;
+  onToggleMediaMode: () => void;
 };
 
-export default function TopControls({ projectUrl, muted, paused, playable, soundAvailable = playable, onToggleMuted, onTogglePaused }: TopControlsProps) {
+export default function TopControls({ projectUrl, muted, paused, playable, soundAvailable = playable, mediaMode, mediaToggleable, onToggleMuted, onTogglePaused, onToggleMediaMode }: TopControlsProps) {
   const [fullscreenError, setFullscreenError] = useState("");
   const hostname = new URL(projectUrl).hostname;
 
@@ -42,6 +45,11 @@ export default function TopControls({ projectUrl, muted, paused, playable, sound
         <button aria-label={paused ? "播放" : "暂停"} className="launcher-control" disabled={!playable} onClick={onTogglePaused} title={playable ? undefined : "当前项目为静态背景，或浏览器不支持视频"} type="button">
           <LauncherIcon name={paused ? "play" : "pause"} />
         </button>
+        {mediaToggleable ? (
+          <button aria-label={mediaMode === "video" ? "切换为图片背景" : "切换为视频背景"} className="launcher-control" onClick={onToggleMediaMode} type="button">
+            <LauncherIcon name={mediaMode === "video" ? "image" : "video"} />
+          </button>
+        ) : null}
         <button aria-label="全屏" className="launcher-control" onClick={() => void toggleFullscreen()} type="button">
           <LauncherIcon name="fullscreen" />
         </button>

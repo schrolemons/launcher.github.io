@@ -7,7 +7,7 @@ const emptyFeeds = () => ({
 });
 
 // 资讯/新闻条目与左侧轮播图统一占位外链。后续按条目替换为各自的实际外部链接即可，顺序即下方数组顺序。
-const PLACEHOLDER_HREF = "https://www.sch-nie.com/";
+const PLACEHOLDER_HREF = "https://ark.sch-nie.com/";
 
 const arkFeeds = {
   announcement: [
@@ -34,11 +34,11 @@ export const launcherProjects = [
     media: {
       kind: "video",
       src: "/videos/ark.mp4",
-      poster: "/images/index-bg.jpg",
+      poster: "/images/media/2-1.jpg",
       autoplay: true,
       muted: true,
     },
-    audio: { src: "/audios/bgm.mp3", loop: true },
+    audio: { src: "/audios/ark.mp3", loop: true },
     slides: [
       { title: "用户文档", image: "/info-swiper/UserDocumentation.jpg", href: PLACEHOLDER_HREF },
       { title: "第九宇宙", image: "/info-swiper/Blog.jpg", href: PLACEHOLDER_HREF },
@@ -55,20 +55,14 @@ export const launcherProjects = [
     actionLabel: "阅读博客",
     accent: "#22bff2",
     accentSoft: "rgba(34, 191, 242, 0.22)",
-    media: { kind: "image", src: "/images/04-media/2-2.png" },
-    slides: [],
-    feeds: emptyFeeds(),
-  },
-  {
-    id: "zero",
-    name: "SCHNIE：Zero",
-    code: "ZERO",
-    description: "第九边缘元点 · 陈述核心内容",
-    url: "https://zero.sch-nie.com/",
-    actionLabel: "抵达零点",
-    accent: "#ff8a3d",
-    accentSoft: "rgba(255, 138, 61, 0.22)",
-    media: { kind: "image", src: "/images/04-media/be.png" },
+    media: {
+      kind: "video",
+      src: "/videos/blog.mp4",
+      poster: "/images/media/2-2.png",
+      autoplay: true,
+      muted: true,
+    },
+    audio: { src: "/audios/blog.mp3", loop: true },
     slides: [],
     feeds: emptyFeeds(),
   },
@@ -81,7 +75,27 @@ export const launcherProjects = [
     actionLabel: "探索世界",
     accent: "#b9a0ff",
     accentSoft: "rgba(185, 160, 255, 0.22)",
-    media: { kind: "image", src: "/images/04-media/2-3.png" },
+    media: {
+      kind: "video",
+      src: "/videos/world.mp4",
+      poster: "/images/media/2-3.png",
+      autoplay: true,
+      muted: true,
+    },
+    audio: { src: "/audios/world.mp3", loop: true },
+    slides: [],
+    feeds: emptyFeeds(),
+  },
+    {
+    id: "zero",
+    name: "SCHNIE：Zero",
+    code: "ZERO",
+    description: "第九边缘元点 · 陈述核心内容",
+    url: "https://zero.sch-nie.com/",
+    actionLabel: "抵达零点",
+    accent: "#ff8a3d",
+    accentSoft: "rgba(255, 138, 61, 0.22)",
+    media: { kind: "image", src: "/images/media/zero.png" },
     slides: [],
     feeds: emptyFeeds(),
   },

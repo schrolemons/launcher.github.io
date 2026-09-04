@@ -6,15 +6,16 @@ type BackgroundStageProps = {
   paused: boolean;
   muted: boolean;
   visible: boolean;
+  mediaMode: "video" | "image";
   onPlaybackAvailabilityChange: (available: boolean) => void;
 };
 
-export default function BackgroundStage({ project, paused, muted, visible, onPlaybackAvailabilityChange }: BackgroundStageProps) {
+export default function BackgroundStage({ project, paused, muted, visible, mediaMode, onPlaybackAvailabilityChange }: BackgroundStageProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [posterFailed, setPosterFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const media = project.media;
-  const isVideo = media.kind === "video";
+  const isVideo = media.kind === "video" && mediaMode === "video";
 
   useEffect(() => {
     onPlaybackAvailabilityChange(isVideo && visible);
@@ -74,6 +75,21 @@ export default function BackgroundStage({ project, paused, muted, visible, onPla
     display: visible ? undefined : "none",
   };
 
+  if (isVideo) {
+    return (
+      <video
+        ref={videoRef}
+        className="launcher-stage__media"
+        data-testid="launcher-video"
+        poster={media.poster}
+        muted
+        loop
+        playsInline
+        style={style}
+      />
+    );
+  }
+
   if (posterFailed) {
     return (
       <div
@@ -86,28 +102,14 @@ export default function BackgroundStage({ project, paused, muted, visible, onPla
     );
   }
 
-  if (media.kind === "image") {
-    return (
-      <img
-        className="launcher-stage__media"
-        src={media.src}
-        alt={`${project.code} 背景`}
-        style={style}
-        onError={() => setPosterFailed(true)}
-      />
-    );
-  }
-
+  const staticSrc = media.kind === "video" ? media.poster : media.src;
   return (
-    <video
-      ref={videoRef}
+    <img
       className="launcher-stage__media"
-      data-testid="launcher-video"
-      poster={media.poster}
-      muted
-      loop
-      playsInline
+      src={staticSrc}
+      alt={`${project.code} 背景`}
       style={style}
+      onError={() => setPosterFailed(true)}
     />
   );
 }

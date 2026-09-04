@@ -14,6 +14,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
   const [activeId, setActiveId] = useState<ProjectId>("ark");
   const [mediaPaused, setMediaPaused] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [mediaMode, setMediaMode] = useState<"video" | "image">("video");
   const [hasPlayableMedia, setHasPlayableMedia] = useState(false);
   const [openToolId, setOpenToolId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -23,13 +24,14 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (mediaPaused || muted) audio.pause();
-  }, [mediaPaused, muted]);
+    if (mediaPaused || muted || mediaMode === "image") audio.pause();
+  }, [mediaPaused, muted, mediaMode]);
 
   const selectProject = (projectId: ProjectId) => {
     setActiveId(projectId);
     setMediaPaused(false);
     setMuted(true);
+    setMediaMode("video");
     audioRef.current?.pause();
     setOpenToolId(null);
   };
@@ -52,6 +54,12 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
     else void audio.play().catch(() => setMuted(true));
   };
 
+  const toggleMediaMode = () => {
+    const nextMode = mediaMode === "video" ? "image" : "video";
+    setMediaMode(nextMode);
+    if (nextMode === "image") audioRef.current?.pause();
+  };
+
   return (
     <div
       className="launcher-scene"
@@ -71,6 +79,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
               paused={mediaPaused || project.id !== activeId}
               muted={muted}
               visible={project.id === activeId}
+              mediaMode={mediaMode}
               onPlaybackAvailabilityChange={project.id === activeId ? setHasPlayableMedia : () => {}}
             />
           ))}
@@ -90,15 +99,18 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
           <div className="launcher-stage__vignette" />
           <div className="launcher-stage__readability" />
           <div className="launcher-stage__floor" />
-          <div className="launcher-stage__content" data-playable-media={hasPlayableMedia}>
+          <div className="launcher-stage__content" data-playable-media={hasPlayableMedia && mediaMode === "video"}>
             <img className="launcher-brand-logo" src="/images/logo.png" alt="SCHNIE logo" />
             <TopControls
+              mediaMode={mediaMode}
+              mediaToggleable={displayedProject.media.kind === "video"}
               muted={muted}
+              onToggleMediaMode={toggleMediaMode}
               onToggleMuted={toggleMuted}
               onTogglePaused={togglePaused}
               paused={mediaPaused}
-              playable={hasPlayableMedia}
-              soundAvailable={Boolean(displayedProject.audio) || hasPlayableMedia}
+              playable={hasPlayableMedia && mediaMode === "video"}
+              soundAvailable={(Boolean(displayedProject.audio) || hasPlayableMedia) && mediaMode === "video"}
               projectUrl={displayedProject.url}
             />
             <section

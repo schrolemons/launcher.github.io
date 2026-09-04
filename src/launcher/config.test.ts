@@ -6,8 +6,8 @@ describe("launcher configuration", () => {
     expect(launcherProjects.map((project) => project.id)).toEqual([
       "ark",
       "blog",
-      "zero",
       "world",
+      "zero",
     ]);
     expect(getProjectById("ark").media).toMatchObject({
       kind: "video",

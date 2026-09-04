@@ -78,15 +78,36 @@ describe("LauncherApp", () => {
     const play = vi.spyOn(HTMLMediaElement.prototype, "play");
     render(<LauncherApp />);
 
-    expect(screen.getByTestId("launcher-audio")).toHaveAttribute("src", "/audios/bgm.mp3");
+    expect(screen.getAllByTestId("launcher-audio")[0]).toHaveAttribute("src", "/audios/ark.mp3");
     const muteButton = screen.getByRole("button", { name: "取消静音" });
     expect(muteButton).toBeInTheDocument();
     await user.click(muteButton);
     expect(screen.getByRole("button", { name: "静音" })).toBeInTheDocument();
     expect(play).toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: /选择 BLOG/ }));
+    await user.click(screen.getByRole("button", { name: /选择 ZERO/ }));
     expect(screen.getByRole("button", { name: "暂停" })).toBeDisabled();
+  });
+
+  it("switches to a static image and disables playback controls", async () => {
+    const user = userEvent.setup();
+    render(<LauncherApp />);
+
+    await user.click(screen.getByRole("button", { name: "切换为图片背景" }));
+
+    expect(screen.getByRole("button", { name: "切换为视频背景" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "暂停" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "取消静音" })).toBeDisabled();
+  });
+
+  it("omits the media toggle for a static image project", async () => {
+    const user = userEvent.setup();
+    render(<LauncherApp />);
+
+    await user.click(screen.getByRole("button", { name: /选择 ZERO/ }));
+
+    expect(screen.queryByRole("button", { name: "切换为视频背景" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "切换为图片背景" })).not.toBeInTheDocument();
   });
 
   it("opens the active project details without duplicating the information dock", async () => {

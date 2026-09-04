@@ -11,7 +11,10 @@ describe("TopControls", () => {
   it("uses SVG icons while preserving accessible control names", () => {
     render(
       <TopControls
+        mediaMode="video"
+        mediaToggleable
         muted
+        onToggleMediaMode={vi.fn()}
         onToggleMuted={vi.fn()}
         onTogglePaused={vi.fn()}
         paused={false}
@@ -30,7 +33,10 @@ describe("TopControls", () => {
     vi.spyOn(HTMLElement.prototype, "requestFullscreen").mockRejectedValueOnce(new Error("blocked"));
     render(
       <TopControls
+        mediaMode="video"
+        mediaToggleable
         muted
+        onToggleMediaMode={vi.fn()}
         onToggleMuted={vi.fn()}
         onTogglePaused={vi.fn()}
         paused={false}
