@@ -76,7 +76,7 @@ export function ToolPopover({ tool, accent, accentSoft, onClose }: ToolPopoverPr
           )}
           {tool.mode === "both" && (
             <a className="launcher-tool-popover__visit" href={tool.href} rel="noopener noreferrer" target="_blank">
-              直接访问 <LauncherIcon name="outbound" />
+              直接访问
             </a>
           )}
         </section>

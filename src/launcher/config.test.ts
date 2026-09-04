@@ -16,7 +16,7 @@ describe("launcher configuration", () => {
       muted: true,
     });
     expect(getProjectById("ark").audio).toEqual({
-      src: "/audios/bgm.mp3",
+      src: "/audios/ark.mp3",
       loop: true,
     });
   });
