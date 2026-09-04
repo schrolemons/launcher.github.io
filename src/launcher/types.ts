@@ -2,8 +2,8 @@ export type ProjectId = "ark" | "blog" | "zero" | "world";
 export type FeedKind = "announcement" | "news" | "information";
 
 export type ProjectMedia =
-  | { kind: "image"; src: string; poster?: string; position?: string }
-  | { kind: "video"; src: string; poster: string; position?: string; autoplay: boolean; muted: boolean };
+  | { kind: "image"; src: string; poster?: string; position?: string; thumb?: string }
+  | { kind: "video"; src: string; poster: string; position?: string; autoplay: boolean; muted: boolean; thumb?: string };
 
 export interface FeedItem {
   title: string;

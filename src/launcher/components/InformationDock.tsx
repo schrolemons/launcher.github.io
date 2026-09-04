@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type WheelEvent } from "react";
 import { A11y, Autoplay, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
 import type { FeedItem, FeedKind, LauncherProject } from "../types";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -49,6 +50,8 @@ export default function InformationDock({ project }: { project: LauncherProject 
   const [activeFeed, setActiveFeed] = useState<FeedKind>("announcement");
   const [feedPage, setFeedPage] = useState(0);
   const wheelUnlockTimer = useRef<number | undefined>(undefined);
+  const coverWheelLock = useRef<number | undefined>(undefined);
+  const swiperRef = useRef<SwiperType | null>(null);
   const tabId = useId();
   const panelId = `${tabId}-${project.id}-panel`;
   const feed = [...project.feeds[activeFeed]].sort((left, right) => (right.top ?? 0) - (left.top ?? 0));
@@ -64,7 +67,10 @@ export default function InformationDock({ project }: { project: LauncherProject 
     setFeedPage(0);
   }, [activeFeed, project.id]);
 
-  useEffect(() => () => window.clearTimeout(wheelUnlockTimer.current), []);
+  useEffect(() => () => {
+    window.clearTimeout(wheelUnlockTimer.current);
+    window.clearTimeout(coverWheelLock.current);
+  }, []);
 
   const selectTab = (kind: FeedKind) => {
     setActiveFeed(kind);
@@ -79,6 +85,31 @@ export default function InformationDock({ project }: { project: LauncherProject 
 
     event.preventDefault();
     setFeedPage(nextPage);
+    wheelUnlockTimer.current = window.setTimeout(() => {
+      wheelUnlockTimer.current = undefined;
+    }, 240);
+  };
+
+  const onCoverWheel = (event: WheelEvent<HTMLDivElement>) => {
+    if (project.slides.length <= 1 || Math.abs(event.deltaY) < 8 || coverWheelLock.current !== undefined) return;
+    const swiper = swiperRef.current;
+    if (!swiper) return;
+
+    event.preventDefault();
+    if (event.deltaY > 0) swiper.slideNext();
+    else swiper.slidePrev();
+    coverWheelLock.current = window.setTimeout(() => {
+      coverWheelLock.current = undefined;
+    }, 300);
+  };
+
+  const onTabsWheel = (event: WheelEvent<HTMLDivElement>) => {
+    if (Math.abs(event.deltaY) < 8 || wheelUnlockTimer.current !== undefined) return;
+
+    event.preventDefault();
+    const index = feedTabs.findIndex((tab) => tab.kind === activeFeed);
+    const nextIndex = (index + (event.deltaY > 0 ? 1 : -1) + feedTabs.length) % feedTabs.length;
+    selectTab(feedTabs[nextIndex].kind);
     wheelUnlockTimer.current = window.setTimeout(() => {
       wheelUnlockTimer.current = undefined;
     }, 240);
@@ -100,7 +131,7 @@ export default function InformationDock({ project }: { project: LauncherProject 
 
   return (
     <section className="information-dock" data-testid="information-dock" aria-label={`${project.code} 信息`}> 
-      <div className="information-dock__cover">
+      <div className="information-dock__cover" onWheel={onCoverWheel}>
         {project.slides.length > 0 ? (
           <Swiper
             key={project.id}
@@ -109,6 +140,9 @@ export default function InformationDock({ project }: { project: LauncherProject 
             navigation
             autoplay={reducedMotion ? false : { delay: 5000, disableOnInteraction: false }}
             a11y={{ enabled: true }}
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+            }}
           >
             {project.slides.map((slide) => (
               <SwiperSlide key={slide.title}>
@@ -133,7 +167,7 @@ export default function InformationDock({ project }: { project: LauncherProject 
         )}
       </div>
       <div className="information-dock__feeds">
-        <div className="information-dock__tabs" role="tablist" aria-label="信息分类">
+        <div className="information-dock__tabs" role="tablist" aria-label="信息分类" onWheel={onTabsWheel}>
           {feedTabs.map(({ kind, label }) => {
             const selected = activeFeed === kind;
             const id = `${tabId}-${kind}`;

@@ -58,11 +58,11 @@ export default function DesktopLauncher({ arkFeeds }: { arkFeeds?: LauncherProje
                     style={{ "--card-accent": project.accent, "--card-accent-soft": project.accentSoft } as CSSProperties}
                   >
                     <div className="launcher-mobile-card__media">
-                      {project.media.kind === "video" ? (
-                        <img src={project.media.poster} alt="" loading="lazy" />
-                      ) : (
-                        <img src={project.media.src} alt="" loading="lazy" />
-                      )}
+                      <img
+                        src={project.media.thumb ?? (project.media.kind === "video" ? project.media.poster : project.media.src)}
+                        alt=""
+                        loading="lazy"
+                      />
                       <div className="launcher-mobile-card__media-overlay" />
                     </div>
                     <div className="launcher-mobile-card__body">
