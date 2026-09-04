@@ -1,14 +1,74 @@
 ---
 import LauncherLayout from "../layouts/LauncherLayout.astro";
 import DesktopLauncher from "../launcher/DesktopLauncher";
+import { launcherProjects } from "../launcher/config";
+
+const base = import.meta.env.BASE_URL;
+const logo = base + "images/logo.png";
 ---
 
 <LauncherLayout title="SCHNIE // PROJECT LAUNCHER" description="SCH-NIE 项目启动器">
-  <div class="launcher-mobile-block" aria-labelledby="desktop-only-title">
-    <p class="launcher-mobile-block__eyebrow">SCHNIE // ACCESS GATE</p>
-    <h1 id="desktop-only-title">请使用桌面设备访问</h1>
-    <p>启动器目前面向宽屏设备开放。</p>
+  <div class="launcher-mobile-scene">
+    <div class="launcher-mobile-scene__bg">
+      <div class="launcher-mobile-scene__gradient-1" />
+      <div class="launcher-mobile-scene__gradient-2" />
+      <div class="launcher-mobile-scene__scanlines" />
+    </div>
+
+    <header class="launcher-mobile-header">
+      <img class="launcher-mobile-header__logo" src={logo} alt="SCHNIE" width="64" height="64" />
+      <div class="launcher-mobile-header__brand">
+        <span class="launcher-mobile-header__wordmark">SCHNIE</span>
+        <span class="launcher-mobile-header__subtitle">PROJECT LAUNCHER</span>
+      </div>
+    </header>
+
+    <section class="launcher-mobile-hero">
+      <p class="launcher-mobile-hero__eyebrow">SCHNIE // 第九边缘</p>
+      <h1 class="launcher-mobile-hero__title">无限世界，一键启程</h1>
+      <p class="launcher-mobile-hero__desc">请使用桌面设备访问，体验完整启动器功能</p>
+    </section>
+
+    <section class="launcher-mobile-projects">
+      <h2 class="launcher-mobile-projects__title">探索项目</h2>
+      <div class="launcher-mobile-projects__grid">
+        {launcherProjects.map((project) => (
+          <a
+            class="launcher-mobile-card"
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={`--card-accent: ${project.accent}; --card-accent-soft: ${project.accentSoft}`}
+          >
+            <div class="launcher-mobile-card__media">
+              {project.media.kind === "video" ? (
+                <img src={project.media.poster} alt="" loading="lazy" />
+              ) : (
+                <img src={project.media.src} alt="" loading="lazy" />
+              )}
+              <div class="launcher-mobile-card__media-overlay" />
+            </div>
+            <div class="launcher-mobile-card__body">
+              <span class="launcher-mobile-card__code">{project.code}</span>
+              <h3 class="launcher-mobile-card__name">{project.name}</h3>
+              <p class="launcher-mobile-card__desc">{project.description}</p>
+              <span class="launcher-mobile-card__action">
+                {project.actionLabel}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <footer class="launcher-mobile-footer">
+      <p class="launcher-mobile-footer__brand">SCHNIE</p>
+      <p class="launcher-mobile-footer__tagline">一站式项目平台 · 集合所有 SCHNIE 生态项目</p>
+      <p class="launcher-mobile-footer__copy">&copy; {new Date().getFullYear()} SCHNIE. All rights reserved.</p>
+    </footer>
   </div>
+
   <div class="launcher-desktop-root">
     <DesktopLauncher client:only="react" />
   </div>
