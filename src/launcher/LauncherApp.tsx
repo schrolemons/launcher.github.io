@@ -113,6 +113,8 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
             </div>
           </div>
           <ToolRail
+            accent={displayedProject.accent}
+            accentSoft={displayedProject.accentSoft}
             onCloseTool={() => setOpenToolId(null)}
             onOpenTool={setOpenToolId}
             openToolId={openToolId}

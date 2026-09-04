@@ -40,6 +40,8 @@ function ControlledToolRail({ tools }: { tools: LauncherTool[] }) {
     <ToolRail
       tools={tools}
       openToolId={openToolId}
+      accent="#f4ee00"
+      accentSoft="rgba(244, 238, 0, 0.22)"
       onOpenTool={setOpenToolId}
       onCloseTool={() => setOpenToolId(null)}
     />
