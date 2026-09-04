@@ -310,9 +310,274 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .information-dock__tab:focus-visible,
 .information-dock__feed-row:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
-.launcher-mobile-block { align-items: center; background: radial-gradient(circle at 75% 15%, rgba(244, 238, 0, 0.18), transparent 35%), #07090d; display: flex; flex-direction: column; justify-content: center; min-height: 100svh; overflow: hidden; padding: 2rem; text-align: center; }
-.launcher-mobile-block h1 { font-family: Bender-Bold, sans-serif; margin: 0; }
-.launcher-mobile-block p:last-child { color: rgba(245, 247, 250, 0.66); }
+/* ── Mobile Scene ── */
+.launcher-mobile-scene {
+  background: #05070a;
+  color: #f7f8fb;
+  font-family: Bender-Regular, "Segoe UI", "Microsoft YaHei", sans-serif;
+  min-height: 100svh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+.launcher-mobile-scene__bg {
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+.launcher-mobile-scene__gradient-1 {
+  animation: mobile-glow-1 8s ease-in-out infinite alternate;
+  background: radial-gradient(circle at 75% 0%, rgba(244, 238, 0, 0.22), transparent 48%);
+  height: 60vh;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+.launcher-mobile-scene__gradient-2 {
+  animation: mobile-glow-2 10s ease-in-out infinite alternate;
+  background: radial-gradient(circle at 20% 100%, rgba(66, 139, 175, 0.18), transparent 52%);
+  bottom: 0;
+  height: 50vh;
+  position: absolute;
+  right: 0;
+  width: 100%;
+}
+.launcher-mobile-scene__scanlines {
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 4px);
+  inset: 0;
+  position: absolute;
+}
+
+/* ── Mobile Header ── */
+.launcher-mobile-header {
+  align-items: center;
+  animation: mobile-fade-in 600ms ease both;
+  display: flex;
+  gap: 0.85rem;
+  padding: 1.5rem 1.25rem 0;
+  position: relative;
+  z-index: 2;
+}
+.launcher-mobile-header__logo {
+  filter: drop-shadow(0 0 1.2rem rgba(244, 238, 0, 0.45));
+  height: 3rem;
+  object-fit: contain;
+  width: 3rem;
+}
+.launcher-mobile-header__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.launcher-mobile-header__wordmark {
+  color: #fff;
+  font-family: Bender-Bold, "Arial Narrow", sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-shadow: 0 0 1.5rem rgba(244, 238, 0, 0.3);
+}
+.launcher-mobile-header__wordmark::first-letter {
+  color: var(--accent, #f4ee00);
+}
+.launcher-mobile-header__subtitle {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.58rem;
+  letter-spacing: 0.3em;
+  line-height: 1;
+}
+
+/* ── Mobile Hero ── */
+.launcher-mobile-hero {
+  animation: mobile-fade-in 600ms 100ms ease both;
+  padding: 2.5rem 1.25rem 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+.launcher-mobile-hero__eyebrow {
+  color: var(--accent, #f4ee00);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  margin: 0 0 0.6rem;
+}
+.launcher-mobile-hero__title {
+  font-family: Bender-Bold, "Arial Narrow", sans-serif;
+  font-size: clamp(1.8rem, 7vw, 2.6rem);
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+  margin: 0 0 0.65rem;
+  text-shadow: 0 0.2rem 1.2rem rgba(0, 0, 0, 0.8);
+}
+.launcher-mobile-hero__desc {
+  color: rgba(245, 247, 250, 0.66);
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Mobile Projects ── */
+.launcher-mobile-projects {
+  padding: 1rem 1.25rem 2rem;
+  position: relative;
+  z-index: 2;
+}
+.launcher-mobile-projects__title {
+  color: rgba(245, 247, 250, 0.45);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+}
+.launcher-mobile-projects__grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+
+/* ── Mobile Card ── */
+.launcher-mobile-card {
+  animation: mobile-card-enter 500ms ease both;
+  background: rgba(28, 34, 48, 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.9rem;
+  color: inherit;
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  overflow: hidden;
+  position: relative;
+  text-decoration: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.launcher-mobile-card:nth-child(1) { animation-delay: 150ms; }
+.launcher-mobile-card:nth-child(2) { animation-delay: 220ms; }
+.launcher-mobile-card:nth-child(3) { animation-delay: 290ms; }
+.launcher-mobile-card:nth-child(4) { animation-delay: 360ms; }
+.launcher-mobile-card:active {
+  border-color: var(--card-accent, #f4ee00);
+  box-shadow: 0 0 1.5rem var(--card-accent-soft, rgba(244, 238, 0, 0.22));
+  transform: scale(0.985);
+}
+.launcher-mobile-card__media {
+  aspect-ratio: 1;
+  background: #0a0d13;
+  overflow: hidden;
+  position: relative;
+}
+.launcher-mobile-card__media img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+}
+.launcher-mobile-card__media-overlay {
+  background: linear-gradient(180deg, transparent 40%, rgba(5, 7, 10, 0.7) 100%);
+  inset: 0;
+  position: absolute;
+}
+.launcher-mobile-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.85rem 0.9rem;
+}
+.launcher-mobile-card__code {
+  color: var(--card-accent, #f4ee00);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+.launcher-mobile-card__name {
+  font-family: Bender-Bold, "Arial Narrow", sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.launcher-mobile-card__desc {
+  color: rgba(245, 247, 250, 0.56);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.launcher-mobile-card__action {
+  align-items: center;
+  color: var(--card-accent, #f4ee00);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 700;
+  gap: 0.3rem;
+  letter-spacing: 0.06em;
+  margin-top: 0.25rem;
+  opacity: 0.85;
+  transition: opacity 160ms ease;
+}
+.launcher-mobile-card:active .launcher-mobile-card__action {
+  opacity: 1;
+}
+
+/* ── Mobile Footer ── */
+.launcher-mobile-footer {
+  animation: mobile-fade-in 600ms 400ms ease both;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.75rem 1.25rem 2.5rem;
+  position: relative;
+  text-align: center;
+  z-index: 2;
+}
+.launcher-mobile-footer__brand {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: Bender-Bold, "Arial Narrow", sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.16em;
+  margin: 0 0 0.4rem;
+}
+.launcher-mobile-footer__tagline {
+  color: rgba(245, 247, 250, 0.45);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.8rem;
+}
+.launcher-mobile-footer__copy {
+  color: rgba(245, 247, 250, 0.3);
+  font-size: 0.64rem;
+  margin: 0;
+}
+
+/* ── Mobile Animations ── */
+@keyframes mobile-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes mobile-card-enter {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes mobile-glow-1 {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+@keyframes mobile-glow-2 {
+  from { opacity: 0.5; }
+  to { opacity: 0.9; }
+}
 .launcher-desktop-root { min-height: 100svh; }
 .launcher-loading {
   align-items: center;
@@ -377,8 +642,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes launcher-status-breathe { 0%, 100% { opacity: 0.55; box-shadow: 0 0 0 0 var(--accent-soft); } 50% { opacity: 1; box-shadow: 0 0 0.5rem 0.18rem var(--accent-soft); } }
 @keyframes launcher-loading-spin { to { transform: rotate(360deg); } }
 
-@media (max-width: 899.98px) { .launcher-desktop-root { display: none; } }
-@media (min-width: 900px) { .launcher-mobile-block { display: none; } }
+@media (max-width: 899.98px) {
+  .launcher-desktop-root { display: none; }
+  html, body { overflow: auto; }
+}
+@media (min-width: 900px) {
+  .launcher-mobile-scene { display: none; }
+}
 @media (max-width: 1180px) and (min-width: 900px) {
   .launcher-scene {
     --gutter: 1.5rem;
