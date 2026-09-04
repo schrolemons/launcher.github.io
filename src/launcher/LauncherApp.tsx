@@ -75,7 +75,8 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
     }
 
     // active：保持播放（对齐视频）；prev：淡出后暂停
-    const tracks = [];
+    type AudioTrack = { el: HTMLAudioElement; wasAudible: boolean; willBeAudible: boolean; keepPlaying: boolean };
+    const tracks: AudioTrack[] = [];
     if (activeEl) tracks.push({ el: activeEl, wasAudible: !activeEl.muted, willBeAudible: !muted, keepPlaying: true });
     if (prevEl) tracks.push({ el: prevEl, wasAudible: !prevEl.muted, willBeAudible: false, keepPlaying: false });
 
@@ -108,7 +109,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
 
     // 先淡出，再淡入（两阶段顺序执行）
     const FADE_MS = 420;
-    const phases = [];
+    const phases: { tracks: AudioTrack[]; to: number }[] = [];
     if (fadeOutTracks.length) phases.push({ tracks: fadeOutTracks, to: 0 });
     if (fadeInTracks.length) phases.push({ tracks: fadeInTracks, to: 1 });
 
