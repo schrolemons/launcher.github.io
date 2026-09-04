@@ -121,7 +121,7 @@ export const launcherTools: LauncherTool[] = [
     description: "关注 SCHNIE 微信公众号",
     icon: "wechat",
     mode: "qr",
-    qrImage: "/launcher/tools/wechat-official-qr.svg",
+    qrImage: "/launcher/tools/wechat.jpeg",
   },
 ];
 
