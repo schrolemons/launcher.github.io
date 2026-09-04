@@ -133,6 +133,15 @@ export const launcherTools: LauncherTool[] = [
     qrImage: "/launcher/tools/qq-qr.svg",
   },
   {
+    id: "bilibili",
+    label: "bilibili",
+    description: "SCHNIE 的 B 站主页",
+    icon: "bilibili",
+    mode: "both",
+    href: "https://b23.tv/e1vviXs",
+    qrImage: "/launcher/tools/bilibili-qr.svg",
+  },
+  {
     id: "wechat-official",
     label: "微信公众号",
     description: "关注 SCHNIE 微信公众号",

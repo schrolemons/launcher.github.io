@@ -290,7 +290,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .launcher-project-action__details p { color: rgba(245, 247, 250, 0.72); font-size: 0.78rem; line-height: 1.55; margin: 0.5rem 0; }
 .launcher-project-action__details span { color: rgba(245, 247, 250, 0.48); font-size: 0.68rem; }
 
-.launcher-tool-rail { backdrop-filter: blur(22px); background: linear-gradient(180deg, rgba(8, 11, 17, 0.78), rgba(3, 5, 9, 0.64)); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 1.25rem; box-shadow: 0 1.1rem 2.8rem rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08); padding: 0.45rem; position: absolute; right: var(--tool-gutter); top: 50%; transform: translateY(-50%); z-index: 5; }
+.launcher-tool-rail { backdrop-filter: blur(22px); background: linear-gradient(180deg, rgba(8, 11, 17, 0.78), rgba(3, 5, 9, 0.64)); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 1.25rem; box-shadow: 0 1.1rem 2.8rem rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08); padding: 0.45rem; position: absolute; right: var(--tool-gutter); top: 44%; transform: translateY(-50%); z-index: 5; }
 .launcher-tool-rail::before,
 .launcher-tool-rail::after { background: linear-gradient(90deg, transparent, var(--accent), transparent); content: ""; height: 1px; left: 22%; opacity: 0.55; position: absolute; right: 22%; }
 .launcher-tool-rail::before { top: 0; }
