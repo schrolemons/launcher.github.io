@@ -61,7 +61,7 @@ export const launcherProjects = [
   },
   {
     id: "zero",
-    name: "Zero",
+    name: "SCHNIE：Zero",
     code: "ZERO",
     description: "第九边缘元点 · 陈述核心内容",
     url: "https://zero.sch-nie.com/",
@@ -74,7 +74,7 @@ export const launcherProjects = [
   },
   {
     id: "world",
-    name: "第九边缘：SCHNIE/生涅",
+    name: "第九边缘：SCHNIE",
     code: "WORLD",
     description: "第九边缘世界 · 仅属于虚拟自我的具象世界",
     url: "https://world.sch-nie.com/",

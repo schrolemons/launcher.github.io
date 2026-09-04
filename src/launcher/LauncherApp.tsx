@@ -89,7 +89,9 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
           )}
           <div className="launcher-stage__vignette" />
           <div className="launcher-stage__readability" />
+          <div className="launcher-stage__floor" />
           <div className="launcher-stage__content" data-playable-media={hasPlayableMedia}>
+            <img className="launcher-brand-logo" src="/images/logo.png" alt="SCHNIE logo" />
             <TopControls
               muted={muted}
               onToggleMuted={toggleMuted}
