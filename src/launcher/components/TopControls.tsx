@@ -9,15 +9,23 @@ type TopControlsProps = {
   soundAvailable?: boolean;
   mediaMode: "video" | "image";
   mediaToggleable: boolean;
+  hideMediaControls?: boolean;
   onToggleMuted: () => void;
   onTogglePaused: () => void;
   onToggleMediaMode: () => void;
 };
 
-export default function TopControls({ projectUrl, muted, paused, playable, soundAvailable = playable, mediaMode, mediaToggleable, onToggleMuted, onTogglePaused, onToggleMediaMode }: TopControlsProps) {
+export default function TopControls({ projectUrl, muted, paused, playable, soundAvailable = playable, mediaMode, mediaToggleable, hideMediaControls = false, onToggleMuted, onTogglePaused, onToggleMediaMode }: TopControlsProps) {
   const [fullscreenError, setFullscreenError] = useState("");
   const [pausedHint, setPausedHint] = useState(false);
+  const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
   const hostname = new URL(projectUrl).hostname;
+
+  useEffect(() => {
+    const sync = () => setFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
 
   useEffect(() => {
     if (!(paused && playable && mediaMode === "video")) {
@@ -43,8 +51,11 @@ export default function TopControls({ projectUrl, muted, paused, playable, sound
     <header className="launcher-top-controls">
       <p className="launcher-top-controls__domain">{hostname}</p>
       <div className="launcher-top-controls__actions">
+        {!hideMediaControls && <>
         <button
           aria-label={muted ? "取消静音" : "静音"}
+          aria-pressed={!muted}
+          data-tooltip={muted ? "开启声音" : "关闭声音"}
           className="launcher-control"
           disabled={!soundAvailable}
           onClick={onToggleMuted}
@@ -53,15 +64,16 @@ export default function TopControls({ projectUrl, muted, paused, playable, sound
         >
           <LauncherIcon name={muted ? "muted" : "volume"} />
         </button>
-        <button aria-label={paused ? "播放" : "暂停"} className={`launcher-control${pausedHint ? " launcher-control--hint" : ""}`} disabled={!playable} onClick={onTogglePaused} title={playable ? undefined : "当前项目为静态背景，或浏览器不支持视频"} type="button">
+        <button aria-label={paused ? "播放" : "暂停"} aria-pressed={paused} data-tooltip={paused ? "继续播放" : "暂停背景"} className={`launcher-control${pausedHint ? " launcher-control--hint" : ""}`} disabled={!playable} onClick={onTogglePaused} title={playable ? undefined : "当前项目为静态背景，或浏览器不支持视频"} type="button">
           <LauncherIcon name={paused ? "play" : "pause"} />
         </button>
         {mediaToggleable ? (
-          <button aria-label={mediaMode === "video" ? "切换为图片背景" : "切换为视频背景"} className="launcher-control" onClick={onToggleMediaMode} type="button">
+          <button aria-label={mediaMode === "video" ? "切换为图片背景" : "切换为视频背景"} data-tooltip={mediaMode === "video" ? "静态背景" : "动态背景"} className="launcher-control" onClick={onToggleMediaMode} type="button">
             <LauncherIcon name={mediaMode === "video" ? "image" : "video"} />
           </button>
         ) : null}
-        <button aria-label="全屏" className="launcher-control" onClick={() => void toggleFullscreen()} type="button">
+        </>}
+        <button aria-label={fullscreen ? "退出全屏" : "全屏"} aria-pressed={fullscreen} data-tooltip={fullscreen ? "退出全屏" : "全屏显示"} className="launcher-control" onClick={() => void toggleFullscreen()} type="button">
           <LauncherIcon name="fullscreen" />
         </button>
       </div>

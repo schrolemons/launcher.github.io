@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import type { LauncherTool } from "../types";
 import LauncherIcon from "./LauncherIcon";
@@ -22,6 +22,8 @@ type ToolPopoverProps = {
 export function ToolPopover({ tool, accent, accentSoft, onClose }: ToolPopoverProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const [zoomed, setZoomed] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
+  const zoomRef = useRef<HTMLDivElement>(null);
   const accentStyle = { "--accent": accent, "--accent-soft": accentSoft } as CSSProperties;
 
   useEffect(() => {
@@ -30,10 +32,41 @@ export function ToolPopover({ tool, accent, accentSoft, onClose }: ToolPopoverPr
   }, [tool.id, tool.qrImage]);
 
   useEffect(() => {
+    const trigger = document.activeElement as HTMLElement | null;
+    const launcher = document.querySelector<HTMLElement>(".launcher-window");
+    const wasInert = launcher?.inert ?? false;
+    if (launcher) launcher.inert = true;
+    return () => {
+      if (launcher) launcher.inert = wasInert;
+      if (trigger?.isConnected) trigger.focus();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (dialogRef.current) dialogRef.current.inert = zoomed;
+    const dialog = zoomed ? zoomRef.current : dialogRef.current;
+    dialog?.querySelector<HTMLButtonElement>("button")?.focus();
+  }, [zoomed]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        event.preventDefault();
         if (zoomed) setZoomed(false);
         else onClose();
+      }
+      if (event.key !== "Tab") return;
+      const dialog = zoomed ? zoomRef.current : dialogRef.current;
+      const controls = dialog?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]');
+      if (!controls?.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (!dialog?.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -45,6 +78,8 @@ export function ToolPopover({ tool, accent, accentSoft, onClose }: ToolPopoverPr
     <>
       <div className="launcher-tool-popover__backdrop" onClick={onClose} style={accentStyle}>
         <section
+          ref={dialogRef}
+          aria-hidden={zoomed || undefined}
           aria-labelledby={`${tool.id}-tool-title`}
           aria-modal="true"
           className="launcher-tool-popover"
@@ -83,7 +118,9 @@ export function ToolPopover({ tool, accent, accentSoft, onClose }: ToolPopoverPr
       </div>
       {zoomed && !imageFailed && (
         <div
+          ref={zoomRef}
           aria-label={`${tool.label} 二维码（放大）`}
+          aria-modal="true"
           className="launcher-tool-popover__zoom"
           onClick={() => setZoomed(false)}
           role="dialog"
@@ -114,6 +151,7 @@ export default function ToolRail({ tools, openToolId, accent, accentSoft, onOpen
           <button
             aria-label={tool.label}
             aria-expanded={openTool?.id === tool.id}
+            aria-haspopup="dialog"
             className="launcher-tool-rail__item"
             data-tooltip={tool.label}
             key={tool.id}

@@ -7,7 +7,7 @@ const LazyLauncherApp = lazy(() => import("./LauncherApp"));
 
 export default function DesktopLauncher({ arkFeeds }: { arkFeeds?: LauncherProject["feeds"] }) {
   const [allowed, setAllowed] = useState(false);
-  const { ready, progress } = useAssetPreloader();
+  const { ready, progress } = useAssetPreloader(allowed);
   const [showApp, setShowApp] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
 
@@ -35,18 +35,18 @@ export default function DesktopLauncher({ arkFeeds }: { arkFeeds?: LauncherProje
 
   if (!allowed) return null;
 
-  if (!showApp) {
-    return (
+  const loadingScreen = (
       <div className="launcher-loading" role="status" aria-label="资源加载中">
         <div className="launcher-loading__inner">
           <div className="launcher-loading__spinner" />
           <p className="launcher-loading__text">SCHNIE // 资源就绪中</p>
-          <div className="launcher-loading__bar">
+          <div className="launcher-loading__bar" role="progressbar" aria-label="资源预加载进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
             <div className="launcher-loading__bar-fill" style={{ width: `${Math.round(progress * 100)}%` }} />
           </div>
           {timedOut && (
             <div className="launcher-loading__fallback" role="alert">
-              <p className="launcher-loading__warning">请检查你的网络情况</p>
+              <p className="launcher-loading__warning">资源仍在加载，可先进入，后台继续预热</p>
+              <button className="launcher-loading__continue" type="button" onClick={() => setShowApp(true)}>直接进入启动器</button>
               <div className="launcher-loading__projects">
                 {launcherProjects.map((project) => (
                   <a
@@ -71,7 +71,7 @@ export default function DesktopLauncher({ arkFeeds }: { arkFeeds?: LauncherProje
                       <p className="launcher-mobile-card__desc">{project.description}</p>
                       <span className="launcher-mobile-card__action">
                         {project.actionLabel}
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                       </span>
                     </div>
                   </a>
@@ -82,10 +82,10 @@ export default function DesktopLauncher({ arkFeeds }: { arkFeeds?: LauncherProje
         </div>
       </div>
     );
-  }
+  if (!showApp) return loadingScreen;
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={loadingScreen}>
       <LazyLauncherApp arkFeeds={arkFeeds} />
     </Suspense>
   );

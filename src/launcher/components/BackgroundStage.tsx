@@ -14,26 +14,36 @@ export default function BackgroundStage({ project, paused, muted, visible, media
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [posterFailed, setPosterFailed] = useState(false);
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   const media = project.media;
-  const isVideo = media.kind === "video" && mediaMode === "video";
+  const isVideo = media.kind === "video" && mediaMode === "video" && !failed;
 
   useEffect(() => {
-    onPlaybackAvailabilityChange(isVideo && visible);
-  }, [isVideo, visible, onPlaybackAvailabilityChange]);
+    setFailed(false);
+    setPosterFailed(false);
+  }, [media.src, mediaMode]);
+
+  useEffect(() => {
+    onPlaybackAvailabilityChange(isVideo && visible && ready);
+  }, [isVideo, visible, ready, onPlaybackAvailabilityChange]);
 
   // 设置视频 src 并监听元数据就绪
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !isVideo) return;
 
+    setReady(false);
     const markReady = () => setReady(true);
-    video.addEventListener("loadedmetadata", markReady, { once: true });
+    const markFailed = () => { setFailed(true); setReady(false); };
+    video.addEventListener("canplay", markReady);
+    video.addEventListener("error", markFailed);
     video.src = media.src;
     video.load();
 
     return () => {
-      video.removeEventListener("loadedmetadata", markReady);
-      setReady(false);
+      video.removeEventListener("canplay", markReady);
+      video.removeEventListener("error", markFailed);
+      video.pause();
     };
   }, [isVideo, media.src]);
 
@@ -42,8 +52,9 @@ export default function BackgroundStage({ project, paused, muted, visible, media
     const video = videoRef.current;
     if (!video || !isVideo) return;
 
-    video.muted = muted;
-    if (muted) video.setAttribute("muted", "");
+    // 配置了独立音轨时，视频保持静音，避免两路声音叠加。
+    video.muted = Boolean(project.audio) || muted;
+    if (video.muted) video.setAttribute("muted", "");
     else video.removeAttribute("muted");
 
     if (paused || !visible) {
@@ -68,7 +79,7 @@ export default function BackgroundStage({ project, paused, muted, visible, media
       window.removeEventListener("keydown", resume);
       window.removeEventListener("touchstart", resume);
     };
-  }, [isVideo, muted, paused, ready, visible]);
+  }, [isVideo, muted, paused, ready, visible, project.audio]);
 
   const mediaClassName = `launcher-stage__media${visible ? " launcher-stage__media--active" : ""}`;
   const style: React.CSSProperties = {
@@ -85,6 +96,7 @@ export default function BackgroundStage({ project, paused, muted, visible, media
         muted
         loop
         playsInline
+        preload="auto"
         style={style}
       />
     );

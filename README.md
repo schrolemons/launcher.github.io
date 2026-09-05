@@ -13,9 +13,9 @@ A desktop project launcher built with [Astro](https://docs.astro.build/) and [Re
 - 单一配置模块驱动的项目入口，聚合 `SCHNIE:ARK`、`SCHNIE:BLOG`、`第九边缘：SCHNIE` 与 `SCHNIE：Zero` 四个项目
 - 每个项目拥有独立的主按钮文案、强调色、背景媒体、资讯与二维码工具
 - 全视口单屏布局，支持 `1920x1080`、`1440x900`、`1366x768` 等桌面分辨率，无页面滚动
-- HLS 背景视频静音自动播放，不支持时回退海报图；`prefers-reduced-motion` 下关闭非必要动效
+- 本地 MP4 背景视频静音自动播放，加载失败时回退海报图；`prefers-reduced-motion` 下关闭非必要动效
 - 图标型右侧工具轨道，支持安全外链与本地二维码弹层
-- 完整键盘导航与可访问性支持（`aria-label`、焦点样式、Escape 关闭弹层）
+- 键盘与可访问性支持：分类标签使用 ← / → 切换；资讯列表使用 ↑ / ↓、PageUp / PageDown、Home / End 翻页；二维码弹层支持焦点循环与 Escape 关闭
 
 ## 本地运行 - Local Development
 
@@ -49,7 +49,21 @@ pnpm build
 - 轮播封面 → `public/info-swiper/`
 - 本地二维码 → `public/launcher/tools/`（配置值为站点根路径，如 `/launcher/tools/monitor-qr.svg`）
 
-每个项目的资讯直接写在 `config.ts` 的 `feeds` 字段中，`top` 字段控制同一分类内的降序优先级，每页最多显示 3 条并通过滚轮翻页。ARK 视频仅使用 HLS 源，在 HLS 不可用时回退海报图；其背景音乐为独立的、需用户主动开启的循环音频轨道。
+每个项目的资讯直接写在 `config.ts` 的 `feeds` 字段中，`top` 字段控制同一分类内的降序优先级，每页最多显示 3 条，支持滚轮、键盘与页码两侧按钮翻页。三个动态项目均使用 `public/videos/` 下的 MP4，播放失败时回退海报图；背景音乐使用独立的、需用户主动开启的循环音频轨道。
+
+### 布局与 ZERO 专属界面
+
+- Logo 与标题形成顶部视觉组，间距随窗口高度调整；较矮窗口采用紧凑排版。
+- 半透明磨砂底板随底部资讯与启动区域定位，保留清晰顶边，不向上穿过标题。
+- ZERO 保留静态背景和无音乐设定，使用独立的大字标题、黑白橙配色与元点档案卡片；右上角只保留全屏按钮。文字组件在 `src/launcher/components/ZeroProject.tsx`，独立样式在 `src/launcher/zero-project.css`。
+
+### 加载与播放策略
+
+- 桌面端保留所有项目视频、音轨及图片的预加载，视频达到浏览器的可连续播放状态后计入就绪进度；切换项目时复用已挂载的视频元素。
+- 单项资源等待最多 12 秒，避免图片或媒体请求挂起导致无法进入。等待超过 5 秒会显示直接进入按钮，提前进入后仍继续预热资源。
+- 宽度小于 900px 时不运行桌面媒体预加载，项目卡片使用现有缩略图。
+- 浏览器标签页隐藏时暂停背景视频与音轨，返回时按原暂停设置恢复。系统设置减少动态效果时使用静态背景。
+- 在 900–1180px 窗口下，主按钮移至资讯区下方，避免卡片和按钮挤压；更宽窗口保持并列布局。
 
 ## 项目结构 - Project structure
 
@@ -72,7 +86,7 @@ src/
     ├── useAssetPreloader.ts           # 首屏资源预加载
     ├── launcher.css                   # 全部启动器样式
     └── components/
-        ├── BackgroundStage.tsx        # 背景图片 / 视频 / HLS 渲染与降级
+        ├── BackgroundStage.tsx        # 背景图片 / MP4 视频渲染与降级
         ├── ProjectRail.tsx            # 左侧项目轨道
         ├── ProjectIdentity.tsx        # 项目名称、代号与简介
         ├── InformationDock.tsx        # 轮播封面 + 公告 / 新闻 / 资讯

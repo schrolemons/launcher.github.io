@@ -41,11 +41,7 @@ const logo = base + "images/logo.png";
             style={`--card-accent: ${project.accent}; --card-accent-soft: ${project.accentSoft}`}
           >
             <div class="launcher-mobile-card__media">
-              {project.media.kind === "video" ? (
-                <img src={project.media.poster} alt="" loading="lazy" />
-              ) : (
-                <img src={project.media.src} alt="" loading="lazy" />
-              )}
+              <img src={project.media.thumb ?? (project.media.kind === "video" ? project.media.poster : project.media.src)} alt="" loading="lazy" width="160" height="160" />
               <div class="launcher-mobile-card__media-overlay" />
             </div>
             <div class="launcher-mobile-card__body">

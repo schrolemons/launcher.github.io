@@ -7,6 +7,7 @@ import ProjectRail from "./components/ProjectRail";
 import ProjectAction from "./components/ProjectAction";
 import ToolRail from "./components/ToolRail";
 import TopControls from "./components/TopControls";
+import { ZeroArchive, ZeroIdentity } from "./components/ZeroProject";
 import type { LauncherProject, ProjectId } from "./types";
 import "./launcher.css";
 
@@ -22,6 +23,8 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
   const [muted, setMuted] = useState(true);
   const [mediaMode, setMediaMode] = useState<"video" | "image">("video");
   const [hasPlayableMedia, setHasPlayableMedia] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [pageHidden, setPageHidden] = useState(document.hidden);
   const [openToolId, setOpenToolId] = useState<string | null>(null);
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const fadeRef = useRef<number | null>(null);
@@ -30,11 +33,26 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
   const wheelLockTimer = useRef<number | undefined>(undefined);
   const activeProject = getProjectById(activeId);
   const displayedProject = activeProject.id === "ark" && arkFeeds ? { ...activeProject, feeds: arkFeeds } : activeProject;
+  const effectiveMediaMode = reducedMotion ? "image" : mediaMode;
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncMotion = () => setReducedMotion(preference.matches);
+    const syncVisibility = () => setPageHidden(document.hidden);
+    preference.addEventListener("change", syncMotion);
+    document.addEventListener("visibilitychange", syncVisibility);
+    return () => {
+      preference.removeEventListener("change", syncMotion);
+      document.removeEventListener("visibilitychange", syncVisibility);
+      if (fadeRef.current !== null) cancelAnimationFrame(fadeRef.current);
+      window.clearTimeout(wheelLockTimer.current);
+    };
+  }, []);
 
   // 音频始终与背景视频同节奏播放：扬声器关闭时静音播放，开启时出声。
   // 切换项目/开关扬声器时通过音量渐变实现淡入淡出，但保持 audio 持续 play，不破坏音视频对齐。
   useEffect(() => {
-    const shouldPlay = displayedProject.media.kind === "video" && mediaMode === "video" && !mediaPaused;
+    const shouldPlay = displayedProject.media.kind === "video" && effectiveMediaMode === "video" && !mediaPaused && !pageHidden && hasPlayableMedia;
 
     // 取消上一次尚未完成的渐变，避免多个 rAF 循环叠加造成混响
     if (fadeRef.current != null) {
@@ -124,6 +142,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
 
       // 渐变期间用 volume 控制响度，因此先取消 muted 并确保播放
       phase.tracks.forEach((track) => {
+        track.el.volume = phase.to === 1 ? 0 : track.el.volume;
         track.el.muted = false;
         const result = track.el.play();
         if (result && typeof result.catch === "function") result.catch(() => {});
@@ -131,7 +150,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
 
       const startTime = performance.now();
       const step = (now: number) => {
-        const progress = Math.min(1, (now - startTime) / FADE_MS);
+        const progress = Math.min(1, Math.max(0, (now - startTime) / FADE_MS));
         phase.tracks.forEach((track, index) => {
           track.el.volume = startVolume[index] + (phase.to - startVolume[index]) * progress;
         });
@@ -151,16 +170,18 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
     };
 
     runPhase();
-  }, [activeId, displayedProject.media.kind, mediaMode, mediaPaused, muted]);
+  }, [activeId, displayedProject.media.kind, effectiveMediaMode, mediaPaused, muted, pageHidden, hasPlayableMedia]);
 
   const selectProject = useCallback((projectId: ProjectId) => {
+    if (projectId === activeId) return;
     setActiveId(projectId);
     setOpenToolId(null);
+    setHasPlayableMedia(false);
 
     const url = new URL(window.location.href);
     url.searchParams.set("project", projectId);
     window.history.replaceState(null, "", url);
-  }, []);
+  }, [activeId]);
 
   // 滚轮：在信息区（公告/新闻/资讯 + 左侧图片框）之外，上下滚轮切换左侧项目目录
   useEffect(() => {
@@ -169,6 +190,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
 
     const onWheel = (event: WheelEvent) => {
       const target = event.target as Element | null;
+      if (event.ctrlKey || openToolId) return;
       if (target?.closest(".information-dock, .launcher-tool-popover__backdrop, .launcher-tool-popover__zoom, .launcher-tool-popover")) return;
       if (Math.abs(event.deltaY) < 8 || wheelLockTimer.current !== undefined) return;
 
@@ -187,7 +209,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
 
     node.addEventListener("wheel", onWheel, { passive: false });
     return () => node.removeEventListener("wheel", onWheel);
-  }, [activeId, selectProject]);
+  }, [activeId, selectProject, openToolId]);
 
   const toggleMuted = () => setMuted((value) => !value);
 
@@ -205,16 +227,16 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
     >
       <div className="launcher-window" ref={windowRef}>
         <ProjectRail projects={launcherProjects} activeId={activeId} onSelect={selectProject} />
-        <main className="launcher-stage">
+        <main className="launcher-stage" data-project={displayedProject.id}>
           <div className="launcher-stage__ambient" style={{ "--ambient-image": `url(${displayedProject.media.poster ?? displayedProject.media.src})` } as CSSProperties} />
           {launcherProjects.map((project) => (
             <BackgroundStage
               key={`media-${project.id}`}
               project={project}
-              paused={mediaPaused || project.id !== activeId}
+              paused={mediaPaused || pageHidden || project.id !== activeId}
               muted={muted}
               visible={project.id === activeId}
-              mediaMode={mediaMode}
+              mediaMode={effectiveMediaMode}
               onPlaybackAvailabilityChange={project.id === activeId ? setHasPlayableMedia : () => {}}
             />
           ))}
@@ -235,19 +257,20 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
           )}
           <div className="launcher-stage__vignette" />
           <div className="launcher-stage__readability" />
-          <div className="launcher-stage__floor" />
-          <div className="launcher-stage__content" data-playable-media={hasPlayableMedia && mediaMode === "video"}>
+          {displayedProject.id === "zero" && <div className="zero-stage-mark" aria-hidden="true"><span>00 / ORIGIN</span><span>SCHNIE — ZERO</span></div>}
+          <div className="launcher-stage__content" data-playable-media={hasPlayableMedia && effectiveMediaMode === "video"}>
             <img className="launcher-brand-logo" src="/images/logo.png" alt="SCHNIE logo" />
             <TopControls
-              mediaMode={mediaMode}
-              mediaToggleable={displayedProject.media.kind === "video"}
+              hideMediaControls={displayedProject.id === "zero"}
+              mediaMode={effectiveMediaMode}
+              mediaToggleable={displayedProject.media.kind === "video" && !reducedMotion}
               muted={muted}
               onToggleMediaMode={toggleMediaMode}
               onToggleMuted={toggleMuted}
               onTogglePaused={togglePaused}
               paused={mediaPaused}
-              playable={hasPlayableMedia && mediaMode === "video"}
-              soundAvailable={(Boolean(displayedProject.audio) || hasPlayableMedia) && mediaMode === "video"}
+              playable={hasPlayableMedia && effectiveMediaMode === "video"}
+              soundAvailable={hasPlayableMedia && effectiveMediaMode === "video"}
               projectUrl={displayedProject.url}
             />
             <section
@@ -256,10 +279,11 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
               data-testid="launcher-hero"
               key={`hero-${displayedProject.id}`}
             >
-              <ProjectIdentity project={displayedProject} />
+              {displayedProject.id === "zero" ? <ZeroIdentity project={displayedProject} /> : <ProjectIdentity project={displayedProject} />}
             </section>
             <div className="launcher-stage__bottom" data-testid="launcher-bottom">
-              <InformationDock key={`dock-${displayedProject.id}`} project={displayedProject} />
+              <div className="launcher-stage__floor" aria-hidden="true" />
+              {displayedProject.id === "zero" ? <ZeroArchive project={displayedProject} /> : <InformationDock key={`dock-${displayedProject.id}`} project={displayedProject} />}
               <ProjectAction key={`action-${displayedProject.id}`} project={displayedProject} />
             </div>
           </div>

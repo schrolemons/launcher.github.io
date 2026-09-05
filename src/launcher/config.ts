@@ -70,7 +70,7 @@ export const launcherProjects = [
   },
   {
     id: "world",
-    name: "第九边缘：SCHNIE",
+    name: "SCHNIE：WORLD",
     code: "WORLD",
     description: "第九边缘世界 · 仅属于虚拟自我的具象世界",
     url: "https://world.sch-nie.com/",

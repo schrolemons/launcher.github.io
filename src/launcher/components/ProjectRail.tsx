@@ -25,11 +25,15 @@ export default function ProjectRail({ projects, activeId, onSelect }: ProjectRai
               aria-pressed={project.id === activeId}
               onClick={() => onSelect(project.id)}
             >
-              {project.code}
+              <span className="launcher-rail__art" aria-hidden="true">
+                <img src={project.media.thumb ?? (project.media.kind === "video" ? project.media.poster : project.media.src)} alt="" width="48" height="48" />
+              </span>
+              <span className="launcher-rail__label">{project.code}</span>
             </button>
           </Fragment>
         ))}
       </div>
+      <p className="launcher-rail__hint">{activeId === "zero" ? "点击选择项目" : "滚轮切换项目"}</p>
     </nav>
   );
 }

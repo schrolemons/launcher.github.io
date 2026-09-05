@@ -26,8 +26,8 @@ function FeedRow({ item }: { item: FeedItem }) {
   const content = (
     <>
       <span className="information-dock__feed-tag">{item.tag ?? "资讯"}</span>
-      <span className="information-dock__feed-title">{item.title}</span>
-      <time dateTime={item.date}>{item.date}</time>
+      <span className="information-dock__feed-title" title={item.title}>{item.title}</span>
+      <time dateTime={item.date} title={item.date}>{item.date}</time>
     </>
   );
 
@@ -49,6 +49,7 @@ function FeedRow({ item }: { item: FeedItem }) {
 export default function InformationDock({ project }: { project: LauncherProject }) {
   const [activeFeed, setActiveFeed] = useState<FeedKind>("announcement");
   const [feedPage, setFeedPage] = useState(0);
+  const [activeSlide, setActiveSlide] = useState(0);
   const wheelUnlockTimer = useRef<number | undefined>(undefined);
   const coverWheelLock = useRef<number | undefined>(undefined);
   const swiperRef = useRef<SwiperType | null>(null);
@@ -78,12 +79,11 @@ export default function InformationDock({ project }: { project: LauncherProject 
   };
 
   const onFeedWheel = (event: WheelEvent<HTMLDivElement>) => {
-    if (pageCount <= 1 || Math.abs(event.deltaY) < 8 || wheelUnlockTimer.current !== undefined) return;
+    if (event.ctrlKey || pageCount <= 1 || Math.abs(event.deltaY) < 8 || wheelUnlockTimer.current !== undefined) return;
 
     const nextPage = Math.min(pageCount - 1, Math.max(0, feedPage + (event.deltaY > 0 ? 1 : -1)));
     if (nextPage === feedPage) return;
 
-    event.preventDefault();
     setFeedPage(nextPage);
     wheelUnlockTimer.current = window.setTimeout(() => {
       wheelUnlockTimer.current = undefined;
@@ -91,11 +91,10 @@ export default function InformationDock({ project }: { project: LauncherProject 
   };
 
   const onCoverWheel = (event: WheelEvent<HTMLDivElement>) => {
-    if (project.slides.length <= 1 || Math.abs(event.deltaY) < 8 || coverWheelLock.current !== undefined) return;
+    if (event.ctrlKey || project.slides.length <= 1 || Math.abs(event.deltaY) < 8 || coverWheelLock.current !== undefined) return;
     const swiper = swiperRef.current;
     if (!swiper) return;
 
-    event.preventDefault();
     if (event.deltaY > 0) swiper.slideNext();
     else swiper.slidePrev();
     coverWheelLock.current = window.setTimeout(() => {
@@ -104,9 +103,8 @@ export default function InformationDock({ project }: { project: LauncherProject 
   };
 
   const onTabsWheel = (event: WheelEvent<HTMLDivElement>) => {
-    if (Math.abs(event.deltaY) < 8 || wheelUnlockTimer.current !== undefined) return;
+    if (event.ctrlKey || Math.abs(event.deltaY) < 8 || wheelUnlockTimer.current !== undefined) return;
 
-    event.preventDefault();
     const index = feedTabs.findIndex((tab) => tab.kind === activeFeed);
     const nextIndex = (index + (event.deltaY > 0 ? 1 : -1) + feedTabs.length) % feedTabs.length;
     selectTab(feedTabs[nextIndex].kind);
@@ -129,6 +127,17 @@ export default function InformationDock({ project }: { project: LauncherProject 
     selectTab(feedTabs[nextIndex].kind);
   };
 
+  const onFeedKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    let nextPage: number | undefined;
+    if (event.key === "PageDown" || event.key === "ArrowDown") nextPage = feedPage + 1;
+    if (event.key === "PageUp" || event.key === "ArrowUp") nextPage = feedPage - 1;
+    if (event.key === "Home") nextPage = 0;
+    if (event.key === "End") nextPage = pageCount - 1;
+    if (nextPage === undefined || event.altKey || event.ctrlKey || event.metaKey) return;
+    event.preventDefault();
+    setFeedPage(Math.min(pageCount - 1, Math.max(0, nextPage)));
+  };
+
   return (
     <section className="information-dock" data-testid="information-dock" aria-label={`${project.code} 信息`}> 
       <div className="information-dock__cover" onWheel={onCoverWheel}>
@@ -136,10 +145,15 @@ export default function InformationDock({ project }: { project: LauncherProject 
           <Swiper
             key={project.id}
             modules={[Autoplay, A11y, Navigation]}
-            loop
-            navigation
-            autoplay={reducedMotion ? false : { delay: 5000, disableOnInteraction: false }}
-            a11y={{ enabled: true }}
+            loop={project.slides.length > 1}
+            navigation={project.slides.length > 1}
+            autoplay={reducedMotion || project.slides.length < 2 ? false : { delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }}
+            a11y={{ enabled: true, prevSlideMessage: "上一张", nextSlideMessage: "下一张" }}
+            onSlideChange={(swiper) => setActiveSlide(swiper.realIndex)}
+            onFocusCapture={() => swiperRef.current?.autoplay?.stop()}
+            onBlurCapture={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null) && !reducedMotion && project.slides.length > 1) swiperRef.current?.autoplay?.start();
+            }}
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
             }}
@@ -161,10 +175,12 @@ export default function InformationDock({ project }: { project: LauncherProject 
             ))}
           </Swiper>
         ) : (
-          <div className="information-dock__cover-placeholder" aria-label={`${project.code} 轮播图占位`}>
-            {project.code}
+          <div className="information-dock__cover-placeholder" aria-label={`${project.code} 项目封面`}>
+            <small>SCHNIE PROJECTS</small>
+            <span>{project.code}</span>
           </div>
         )}
+        {project.slides.length > 1 && <div className="information-dock__slide-count" aria-hidden="true">{String(activeSlide + 1).padStart(2, "0")} <span>/ {String(project.slides.length).padStart(2, "0")}</span></div>}
       </div>
       <div className="information-dock__feeds">
         <div className="information-dock__tabs" role="tablist" aria-label="信息分类" onWheel={onTabsWheel}>
@@ -189,21 +205,29 @@ export default function InformationDock({ project }: { project: LauncherProject 
               </button>
             );
           })}
-          {pageCount > 1 ? <span className="information-dock__pager" aria-live="polite">{feedPage + 1} / {pageCount}</span> : null}
         </div>
         <div
           key={`${project.id}-${activeFeed}`}
           id={panelId}
           role="tabpanel"
           aria-labelledby={`${tabId}-${activeFeed}`}
-          aria-label={`${feedTabs.find((tab) => tab.kind === activeFeed)?.label}，滚轮翻页`}
+          aria-describedby={`${panelId}-help`}
           className="information-dock__feed-list"
           onWheel={onFeedWheel}
+          onKeyDown={onFeedKeyDown}
           tabIndex={0}
         >
           <div className="information-dock__feed-page" key={`${project.id}-${activeFeed}-${feedPage}`}>
-            {visibleFeed.length > 0 ? visibleFeed.map((item) => <FeedRow key={`${item.date}-${item.title}`} item={item} />) : <p className="information-dock__empty">内容由站点维护者补充</p>}
+            {visibleFeed.length > 0 ? visibleFeed.map((item) => <FeedRow key={`${item.date}-${item.title}`} item={item} />) : <p className="information-dock__empty"><span>暂无{feedTabs.find((tab) => tab.kind === activeFeed)?.label}</span><small>新的动态将在这里与你见面</small></p>}
           </div>
+        </div>
+        <div className="information-dock__footer">
+          <span id={`${panelId}-help`}>{pageCount > 1 ? "滚轮 / ↑ ↓ 翻页" : `${feed.length} 条动态`}</span>
+          {pageCount > 1 && <div className="information-dock__pagination">
+            <button type="button" aria-label="上一页资讯" aria-controls={panelId} disabled={feedPage === 0} onClick={() => setFeedPage((page) => Math.max(0, page - 1))}>‹</button>
+            <span className="information-dock__pager" aria-live="polite">{feedPage + 1} / {pageCount}</span>
+            <button type="button" aria-label="下一页资讯" aria-controls={panelId} disabled={feedPage >= pageCount - 1} onClick={() => setFeedPage((page) => Math.min(pageCount - 1, page + 1))}>›</button>
+          </div>}
         </div>
       </div>
     </section>

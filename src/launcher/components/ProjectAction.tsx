@@ -12,6 +12,7 @@ export default function ProjectAction({ project }: ProjectActionProps) {
 
   return (
     <div className="launcher-project-action">
+      <p className="launcher-project-action__caption"><span>{project.code}</span><span>PROJECT ACCESS</span></p>
       <a className="launcher-action" href={project.url} rel="noopener noreferrer" target="_blank">
         {project.actionLabel} <LauncherIcon name="outbound" />
       </a>
