@@ -106,6 +106,14 @@ export const launcherProjects = [
 
 export const launcherTools: LauncherTool[] = [
   {
+    id: "chat",
+    label: "AI 对话",
+    description: "SCHNIE 智能对话助手",
+    icon: "chat",
+    mode: "link",
+    href: "/chat/",
+  },
+  {
     id: "github",
     label: "GitHub",
     description: "SCHNIE 的开源仓库",
