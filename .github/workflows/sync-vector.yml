@@ -1,0 +1,37 @@
+name: Sync Blog Posts to Vector DB
+
+on:
+  push:
+    branches:
+      - main           # 你的主分支名，可能是 master
+    paths:
+      - 'src/content/posts/**'    # 只在文章有变化时触发
+  workflow_dispatch:          # 支持手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync to Vector DB
+        env:
+          UPSTASH_VECTOR_REST_URL: ${{ secrets.UPSTASH_VECTOR_REST_URL }}
+          UPSTASH_VECTOR_REST_TOKEN: ${{ secrets.UPSTASH_VECTOR_REST_TOKEN }}
+        run: node scripts/sync-vector.js
