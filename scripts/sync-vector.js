@@ -32,6 +32,7 @@ async function main() {
     for (const file of files) {
         const filePath = path.join(POSTS_DIR, file);
         const raw = fs.readFileSync(filePath, 'utf-8');
+        const slug = file.replace(/\.md$/, '');
         const { data: frontmatter, content: body } = matter(raw);
         const title = frontmatter.title || slug;
 
@@ -40,8 +41,6 @@ async function main() {
             .split(/\n\s*\n/)
             .map(p => p.trim())
             .filter(p => p.length > 50);
-
-        const slug = file.replace(/\.md$/, '');
 
         // 构造向量记录
         const records = chunks.map((chunk, i) => ({
