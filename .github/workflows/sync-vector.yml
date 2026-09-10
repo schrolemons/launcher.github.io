@@ -31,6 +31,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync to Vector DB
+        continue-on-error: true
         env:
           UPSTASH_VECTOR_REST_URL: ${{ secrets.UPSTASH_VECTOR_REST_URL }}
           UPSTASH_VECTOR_REST_TOKEN: ${{ secrets.UPSTASH_VECTOR_REST_TOKEN }}
