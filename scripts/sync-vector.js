@@ -15,6 +15,34 @@ const index = new Index({
 
 const POSTS_DIR = path.join(__dirname, '..', 'src', 'content', 'posts');
 const MAX_RETRIES = 5;
+const MAX_CHUNK_SIZE = 2000;
+
+function splitLongChunk(chunk, maxSize = MAX_CHUNK_SIZE) {
+    if (chunk.length <= maxSize) return [chunk];
+    const result = [];
+    let remaining = chunk;
+    while (remaining.length > 0) {
+        if (remaining.length <= maxSize) {
+            result.push(remaining);
+            break;
+        }
+        // 在 maxSize 范围内找最近的句子分隔符
+        const slice = remaining.slice(0, maxSize);
+        const sepMatch = slice.match(/[。！？；\n](?=[^。！？；\n]*$)/);
+        const cutPos = sepMatch ? sepMatch.index + 1 : maxSize;
+        result.push(remaining.slice(0, cutPos));
+        remaining = remaining.slice(cutPos);
+    }
+    return result;
+}
+
+function splitLongChunks(chunks, maxSize = MAX_CHUNK_SIZE) {
+    const result = [];
+    for (const chunk of chunks) {
+        result.push(...splitLongChunk(chunk, maxSize));
+    }
+    return result;
+}
 
 async function upsertWithRetry(batch, retries = MAX_RETRIES) {
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -49,11 +77,12 @@ async function main() {
             const { data: frontmatter, content: body } = matter(raw);
             const title = frontmatter.title || slug;
 
-            // 按段落切分，过滤太短的段落
-            const chunks = body
+            // 按段落切分，过滤太短的段落，并将过长段落拆分为合理大小
+            const rawChunks = body
                 .split(/\n\s*\n/)
                 .map(p => p.trim())
                 .filter(p => p.length > 50);
+            const chunks = splitLongChunks(rawChunks);
 
             // 构造向量记录
             const records = chunks.map((chunk, i) => ({
