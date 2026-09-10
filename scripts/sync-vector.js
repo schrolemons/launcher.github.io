@@ -14,9 +14,20 @@ const index = new Index({
 });
 
 const POSTS_DIR = path.join(__dirname, '..', 'src', 'content', 'posts');
+const MAX_RETRIES = 5;
 
-// 简单的 front-matter 解析（如果你用 gray-matter 可以替换）
-
+async function upsertWithRetry(batch, retries = MAX_RETRIES) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            return await index.upsert(batch);
+        } catch (err) {
+            if (attempt === retries) throw err;
+            const delay = Math.min(1000 * 2 ** attempt, 30000);
+            console.warn(`  ⚠ upsert 失败 (第 ${attempt + 1}/${MAX_RETRIES} 次重试)，${delay / 1000}s 后重试...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
 
 async function main() {
     if (!fs.existsSync(POSTS_DIR)) {
@@ -59,7 +70,7 @@ async function main() {
             // 分批上传，每批最多 100 条
             for (let i = 0; i < records.length; i += 100) {
                 const batch = records.slice(i, i + 100);
-                await index.upsert(batch);
+                await upsertWithRetry(batch);
             }
             totalChunks += records.length;
             console.log(`✓ ${file} → ${records.length} 个片段`);
