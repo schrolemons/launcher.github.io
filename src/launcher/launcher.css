@@ -491,6 +491,65 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ── Mobile Projects ── */
+/* ── Mobile Chat ── */
+.launcher-mobile-chat {
+  align-items: center;
+  animation: mobile-card-enter 500ms ease both;
+  background: rgba(24, 209, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(24, 209, 255, 0.22);
+  border-radius: 0.9rem;
+  color: inherit;
+  display: flex;
+  gap: 0.7rem;
+  margin: 0 1.25rem 0.85rem;
+  padding: 0.8rem 0.9rem;
+  position: relative;
+  text-decoration: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+}
+.launcher-mobile-chat:active {
+  background: rgba(24, 209, 255, 0.14);
+  border-color: rgba(24, 209, 255, 0.5);
+  box-shadow: 0 0 1.2rem rgba(24, 209, 255, 0.18);
+}
+.launcher-mobile-chat__icon {
+  align-items: center;
+  background: rgba(24, 209, 255, 0.15);
+  border-radius: 0.55rem;
+  color: #18d1ff;
+  display: flex;
+  flex-shrink: 0;
+  height: 2.4rem;
+  justify-content: center;
+  width: 2.4rem;
+}
+.launcher-mobile-chat__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.launcher-mobile-chat__label {
+  color: #f5f7fa;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.launcher-mobile-chat__desc {
+  color: rgba(245, 247, 250, 0.5);
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+.launcher-mobile-chat__arrow {
+  color: rgba(24, 209, 255, 0.5);
+  flex-shrink: 0;
+}
+
+/* ── Mobile Projects ── */
 .launcher-mobile-projects {
   padding: 1rem 1.25rem 2rem;
   position: relative;
