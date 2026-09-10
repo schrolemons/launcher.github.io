@@ -94,8 +94,13 @@ async function main() {
 
     console.log(`\n完成！共上传 ${totalChunks} 个片段到 Upstash Vector`);
     if (failedFiles.length > 0) {
-        console.warn(`\n以下 ${failedFiles.length} 个文件同步失败，请稍后重试:`);
+        console.warn(`\n以下 ${failedFiles.length} 个文件同步失败，可通过 workflow_dispatch 手动重跑补传:`);
         failedFiles.forEach(f => console.warn(`  - ${f}`));
+    }
+    // 仅当全部文件失败时才报错退出
+    if (failedFiles.length === files.length) {
+        console.error('\n所有文件同步均失败！');
+        process.exit(1);
     }
 }
 
