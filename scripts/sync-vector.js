@@ -39,45 +39,64 @@ async function main() {
     console.log(`找到 ${files.length} 篇文章`);
 
     let totalChunks = 0;
+    const failedFiles = [];
 
     for (const file of files) {
-        const filePath = path.join(POSTS_DIR, file);
-        const raw = fs.readFileSync(filePath, 'utf-8');
-        const slug = file.replace(/\.md$/, '');
-        const { data: frontmatter, content: body } = matter(raw);
-        const title = frontmatter.title || slug;
+        try {
+            const filePath = path.join(POSTS_DIR, file);
+            const raw = fs.readFileSync(filePath, 'utf-8');
+            const slug = file.replace(/\.md$/, '');
+            const { data: frontmatter, content: body } = matter(raw);
+            const title = frontmatter.title || slug;
 
-        // 按段落切分，过滤太短的段落
-        const chunks = body
-            .split(/\n\s*\n/)
-            .map(p => p.trim())
-            .filter(p => p.length > 50);
+            // 按段落切分，过滤太短的段落
+            const chunks = body
+                .split(/\n\s*\n/)
+                .map(p => p.trim())
+                .filter(p => p.length > 50);
 
-        // 构造向量记录
-        const records = chunks.map((chunk, i) => ({
-            id: `${slug}-${i}`,
-            data: chunk,
-            metadata: {
-                title,
-                slug,
-                description: frontmatter.description || '',
-                date: frontmatter.date || '',
-                chunkIndex: i,
-            },
-        }));
+            // 构造向量记录
+            const records = chunks.map((chunk, i) => ({
+                id: `${slug}-${i}`,
+                data: chunk,
+                metadata: {
+                    title,
+                    slug,
+                    description: frontmatter.description || '',
+                    date: frontmatter.date || '',
+                    chunkIndex: i,
+                },
+            }));
 
-        if (records.length > 0) {
-            // 分批上传，每批最多 100 条
-            for (let i = 0; i < records.length; i += 100) {
-                const batch = records.slice(i, i + 100);
-                await upsertWithRetry(batch);
+            if (records.length > 0) {
+                // 分批上传，每批最多 100 条
+                for (let i = 0; i < records.length; i += 100) {
+                    const batch = records.slice(i, i + 100);
+                    await upsertWithRetry(batch);
+                    // 批次间延迟，避免触发 Upstash 限流
+                    if (i + 100 < records.length) {
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
+                }
+                totalChunks += records.length;
+                console.log(`✓ ${file} → ${records.length} 个片段`);
             }
-            totalChunks += records.length;
-            console.log(`✓ ${file} → ${records.length} 个片段`);
+        } catch (err) {
+            console.error(`✗ ${file} 同步失败:`, err.message);
+            failedFiles.push(file);
+            // 文件间延迟更长，给限流窗口更多恢复时间
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
+
+        // 文章间延迟，避免连续请求触发限流
+        await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     console.log(`\n完成！共上传 ${totalChunks} 个片段到 Upstash Vector`);
+    if (failedFiles.length > 0) {
+        console.warn(`\n以下 ${failedFiles.length} 个文件同步失败，请稍后重试:`);
+        failedFiles.forEach(f => console.warn(`  - ${f}`));
+    }
 }
 
 main().catch(err => {
