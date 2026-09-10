@@ -1,0 +1,14 @@
+---
+import LauncherLayout from "../layouts/LauncherLayout.astro";
+import ChatApp from "../chat/ChatApp";
+---
+
+<LauncherLayout title="SCHNIE // AI CHAT" description="SCH-NIE 智能对话助手">
+  <div class="chat-root">
+    <ChatApp client:load />
+  </div>
+</LauncherLayout>
+
+<style is:global>
+  @import "../chat/chat.css";
+</style>
