@@ -1,11 +1,12 @@
 type LauncherIconProps = {
   className?: string;
-  name?: "bilibili" | "close" | "fullscreen" | "github" | "image" | "info" | "link" | "monitor" | "muted" | "outbound" | "pause" | "play" | "qq" | "video" | "volume" | "wechat";
+  name?: "bilibili" | "chat" | "close" | "fullscreen" | "github" | "image" | "info" | "link" | "monitor" | "muted" | "outbound" | "pause" | "play" | "qq" | "video" | "volume" | "wechat";
 };
 
 function IconDrawing({ name }: { name: NonNullable<LauncherIconProps["name"]> }) {
   switch (name) {
     case "bilibili": return <><path d="M8 3v3" /><path d="M16 3v3" /><rect x="3.5" y="6" width="17" height="13" rx="3" /><path d="M9.5 12.5h.01" /><path d="M14.5 12.5h.01" /></>;
+    case "chat": return <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M8 9h8" /><path d="M8 13h5" /></>;
     case "close": return <><path d="M6 6l12 12" /><path d="M18 6L6 18" /></>;
     case "fullscreen": return <><path d="M8 3H3v5" /><path d="M16 3h5v5" /><path d="M21 16v5h-5" /><path d="M8 21H3v-5" /></>;
     case "github": return <><circle cx="12" cy="12" r="8.5" /><path d="M8.2 15.8c1.2.7 2.4.9 3.8.9 3.9 0 5.5-2.4 5.5-5.4 0-1.7-.6-3-1.7-4 .2-.8.1-1.8-.3-2.7-1.1 0-2.2.7-2.8 1.2a9.8 9.8 0 0 0-5.4 0C6.7 5.3 5.6 4.6 4.5 4.6c-.4.9-.5 1.9-.3 2.7a5.3 5.3 0 0 0-1.7 4c0 2.2.9 4.1 3.1 5" /><path d="M8.2 19v-3.1" /></>;
