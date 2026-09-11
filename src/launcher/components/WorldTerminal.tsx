@@ -115,6 +115,9 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const affinity = error ? 0 : lastAssistant?.control?.affinity ?? fallbackAffinity;
   const status = error ? '连接异常' : lastAssistant?.control?.label || (busy ? '检索与生成' : messages.length ? '已完成' : '待机');
   const mood = lastAssistant?.control?.mood;
+  const contextLimit = 6000;
+  const contextChars = messages.reduce((total, message) => total + message.content.length, input.length);
+  const contextPercent = Math.min(100, Math.round((contextChars / contextLimit) * 100));
   const modal = open && <dialog ref={dialog} className={`world-terminal world-terminal--${mode} ${mobile ? 'world-terminal--mobile' : ''}`} aria-labelledby={mobile ? 'mobile-terminal-title' : 'terminal-title'}
     style={{ '--terminal-accent': accent } as CSSProperties} onCancel={e => { e.preventDefault(); close(); }} onClose={close}
     onClick={e => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) close(); } }}>
@@ -131,12 +134,11 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
           <option value="chat">轻松畅聊</option><option value="tutor">耐心讲解</option><option value="scholar">资料考据</option>
         </select></label>
         <button type="button" disabled={busy || !messages.length} onClick={() => reset()}>新对话 ↗</button>
-        <p className="world-terminal__scope-note">ARK 与 WORLD 共用世界档案，AI 按 BLOG / WORLD / ZERO 三类资料分区检索。</p>
       </div>
       <div className="world-terminal__statusbar" aria-label="终端状态">
         <div className={`world-terminal__status world-terminal__status--${error ? 'error' : busy ? 'busy' : 'ready'}`} title={mood ? `模型状态：${mood}` : undefined}><span className="world-terminal__status-dot" aria-hidden="true" /> <span>AI 状态</span><strong>{status}</strong>{mood && <small className="world-terminal__mood">{mood}</small>}</div>
         <div className="world-terminal__status"><span>模式</span><strong>{modeLabel}</strong></div>
-        <div className="world-terminal__status"><span>来源</span><strong>{sourceCount ? `${sourceCount} 条` : '待检索'}</strong></div>
+        <div className="world-terminal__status" title={`当前对话约占 ${contextChars} / ${contextLimit} 字符`}><span>上下文窗口</span><strong>{contextPercent}%</strong></div>
         <div className="world-terminal__trust" title="模型可根据证据、推断边界和回答完整度调整本次回答的可信度；缺少状态时使用保守估算"><span>回答可信度</span><div className="world-terminal__meter" role="meter" aria-label="回答可信度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={trust}><i style={{ width: `${trust}%` }} /></div><strong>{trust}%</strong></div>
         <div className="world-terminal__affinity" title="模型可根据本轮交流的态度调整好感度，并据此改变语气"><span>好感度</span><div className="world-terminal__meter" role="meter" aria-label="好感度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={affinity}><i style={{ width: `${affinity}%` }} /></div><strong>{affinity}%</strong></div>
       </div>

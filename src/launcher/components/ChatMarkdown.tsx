@@ -8,13 +8,16 @@ const safeUrl = (value: string) => {
 };
 
 function inline(text: string): ReactNode[] {
-  const token = /(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\[[^\]]+\]\([^\s)]+\)|~~[^~]+~~|==[^=]+==|\*[^*]+\*|_[^_]+_)/g;
+  const token = /(［\d{1,3}］|\[\d{1,3}\]|\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\[[^\]]+\]\([^\s)]+\)|~~[^~]+~~|==[^=]+==|\*[^*]+\*|_[^_]+_)/g;
   const nodes: ReactNode[] = [];
   let last = 0, index = 0, match: RegExpExecArray | null;
   while ((match = token.exec(text))) {
     if (match.index > last) nodes.push(text.slice(last, match.index));
     const value = match[0], key = `inline-${index++}`;
-    if (value.startsWith('**') || value.startsWith('__')) nodes.push(<strong key={key}>{value.slice(2, -2)}</strong>);
+    if (/^(?:［\d{1,3}］|\[\d{1,3}\])$/.test(value)) {
+      const number = value.replace(/[^\d]/g, '');
+      nodes.push(<sup className="chat-markdown__citation" key={key} aria-label={`参考资料 ${number}`}>［{number}］</sup>);
+    } else if (value.startsWith('**') || value.startsWith('__')) nodes.push(<strong key={key}>{value.slice(2, -2)}</strong>);
     else if (value.startsWith('~~')) nodes.push(<del key={key}>{value.slice(2, -2)}</del>);
     else if (value.startsWith('==')) nodes.push(<mark key={key}>{value.slice(2, -2)}</mark>);
     else if (value.startsWith('`')) nodes.push(<code key={key}>{value.slice(1, -1)}</code>);

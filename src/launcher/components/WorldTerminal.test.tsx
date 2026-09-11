@@ -14,7 +14,9 @@ it('打开终端及推荐轮播不发起模型请求，关闭后恢复入口', (
   expect(screen.getByRole('dialog')).toBeVisible();
   expect(screen.getByLabelText('内容分类')).toBeInTheDocument();
   expect(screen.getByText('AI 状态')).toBeInTheDocument();
-  expect(screen.getByText('ARK 与 WORLD 共用世界档案，AI 按 BLOG / WORLD / ZERO 三类资料分区检索。')).toBeInTheDocument();
+  expect(screen.getByText('上下文窗口')).toBeInTheDocument();
+  expect(screen.queryByText('来源')).not.toBeInTheDocument();
+  expect(screen.queryByText('ARK 与 WORLD 共用世界档案，AI 按 BLOG / WORLD / ZERO 三类资料分区检索。')).not.toBeInTheDocument();
   expect(screen.getByRole('meter', { name: '回答可信度' })).toHaveAttribute('aria-valuenow', '72');
   expect(fetcher).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: '关闭世界终端' }));

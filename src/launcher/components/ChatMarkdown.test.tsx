@@ -15,6 +15,12 @@ it('支持单行 note 语法', () => {
   expect(screen.getByText('warning')).toBeInTheDocument();
   expect(screen.getByText('这是一条提示')).toBeInTheDocument();
 });
+it('把半角和全角引用渲染为彩色上标角标', () => {
+  render(<ChatMarkdown content="依据资料［1］与补充说明 [2]。" />);
+  expect(screen.getByLabelText('参考资料 1').tagName).toBe('SUP');
+  expect(screen.getByLabelText('参考资料 1')).toHaveTextContent('［1］');
+  expect(screen.getByLabelText('参考资料 2')).toHaveTextContent('［2］');
+});
 it('把大 ASCII 表情保留为等宽视觉块', () => {
   render(<ChatMarkdown content={'回答完毕。\n\n*#################*\n#      ^_^      #\n*#################*'} />);
   expect(document.querySelector('.chat-markdown__ascii')).toBeInTheDocument();
