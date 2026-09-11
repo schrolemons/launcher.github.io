@@ -212,6 +212,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       <form className="world-terminal__composer" onSubmit={e => { e.preventDefault(); void send(); }}>
         {configOpen && <div className="world-terminal__config-panel" role="dialog" aria-label="模型设置" onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}>
           <p className="world-terminal__config-title">模型设置 · BYOK</p>
+          <p className="world-terminal__config-warning">警告：自定义 Key 会发送到本站服务器、由服务器代你调用大模型，请自行评估风险后再决定是否填入。</p>
           <label>API Key<input type="password" value={configDraft.apiKey} onChange={e => setConfigDraft({ ...configDraft, apiKey: e.target.value })} placeholder="留空使用站点默认 DeepSeek Key" autoComplete="off" aria-label="API Key" /></label>
           <label>接口地址<input value={configDraft.baseUrl} onChange={e => setConfigDraft({ ...configDraft, baseUrl: e.target.value })} placeholder="https://api.deepseek.com/chat/completions" autoComplete="off" aria-label="接口地址" /></label>
           <label>模型名称<input value={configDraft.model} onChange={e => setConfigDraft({ ...configDraft, model: e.target.value })} placeholder="deepseek-chat" autoComplete="off" aria-label="模型名称" /></label>
