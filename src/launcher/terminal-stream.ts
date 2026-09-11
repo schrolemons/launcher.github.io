@@ -16,7 +16,13 @@ export function parseEvent(frame: string): EventResult {
 
 export async function readTerminalStream(body: ReadableStream<Uint8Array>, onEvent: (event: EventResult) => void) {
   const reader = body.getReader(), decoder = new TextDecoder();
-  let buffer = '', complete = false;
+  let buffer = '', complete = false, sawText = false;
+  const dispatch = (frame: string) => {
+    const event = parseEvent(frame);
+    if (event.type === 'text') sawText = true;
+    if (event.type === 'done') complete = true;
+    onEvent(event);
+  };
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -26,11 +32,16 @@ export async function readTerminalStream(body: ReadableStream<Uint8Array>, onEve
       let boundary;
       while ((boundary = buffer.indexOf('\n\n')) >= 0) {
         const frame = buffer.slice(0, boundary); buffer = buffer.slice(boundary + 2);
-        const event = parseEvent(frame);
-        if (event.type === 'done') complete = true;
-        onEvent(event);
+        dispatch(frame);
       }
-      if (done || complete) break;
+      if (done) {
+        // Some compatible gateways close after the final data frame without
+        // forwarding the provider's [DONE] marker.
+        if (buffer.trim()) { dispatch(buffer.trim()); buffer = ''; }
+        if (!complete && sawText) complete = true;
+        break;
+      }
+      if (complete) break;
     }
     if (!complete) throw new Error('连接提前中断，可以重试上次问题');
   } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }

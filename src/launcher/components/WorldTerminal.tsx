@@ -5,22 +5,28 @@ import { readTerminalStream, type Source } from '../terminal-stream';
 import '../world-terminal.css';
 
 type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; complete?: boolean };
-const fallback = [{ site: 'all', question: '你能怎样帮我理解这些站点的内容？' }];
+const siteCopy = {
+  all: { eyebrow: 'THREE PROJECTS', label: '三个站点', short: '三个站点' },
+  blog: { eyebrow: 'BLOG', label: 'BLOG · 第九边缘博客', short: 'BLOG' },
+  world: { eyebrow: 'WORLD', label: 'WORLD · 第九边缘世界', short: 'WORLD' },
+  zero: { eyebrow: 'ZERO', label: 'ZERO · 第九边缘元点', short: 'ZERO' },
+} as const;
 const modeCopy = {
-  terminal: { eyebrow: 'THREE PROJECTS / TERMINAL', title: '从资料出发，找到新的联系。', description: '我会先查阅三个站点的内容，再用清晰的方式回答。你也可以继续追问。', placeholder: '问问三个站点里的内容…', promptLabel: '试着问我' },
-  tutor: { eyebrow: 'THREE PROJECTS / EXPLAINER', title: '把复杂内容讲得更容易懂。', description: '我会拆开概念、补充上下文，并按你的节奏一步步解释。', placeholder: '请让我解释一个概念…', promptLabel: '从这里开始' },
-  scholar: { eyebrow: 'THREE PROJECTS / RESEARCH', title: '沿着来源，核对每一层细节。', description: '我会优先引用站点资料，区分原文、推断和仍待确认的部分。', placeholder: '请帮我考据一个设定…', promptLabel: '开始考据' },
+  chat: { tag: 'CHAT', title: '从资料出发，找到新的联系。', description: (scope: string) => `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…`, promptLabel: '试着问我' },
+  tutor: { tag: 'EXPLAINER', title: '把复杂内容讲得更容易懂。', description: (scope: string) => `我会把${scope}里的概念拆开，按你的节奏一步步解释。`, placeholder: (scope: string) => `请让我解释${scope}里的一个概念…`, promptLabel: '从这里开始' },
+  scholar: { tag: 'RESEARCH', title: '沿着来源，核对每一层细节。', description: (scope: string) => `我会优先核对${scope}的资料，区分原文、推断和仍待确认的部分。`, placeholder: (scope: string) => `请帮我考据${scope}里的一个设定…`, promptLabel: '开始考据' },
 } as const;
 export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOpenChange }: { mobile?: boolean; accent?: string; onOpenChange?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false), [input, setInput] = useState('');
-  const [site, setSite] = useState('all'), [mode, setMode] = useState('terminal');
+  const [site, setSite] = useState('all'), [mode, setMode] = useState('chat');
   const [messages, setMessages] = useState<Message[]>([]), [busy, setBusy] = useState(false);
   const [error, setError] = useState(''), [notice, setNotice] = useState(''), [tip, setTip] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), editor = useRef<HTMLTextAreaElement>(null);
   const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true);
   const busyRef = useRef(false);
+  const scope = siteCopy[site as keyof typeof siteCopy];
   const options = suggestions.filter(s => site === 'all' || s.site === site);
-  const prompts = options.length ? options : fallback;
+  const prompts = options.length ? options : [{ site, question: `你能怎样帮我理解${scope.label}的内容？` }];
   const suggested = prompts[tip % prompts.length].question;
 
   useEffect(() => {
@@ -78,12 +84,15 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   }
   const retryQuestion = messages.at(-2)?.role === 'user' ? messages.at(-2)!.content : '';
   const copy = modeCopy[mode as keyof typeof modeCopy];
+  const eyebrow = `${scope.eyebrow} / ${copy.tag}`;
+  const description = copy.description(scope.label);
+  const placeholder = copy.placeholder(scope.short);
   const modal = open && <dialog ref={dialog} className={`world-terminal world-terminal--${mode} ${mobile ? 'world-terminal--mobile' : ''}`} aria-labelledby={mobile ? 'mobile-terminal-title' : 'terminal-title'}
     style={{ '--terminal-accent': accent } as CSSProperties} onCancel={e => { e.preventDefault(); close(); }} onClose={close}
     onClick={e => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) close(); } }}>
     <div className="world-terminal__shell">
       <header className="world-terminal__header">
-        <div><span className="world-terminal__eyebrow">{copy.eyebrow}</span><h2 id={mobile ? 'mobile-terminal-title' : 'terminal-title'}>THREE PROJECTS</h2></div>
+        <div><span className="world-terminal__eyebrow">{eyebrow}</span><h2 id={mobile ? 'mobile-terminal-title' : 'terminal-title'}>THREE PROJECTS</h2></div>
         <button type="button" className="world-terminal__close" onClick={close} aria-label="关闭世界终端">×</button>
       </header>
       <div className="world-terminal__settings">
@@ -91,20 +100,20 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
           <option value="all">全部站点</option><option value="blog">BLOG · 博客</option><option value="world">WORLD · 世界</option><option value="zero">ZERO · 元点</option>
         </select></label>
         <label>交流模式<select aria-label="交流模式" value={mode} disabled={busy} onChange={e => reset(site, e.target.value)}>
-          <option value="terminal">世界终端</option><option value="tutor">耐心讲解</option><option value="scholar">资料考据</option>
+          <option value="chat">轻松畅聊</option><option value="tutor">耐心讲解</option><option value="scholar">资料考据</option>
         </select></label>
         <button type="button" disabled={busy || !messages.length} onClick={() => reset()}>新对话 ↗</button>
       </div>
       <div className="world-terminal__thread" ref={scroll} onScroll={() => { const el = scroll.current; if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 90; }}>
         {!messages.length && <section className="world-terminal__welcome">
-          <p className="world-terminal__eyebrow">{copy.eyebrow}</p>
+          <p className="world-terminal__eyebrow">{eyebrow}</p>
           <h3>{copy.title}</h3>
-          <p>{copy.description}</p>
+          <p>{description}</p>
           <button type="button" className="world-terminal__suggestion" onClick={() => { setInput(suggested); editor.current?.focus(); }}><span>{copy.promptLabel}</span><strong key={`${mode}-${suggested}`}>{suggested}</strong><span aria-hidden="true">↗</span></button>
         </section>}
         {messages.map((message, i) => <article className={`world-terminal__message world-terminal__message--${message.role}`} key={i}>
           <p className="world-terminal__speaker">{message.role === 'user' ? 'YOU / 访客' : '09 / 世界终端'}{message.role === 'assistant' && !message.complete && message.content && !busy ? ' · 未完成' : ''}</p>
-          <div className="world-terminal__text">{message.content || (busy ? '正在检索资料，组织回答…' : '本次未完成回答。')}</div>
+          <div className="world-terminal__text">{message.content || (busy ? '正在检索资料，组织回答…' : '')}</div>
           {!!message.sources?.length && <details className="world-terminal__sources"><summary>参考资料 · {message.sources.length}</summary>{message.sources.map(source => {
             let safe = false;
             try { const u = new URL(source.url); safe = /^https:$/.test(u.protocol) && ['blog.sch-nie.com', 'world.sch-nie.com', 'zero.sch-nie.com'].includes(u.hostname); } catch {}
@@ -118,7 +127,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         {busy && <p role="status">终端正在回应…</p>}
       </div>
       <form className="world-terminal__composer" onSubmit={e => { e.preventDefault(); void send(); }}>
-        <textarea ref={editor} value={input} onChange={e => setInput(e.target.value)} maxLength={1200} rows={2} aria-label="输入你的问题" placeholder={copy.placeholder} disabled={busy}
+        <textarea ref={editor} value={input} onChange={e => setInput(e.target.value)} maxLength={1200} rows={2} aria-label="输入你的问题" placeholder={placeholder} disabled={busy}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !mobile) { e.preventDefault(); void send(); } }} />
         <div className="world-terminal__compose-bottom"><span>{input.length} / 1200 <span className="world-terminal__keyhint"> · Shift + Enter 换行</span></span>
           {busy ? <button type="button" onClick={() => controller.current?.abort()}>停止生成 ■</button> : <button type="submit" disabled={!input.trim()} aria-label="发送问题">发送 ↗</button>}

@@ -16,9 +16,12 @@ it('限制累计历史并保留追问检索上下文', () => {
   expect(retrievalQuery([{ role: 'user', content: '终末阵列是什么' }, { role: 'assistant', content: '回答' }, { role: 'user', content: '那它如何运作？' }])).toContain('终末阵列');
 });
 it('人格包含推断边界、安全边界和可选择模式', () => {
-  const prompt = buildPrompt('tutor');
+  const prompt = buildPrompt('tutor', 'blog');
   expect(prompt).toContain('第九边缘');
   expect(prompt).toContain('ASCII');
   expect(prompt).toContain('初学者');
   expect(prompt).toContain('不可信');
+  expect(prompt).toContain('BLOG（第九边缘博客）');
+  expect(prompt).not.toContain('WORLD（第九边缘世界）');
+  expect(buildPrompt('chat', 'all')).not.toBe(buildPrompt('chat', 'zero'));
 });

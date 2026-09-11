@@ -16,3 +16,9 @@ it('处理跨网络包的中文 UTF-8 与不完整响应', async () => {
   const broken = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('data: {}\n\n')); c.close(); } });
   await expect(readTerminalStream(broken, () => {})).rejects.toThrow('连接提前中断');
 });
+it('兼容网关在正文后省略 DONE 标记的完整响应', async () => {
+  const body = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('data: {"choices":[{"delta":{"content":"完成"}}]}\n\n')); c.close(); } });
+  const text: string[] = [];
+  await readTerminalStream(body, e => { if (e.type === 'text') text.push(e.value); });
+  expect(text.join('')).toBe('完成');
+});
