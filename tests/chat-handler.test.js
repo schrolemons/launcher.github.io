@@ -72,6 +72,14 @@ it('来源筛选排除跨站记录、重复文本和危险链接', () => {
   expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'javascript:alert(1)' } }], 'all')[0].url).toBe('https://launcher.sch-nie.com/');
   expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'https://docs.sch-nie.com/article', urlKind: 'article' } }], 'all')[0].url).toBe('https://docs.sch-nie.com/article');
 });
+it('解读性文章里介绍其它文章的文本块，来源指向被介绍的文章', () => {
+  const block = { ...fixture, metadata: { ...fixture.metadata, title: '灵耀体系：木缘桑庭', section: '主神时代Ⅰ TO:2096 / [金泽范式](https://world.sch-nie.com/posts/23.html)', headingPath: ['主神时代Ⅰ TO:2096', '[金泽范式](https://world.sch-nie.com/posts/23.html)'], url: 'https://world.sch-nie.com/' } };
+  const [source] = selectSources([block], 'world');
+  expect(source.title).toBe('金泽范式');
+  expect(source.url).toBe('https://world.sch-nie.com/posts/23.html');
+  expect(source.urlKind).toBe('article');
+  expect(source.section).not.toContain('](');
+});
 it('只补取同篇同版本同词条的相邻片段', async () => {
   services.index.fetch.mockResolvedValue([{ id: 'two', metadata: { ...fixture.metadata, text: '相邻解释' } }, { id: 'bad', metadata: { ...fixture.metadata, articleHash: 'different', text: '不属于这个版本' } }]);
   const res = response(); await createChatHandler(() => services, fetcher)(request(), res);

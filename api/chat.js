@@ -63,6 +63,17 @@ export function clientIdentifier(req) {
 // 来源数量随交流模式变化：考据需要更多证据，畅聊只需少量要点。
 const SOURCE_CAPS = { chat: 4, tutor: 6, scholar: 10 };
 
+// 解读性文章（如《木缘桑庭》）里常用「#### [文章名](链接)」这样的标题概括介绍其它文章。
+// 被选中的文本块此时实际属于被介绍的那篇文章，来源标题和链接应指向被介绍的文章，而不是解读性文章本身。
+function introducedArticle(m) {
+  const headings = [...(Array.isArray(m?.headingPath) ? m.headingPath : []), m?.entry, m?.section].filter(v => typeof v === 'string' && v);
+  for (const heading of headings) {
+    const match = heading.match(/\[([^\]\n]+)\]\(([^)\s]+)\)/);
+    if (match) return { title: match[1].trim(), url: match[2].trim() };
+  }
+  return null;
+}
+
 export function selectSources(results, category, question = '', mode = 'chat') {
   const cap = SOURCE_CAPS[mode] ?? SOURCE_CAPS.chat;
   const counts = new Map(), seen = new Set();
@@ -83,9 +94,15 @@ export function selectSources(results, category, question = '', mode = 'chat') {
     return true;
   }).slice(0, cap).map((r, i) => {
     const m = r.metadata;
-    let url = 'https://launcher.sch-nie.com/', urlKind = 'launcher-home';
-    try { const parsed = new URL(m.url); if (parsed.protocol === 'https:' && !parsed.username && !parsed.password && parsed.hostname) { url = parsed.href; urlKind = m.urlKind === 'launcher-home' ? 'launcher-home' : 'article'; } } catch {}
-    return { number: i + 1, title: String(m.title).slice(0, 120), section: String(m.section || '').slice(0, 220), category: m.category, categoryName: String(m.categoryName || m.category).slice(0, 80), url, urlKind,
+    const introduced = introducedArticle(m);
+    let url = 'https://launcher.sch-nie.com/', urlKind = 'launcher-home', title = String(m.title).slice(0, 120);
+    if (introduced) {
+      title = introduced.title.slice(0, 120);
+      try { const parsed = new URL(introduced.url); if (parsed.protocol === 'https:' && !parsed.username && !parsed.password && parsed.hostname) { url = parsed.href; urlKind = 'article'; } } catch {}
+    } else {
+      try { const parsed = new URL(m.url); if (parsed.protocol === 'https:' && !parsed.username && !parsed.password && parsed.hostname) { url = parsed.href; urlKind = m.urlKind === 'launcher-home' ? 'launcher-home' : 'article'; } } catch {}
+    }
+    return { number: i + 1, title, section: String(m.section || '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').slice(0, 220), category: m.category, categoryName: String(m.categoryName || m.category).slice(0, 80), url, urlKind,
       author: String(m.author || '').slice(0, 100), updatedAt: String(m.updatedAt || '').slice(0, 60),
       // 同一篇文章的所有文本块共享同一个 articleId，模型据此判断哪些信息来自同一来源。
       articleId: String(m.articleId || '').slice(0, 48), articleHash: String(m.articleHash || '').slice(0, 48),
