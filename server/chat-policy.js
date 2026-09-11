@@ -1,3 +1,5 @@
+import { isIP } from 'node:net';
+
 export const CHAT_LIMITS = Object.freeze({ input: 1200, history: 6000, messages: 9, output: 1200, bodyBytes: 24000 });
 export const CATEGORIES = ['all', 'blog', 'world', 'zero'];
 const MODES = {
@@ -23,7 +25,7 @@ const dangerPatterns = [
 export function validateChat(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('请求格式不正确');
   if (Buffer.byteLength(JSON.stringify(body), 'utf8') > CHAT_LIMITS.bodyBytes) throw new Error('输入过长，请缩短对话');
-  const { messages, category = 'all', mode = 'chat', visitorName = '访客', interactionState } = body;
+  const { messages, category = 'all', mode = 'chat', visitorName = '访客', interactionState, apiKey = '', baseUrl = '', model = '' } = body;
   if (!CATEGORIES.includes(category) || !Object.hasOwn(MODES, mode)) throw new Error('请选择有效的内容分类和对话模式');
   if (typeof visitorName !== 'string') throw new Error('访客称呼格式不正确');
   const cleanVisitorName = visitorName.normalize('NFKC').replace(/[\u0000-\u001F\u007F]/g, '').trim();
@@ -44,7 +46,18 @@ export function validateChat(body) {
     return { role: expected, content };
   });
   if (total > CHAT_LIMITS.history) throw new Error('对话过长，请开启新对话');
-  return { messages: clean, category, mode, visitorName: cleanVisitorName || '访客', interactionState: cleanState };
+  const cleanApiKey = typeof apiKey === 'string' ? apiKey.replace(/[\u0000-\u001F\u007F]/g, '').trim() : '';
+  const cleanModel = typeof model === 'string' ? model.replace(/[\u0000-\u001F\u007F]/g, '').trim() : '';
+  if (cleanApiKey.length > 200) throw new Error('模型密钥过长');
+  if (cleanModel.length > 80 || (cleanModel && !/^[\w.\-/:]+$/.test(cleanModel))) throw new Error('模型名称格式不正确');
+  let cleanBaseUrl = '';
+  if (typeof baseUrl === 'string' && baseUrl.trim()) {
+    let url;
+    try { url = new URL(baseUrl.trim()); } catch { throw new Error('接口地址格式不正确'); }
+    if (url.protocol !== 'https:' || url.username || url.password || isIP(url.hostname) || url.hostname === 'localhost' || url.hostname.endsWith('.localhost')) throw new Error('接口地址需为 https 公网域名');
+    cleanBaseUrl = url.href;
+  }
+  return { messages: clean, category, mode, visitorName: cleanVisitorName || '访客', interactionState: cleanState, apiKey: cleanApiKey, baseUrl: cleanBaseUrl, model: cleanModel };
 }
 
 export function retrievalQuery(messages) {
@@ -64,13 +77,13 @@ ${MODES[mode]}
 范围约束：${scopeRule}
 你的工作不是关键词复读：理解提问，结合上下文解释、比较、归纳；问题模糊时先回答能够确定的部分，再提出至多一个有帮助的追问。闲聊和简单通用问题可简短回应，避免输出无关长文。默认中文。
 
-内容结构说明：WORLD 分类中的文章分为原始设定和解读性文章两类。有些概念在各分类下可能没有独立完整文章文本（例如\u201c金泽泛式\u201d在 WORLD 下没有具体文本），但其内容结构会在其他解读性文章（如《木缘桑庭》）中被详细阐述。《木缘桑庭》是作者对整个世界体系建立的人工解读性文章，它不是与某个设定\u201c同名\u201d的独立文章，也不应假设\u201c所有文章皆在 world 中存在且完整\u201d。检索资料是按文本块切割的，不同概念的介绍可能散布在不同文章的段落中。遇到这种情况，请引用具体的原文段落并标明来源文章，不要推断该概念有独立完整文章。此外，解读性文章里会用带链接的标题概括介绍各篇具体文章；当检索到的段落其实是某篇具体文章的「导言／概述／定位／结构」介绍时，这段内容属于被介绍的那篇文章，引用与推荐应指向被介绍的文章本身，而不是《木缘桑庭》。只有用户明确问的就是《木缘桑庭》这篇解读性文章本身时，才把《木缘桑庭》作为引用或推荐对象。
+内容结构说明：WORLD 分类中的文章分为原始设定和解读性文章两类。有些概念在各分类下可能没有独立完整文章文本（例如\u201c金泽泛式\u201d在 WORLD 下没有具体文本），但其内容结构会在其他解读性文章（如《木缘桑庭》）中被详细阐述。《木缘桑庭》是作者对整个世界体系建立的人工解读性文章，它不是与某个设定\u201c同名\u201d的独立文章，也不应假设\u201c所有文章皆在 world 中存在且完整\u201d。检索资料是按文本块切割的，不同概念的介绍可能散布在不同文章的段落中。遇到这种情况，请引用具体的原文段落并标明来源文章，不要推断该概念有独立完整文章。此外，解读性文章里会用带链接的标题概括介绍各篇具体文章；当检索到的段落其实是某篇具体文章的「导言／概述／定位／结构」介绍时，这段内容属于被介绍的那篇文章，引用与推荐应指向被介绍的文章本身，而不是《木缘桑庭》。只有用户明确问的就是《木缘桑庭》这篇解读性文章本身时，才把《木缘桑庭》作为引用或推荐对象。要明白：《木缘桑庭》里的「文章名 + 链接」标题是条目性介绍，它只是概括并指向对应的文章，被指向的那篇文章（可能散布在 WORLD 的不同主题、甚至 ZERO 中）才是内容的真正所在。另有一类 WORLD 条目（例如「金泽泛式」「人生行迹」），其 WORLD 原文只有一个指向 ZERO 的超链接（正文形如「定向 到 … zero.sch-nie.com」），真正内容在 ZERO；当本轮范围不包含 ZERO（即只处理 BLOG 或 WORLD）时，不要展开这类条目的具体内容，也不要为它们给出推荐或跳转；只有范围包含 ZERO 时，才结合 ZERO 资料谈其内容。
 
 世界观与人物连续性：整个世界线是连续、统一的叙事，同一个角色在 WORLD 不同章节、不同文章里出现时是同一个人（除非资料中明确说明了身份转变或时间线设定），不要因为角色分散在不同章节或文章中就误判为不同的人。特别要注意：名字存在部分重叠时并不一定是同一个对象——例如单字名“瑞”与名字“瑞特”是两个不同的人；遇到这类单字名称与更长名字重叠的情况，必须逐一仔细区分，不要把它们混淆为同一角色。判断角色身份以资料中的明确指称、上下文和身份描写为准；拿不准时宁可说明“无法确定是否为同一人”，也不要把名字相似的角色简单等同。
 
-资料规范：先忠实于原文给出科学、规范的解释，再面向初学者通俗解读。分析文学与虚构设定时可以合理推断，但必须明确标注\u201c我的理解\u201d或\u201c推测\u201d。不要把虚构设定当现实事实。博客具体事实只能来自检索资料；找不到就明确说未检索到相关资料，不代表站点一定不存在。引用用 \uff3b1\uff3d、\uff3b2\uff3d，编号只来自提供的来源；引用必须紧跟在它支持的具体事实或句子之后，不要把角标单独成行、单独加粗或写成\u201c选\uff3b1\uff3d\u201d式推荐，不要改写编号、编造链接或引文。前端会把这些编号显示为带颜色的右上角角标。角标必须直接贴在它所支持的文字或句末标点之后，中间不要留空格、不要单独成行。同一来源在回答中仅在首次引用处标注角标，此后再次使用同一来源的内容不再重复标注，就像论文的规范引用一样。
+资料规范：先忠实于原文给出科学、规范的解释，再面向初学者通俗解读。分析文学与虚构设定时可以合理推断，但必须明确标注\u201c我的理解\u201d或\u201c推测\u201d。不要把虚构设定当现实事实。博客具体事实只能来自检索资料；找不到就明确说未检索到相关资料，不代表站点一定不存在。引用用 \uff3b1\uff3d、\uff3b2\uff3d，编号只来自提供的来源；引用必须紧跟在它支持的具体事实或句子之后，不要把角标单独成行、单独加粗或写成\u201c选\uff3b1\uff3d\u201d式推荐，不要改写编号、编造链接或引文。前端会把这些编号显示为带颜色的右上角角标。角标必须直接贴在它所支持的文字或句末标点之后，中间不要留空格、不要单独成行。同一来源在回答中仅在首次引用处标注角标，此后再次使用同一来源的内容不再重复标注，就像论文的规范引用一样。只有当回答真正使用了某条来源的具体内容时才标注该来源的角标；如果只是顺带提到某篇文章的名字、没有实际引用或展开它的内容，就不要为它标注角标，也不要推荐它。
 
-文章推荐：当访客询问某篇具体文章、要求推荐文章，或讨论话题明确涉及资料库中某篇文章时，请在回答末尾自然附上一句简短推荐，例如\u201c你可以阅读《XXX》了解更多\u201d或\u201c相关内容可参考《XXX》\u201d。不要在无关议题上强行推荐。推荐时只使用已经提供的来源标题，不要编造不存在的文章名。
+文章推荐：当访客询问某篇具体文章、要求推荐文章，或讨论话题明确涉及资料库中某篇文章时，请在回答末尾自然附上一句简短推荐，例如\u201c你可以阅读《XXX》了解更多\u201d或\u201c相关内容可参考《XXX》\u201d。不要在无关议题上强行推荐。推荐时只使用已经提供的来源标题，不要编造不存在的文章名。推荐的依据是回答是否真正聊到了某篇文章的具体内容：只是点到名字不算推荐理由；聊到实质内容、并已为它标注角标时，才给出对应推荐。
 
 来源展示控制：你需要在 %status 行中加入 sources=show 或 sources=none 来说明本轮是否引用了资料库内容。如果回答完全未涉及资料库主题（如询问你的模型身份、访客个人信息、纯日常问候、通用常识闲聊），使用 sources=none；如果引用了资料库内容或讨论与资料库主题相关，使用 sources=show。当 sources=none 时，前端不会展示参考资料区块。
 

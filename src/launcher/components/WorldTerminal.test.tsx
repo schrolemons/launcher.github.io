@@ -41,7 +41,7 @@ it('仅主动发送时请求 API，展示错误且可以重试', async () => {
 it('读取模型状态控制行，更新可信度并隐藏控制语法', async () => {
   const body = new Response([
     'event: sources\ndata: [{"number":1,"title":"终末阵列","section":"规则","category":"world","url":"https://world.sch-nie.com/articles/end","urlKind":"article"},{"number":2,"title":"终末阵列","section":"规则 / 延伸","category":"world","url":"https://world.sch-nie.com/articles/end","urlKind":"article"}]\n\n',
-    'data: {"choices":[{"delta":{"content":"已核对。\\n%status trust=88 affinity=76 mood=focused label=证据清晰%"}}]}\n\n',
+    'data: {"choices":[{"delta":{"content":"已核对。［1］\\n%status trust=88 affinity=76 mood=focused label=证据清晰%"}}]}\n\n',
     'data: [DONE]\n\n',
   ].join('')).body;
   const fetcher = vi.fn().mockResolvedValue({ ok: true, body });
@@ -57,6 +57,21 @@ it('读取模型状态控制行，更新可信度并隐藏控制语法', async (
   expect(screen.getAllByRole('link', { name: '阅读《终末阵列》 ↗' })).toHaveLength(1);
   expect(screen.getByRole('link', { name: '阅读《终末阵列》 ↗' })).toHaveAttribute('href', 'https://world.sch-nie.com/articles/end');
   expect(screen.queryByText(/%status trust/)).not.toBeInTheDocument();
+});
+it('仅提及来源但未标注角标时不显示推荐卡片', async () => {
+  const body = new Response([
+    'event: sources\ndata: [{"number":1,"title":"终末阵列","section":"规则","category":"world","url":"https://world.sch-nie.com/articles/end","urlKind":"article"}]\n\n',
+    'data: {"choices":[{"delta":{"content":"终末阵列是一套设定。\\n%status trust=80 affinity=70 mood=calm label=已核对 sources=show%"}}]}\n\n',
+    'data: [DONE]\n\n',
+  ].join('')).body;
+  const fetcher = vi.fn().mockResolvedValue({ ok: true, body });
+  vi.stubGlobal('fetch', fetcher);
+  render(<WorldTerminal />);
+  fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
+  fireEvent.change(screen.getByRole('textbox', { name: '输入你的问题' }), { target: { value: '终末阵列是什么？' } });
+  fireEvent.click(screen.getByRole('button', { name: '发送问题' }));
+  await waitFor(() => expect(screen.getByText('终末阵列是一套设定。')).toBeInTheDocument());
+  expect(screen.queryByRole('link', { name: /阅读《/ })).not.toBeInTheDocument();
 });
 it('切换交流模式会同步更新简介、推荐入口和输入提示', () => {
   const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
