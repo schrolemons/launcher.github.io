@@ -66,7 +66,8 @@ it('检索故障时停止，不能退回无来源模型调用', async () => {
 it('来源筛选排除跨站记录、重复文本和危险链接', () => {
   const output = selectSources([fixture, fixture, { ...fixture, metadata: { ...fixture.metadata, category: 'blog' } }], 'world');
   expect(output).toHaveLength(1);
-  expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'javascript:alert(1)' } }], 'all')[0].url).toBe('https://world.sch-nie.com/');
+  expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'javascript:alert(1)' } }], 'all')[0].url).toBe('https://launcher.sch-nie.com/');
+  expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'https://docs.sch-nie.com/article', urlKind: 'article' } }], 'all')[0].url).toBe('https://docs.sch-nie.com/article');
 });
 it('只补取同篇同版本同词条的相邻片段', async () => {
   services.index.fetch.mockResolvedValue([{ id: 'two', metadata: { ...fixture.metadata, text: '相邻解释' } }, { id: 'bad', metadata: { ...fixture.metadata, articleHash: 'different', text: '不属于这个版本' } }]);

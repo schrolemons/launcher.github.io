@@ -7,12 +7,11 @@ import ChatMarkdown from './ChatMarkdown';
 import '../world-terminal.css';
 
 type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; control?: TerminalControl; complete?: boolean };
-const articleHosts = new Set(['blog.sch-nie.com', 'world.sch-nie.com', 'zero.sch-nie.com']);
 const categoryCopy = {
   all: { eyebrow: 'SCHNIE', label: '三类资料', short: '三类资料' },
-  blog: { eyebrow: 'BLOG', label: 'BLOG · 第九边缘博客', short: 'BLOG' },
-  world: { eyebrow: 'WORLD', label: 'WORLD · 第九边缘世界', short: 'WORLD' },
-  zero: { eyebrow: 'ZERO', label: 'ZERO · 第九边缘元点', short: 'ZERO' },
+  blog: { eyebrow: 'BLOG', label: 'BLOG · 经验与技术', short: 'BLOG' },
+  world: { eyebrow: 'WORLD', label: 'WORLD · 文明体系', short: 'WORLD' },
+  zero: { eyebrow: 'ZERO', label: 'ZERO · 核心信息', short: 'ZERO' },
 } as const;
 const modeCopy = {
   chat: { tag: 'CHAT WITH AI', title: '从资料出发，找到新的联系。', description: (scope: string) => scope === '三类资料' ? '我会在 BLOG、WORLD、ZERO 三类资料中查找，再自然地和你聊下去；ARK 与 WORLD 是同一世界档案的不同呈现入口。' : `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…`, promptLabel: '试着问我' },
@@ -126,7 +125,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       </header>
       <div className="world-terminal__settings">
         <label>内容分类<select aria-label="内容分类" value={category} disabled={busy} onChange={e => reset(e.target.value, mode)}>
-          <option value="all">全部资料</option><option value="blog">BLOG · 博客</option><option value="world">WORLD · 世界</option><option value="zero">ZERO · 元点</option>
+          <option value="all">全部资料</option><option value="blog">BLOG · 经验与技术</option><option value="world">WORLD · 文明体系</option><option value="zero">ZERO · 核心信息</option>
         </select></label>
         <label>交流模式<select aria-label="交流模式" value={mode} disabled={busy} onChange={e => reset(category, e.target.value)}>
           <option value="chat">轻松畅聊</option><option value="tutor">耐心讲解</option><option value="scholar">资料考据</option>
@@ -153,10 +152,10 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
           <div className="world-terminal__text">{message.content ? (message.role === 'assistant' ? <ChatMarkdown content={message.content} /> : message.content) : (busy ? '正在检索资料，组织回答…' : '')}</div>
           {!!message.sources?.length && <details className="world-terminal__sources"><summary>参考资料 · {message.sources.length}</summary>{message.sources.map(source => {
             let safe = false;
-            try { const u = new URL(source.url); safe = /^https:$/.test(u.protocol) && ['blog.sch-nie.com', 'world.sch-nie.com', 'zero.sch-nie.com'].includes(u.hostname); } catch {}
-            return safe && <a href={source.url} target="_blank" rel="noopener noreferrer" key={source.number}><span>[{source.number}] {source.category.toUpperCase()}</span> {source.title}<small>{source.section}{source.urlKind === 'site' ? ' · 分类入口（未提供文章直链）' : ' · 阅读原文'} ↗</small></a>;
+            try { const u = new URL(source.url); safe = /^https:$/.test(u.protocol) && !u.username && !u.password && !!u.hostname; } catch {}
+            return safe && <a href={source.url} target="_blank" rel="noopener noreferrer" key={source.number}><span>[{source.number}] {source.category.toUpperCase()} · {source.categoryName || '资料'}</span> {source.title}<small>{source.section}{source.categories?.length ? ` · ${source.categories.join(' / ')}` : ''}{source.urlKind === 'launcher-home' ? ' · 终端入口（未提供文章直链）' : ' · 阅读原文'} ↗</small></a>;
           })}</details>}
-          {message.role === 'assistant' && !!message.sources?.length && <div className="world-terminal__article-links">{message.sources.filter(source => source.urlKind === 'article' && (() => { try { const u = new URL(source.url); return u.protocol === 'https:' && articleHosts.has(u.hostname); } catch { return false; } })()).slice(0, 3).map(source => <a href={source.url} target="_blank" rel="noopener noreferrer" key={`article-${source.number}`}>阅读《{source.title}》 ↗</a>)}</div>}
+          {message.role === 'assistant' && !!message.sources?.length && <div className="world-terminal__article-links">{message.sources.filter(source => source.urlKind === 'article' && (() => { try { const u = new URL(source.url); return u.protocol === 'https:' && !u.username && !u.password && !!u.hostname; } catch { return false; } })()).slice(0, 3).map(source => <a href={source.url} target="_blank" rel="noopener noreferrer" key={`article-${source.number}`}>阅读《{source.title}》 ↗</a>)}</div>}
         </article>)}
       </div>
       <div className="world-terminal__feedback" aria-live="polite">

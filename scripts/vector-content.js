@@ -23,15 +23,15 @@ const textValue = (v, max = 180) => String(v ?? '').slice(0, max);
 const dateValue = v => v instanceof Date ? v.toISOString() : textValue(v, 60);
 const listValue = v => (Array.isArray(v) ? v.flat(Infinity) : v ? [v] : []).map(v => textValue(v, 60)).slice(0, 16);
 
-export function sourceUrl(frontmatter, category) {
-  const base = `https://${category}.sch-nie.com/`;
+export function sourceUrl(frontmatter) {
+  const base = 'https://launcher.sch-nie.com/';
   try {
-    const value = frontmatter.url || frontmatter.permalink;
-    if (!value) return { url: base, urlKind: 'site' };
+    const value = frontmatter.url;
+    if (!value) return { url: base, urlKind: 'launcher-home' };
     const url = new URL(String(value), base);
-    if (url.origin === new URL(base).origin && !url.username && !url.password) return { url: url.href, urlKind: 'article' };
-  } catch { /* Invalid URLs fall back to an explicitly labelled site link. */ }
-  return { url: base, urlKind: 'site' };
+    if (url.protocol === 'https:' && !url.username && !url.password) return { url: url.href, urlKind: 'article' };
+  } catch { /* Invalid URLs fall back to an explicitly labelled launcher entry. */ }
+  return { url: base, urlKind: 'launcher-home' };
 }
 
 export function articleRecords(raw, category, relativePath) {
@@ -84,7 +84,7 @@ export function articleRecords(raw, category, relativePath) {
         summary: textValue(fm.description || item.text.replace(/[`#*_]/g, '').replace(/\s+/g, ' '), 240),
         summaryMethod: fm.description ? 'frontmatter-description' : 'source-excerpt',
         articleCharacters: cleaned.length, sectionCharacters: item.text.length,
-        ...sourceUrl(fm, effectiveCategory),
+        ...sourceUrl(fm),
         categories: listValue(fm.categories), tags: listValue(fm.tags), description: textValue(fm.description, 300),
         chunkIndex: records.length, text: buffer.trim() };
       const data = prefix + metadata.text;

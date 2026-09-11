@@ -65,7 +65,7 @@ it('切换交流模式会同步更新简介、推荐入口和输入提示', () =
   expect(screen.getByPlaceholderText('请帮我考据三类资料里的一个设定…')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /开始考据/ })).toBeInTheDocument();
   fireEvent.change(screen.getByRole('combobox', { name: '内容分类' }), { target: { value: 'blog' } });
-  expect(screen.getByText('我会优先核对BLOG · 第九边缘博客的资料，区分原文、推断和仍待确认的部分。')).toBeInTheDocument();
+  expect(screen.getByText('我会优先核对BLOG · 经验与技术的资料，区分原文、推断和仍待确认的部分。')).toBeInTheDocument();
   expect(screen.getByPlaceholderText('请帮我考据BLOG里的一个设定…')).toBeInTheDocument();
   expect(screen.queryByText(/问问三类资料/)).not.toBeInTheDocument();
 });

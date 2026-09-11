@@ -20,15 +20,17 @@ describe('语义分片', () => {
     expect(a.map(r => r.metadata.text).join('')).toBe('甲乙丙丁。'.repeat(800));
     expect(a[0].id).not.toBe(b[0].id);
   });
-  it('跳过草稿，拒绝不受信来源 URL', () => {
+  it('跳过草稿，拒绝危险 URL 并回退到 launcher', () => {
     expect(articleRecords('---\ndraft: true\n---\nsecret', 'blog', 'draft.md')).toEqual([]);
     const [r] = articleRecords('---\nurl: javascript:alert(1)\n---\n正文', 'blog', 'a.md');
-    expect(r.metadata.url).toBe('https://blog.sch-nie.com/');
+    expect(r.metadata.url).toBe('https://launcher.sch-nie.com/');
+    expect(r.metadata.urlKind).toBe('launcher-home');
   });
-  it('把同分类 frontmatter url 写入每个向量片段的元数据', () => {
-    const [r] = articleRecords('---\ntitle: 可跳转\nurl: /archives/ke-tiao-zhuan\n---\n正文', 'world', 'a.md');
-    expect(r.metadata.url).toBe('https://world.sch-nie.com/archives/ke-tiao-zhuan');
+  it('把 frontmatter url 原样写入每个向量片段的元数据', () => {
+    const [r] = articleRecords('---\ntitle: 可跳转\nurl: https://docs.sch-nie.com/archives/ke-tiao-zhuan\ncategories: [设定集]\n---\n正文', 'world', 'a.md');
+    expect(r.metadata.url).toBe('https://docs.sch-nie.com/archives/ke-tiao-zhuan');
     expect(r.metadata.urlKind).toBe('article');
+    expect(r.metadata.categories).toEqual(['设定集']);
   });
   it('允许 frontmatter category 按内容性质覆盖默认文件夹分类', () => {
     const [r] = articleRecords('---\ntitle: 方法论\ncategory: blog\n---\n正文', 'world', 'a.md');
