@@ -94,6 +94,7 @@
 .world-terminal__config-title { margin:0; color:#dce9e5; font-size:12px; font-weight:600; }
 .world-terminal__config-hint { margin:10px 0 0; color:#7f9299; font-size:10px; line-height:1.6; }
 .world-terminal__config-warning { margin:10px 0 0; color:#ff7b7b; font-size:10px; line-height:1.6; }
+.world-terminal__config-error { margin:10px 0 0; color:#ff7b7b; font-weight:600; font-size:10px; line-height:1.6; }
 .world-terminal__config-actions { display:flex; gap:8px; margin-top:12px; }
 .world-terminal__config-actions button { flex:1; padding:8px; border:1px solid rgba(255,255,255,.16); border-radius:6px; background:transparent; color:#dce9e5; font-size:12px; transition:border-color .2s,color .2s; }
 .world-terminal__config-actions button:hover { border-color:var(--terminal-accent); color:var(--terminal-accent); }
