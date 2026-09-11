@@ -1,5 +1,5 @@
 export type TerminalMood = 'calm' | 'curious' | 'cautious' | 'focused' | 'playful';
-export type TerminalControl = { trust?: number; affinity?: number; mood?: TerminalMood; label?: string };
+export type TerminalControl = { trust?: number; affinity?: number; mood?: TerminalMood; label?: string; sources?: 'show' | 'none' };
 
 const statusLine = /^[ \t]*%status\s+([^%\r\n]+)%[ \t]*(?:\r?\n|$)/gimu;
 const moods = new Set<TerminalMood>(['calm', 'curious', 'cautious', 'focused', 'playful']);
@@ -17,10 +17,12 @@ export function parseTerminalOutput(content: string): { content: string; control
     const affinity = params.match(/(?:^|\s)affinity\s*=\s*(\d{1,3})(?=\s|$)/iu)?.[1];
     const mood = params.match(/(?:^|\s)mood\s*=\s*([a-z-]+)(?=\s|$)/iu)?.[1]?.toLowerCase() as TerminalMood | undefined;
     const label = params.match(/(?:^|\s)label\s*=\s*([^\s]+)/iu)?.[1];
+    const sources = params.match(/(?:^|\s)sources\s*=\s*(show|none)(?=\s|$)/iu)?.[1]?.toLowerCase() as 'show' | 'none' | undefined;
     if (trust !== undefined) control.trust = Math.max(0, Math.min(100, Number(trust)));
     if (affinity !== undefined) control.affinity = Math.max(0, Math.min(100, Number(affinity)));
     if (mood && moods.has(mood)) control.mood = mood;
     if (label) control.label = cleanLabel(label);
+    if (sources === 'show' || sources === 'none') control.sources = sources;
     return '';
   }).replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   return { content: visible, control };

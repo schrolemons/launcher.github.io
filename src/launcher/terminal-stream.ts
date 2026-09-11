@@ -1,4 +1,4 @@
-export type Source = { number: number; title: string; section: string; category: string; categoryName?: string; categories?: string[]; url: string; urlKind: 'article' | 'launcher-home' | string };
+export type Source = { number: number; title: string; section: string; category: string; categoryName?: string; categories?: string[]; url: string; urlKind: 'article' | 'launcher-home' | string; articleId?: string; articleHash?: string };
 type EventResult = { type: 'text'; value: string } | { type: 'sources'; value: Source[] } | { type: 'done' } | { type: 'length' } | { type: 'ignore' };
 export function parseEvent(frame: string): EventResult {
   const lines = frame.split('\n');
@@ -8,7 +8,7 @@ export function parseEvent(frame: string): EventResult {
   if (data === '[DONE]') return { type: 'done' };
   const payload = JSON.parse(data);
   if (event === 'error' || payload.error) throw new Error(typeof payload.error === 'string' ? payload.error : '连接中断，请重试');
-  if (event === 'sources') return { type: 'sources', value: Array.isArray(payload) ? payload.slice(0, 6) : [] };
+  if (event === 'sources') return { type: 'sources', value: Array.isArray(payload) ? payload.slice(0, 12) : [] };
   if (payload.choices?.[0]?.finish_reason === 'length') return { type: 'length' };
   const content = payload.choices?.[0]?.delta?.content;
   return typeof content === 'string' ? { type: 'text', value: content } : { type: 'ignore' };
