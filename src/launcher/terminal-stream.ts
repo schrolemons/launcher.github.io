@@ -1,4 +1,4 @@
-export type Source = { number: number; title: string; section: string; site: string; url: string; urlKind: string };
+export type Source = { number: number; title: string; section: string; category: string; url: string; urlKind: string };
 type EventResult = { type: 'text'; value: string } | { type: 'sources'; value: Source[] } | { type: 'done' } | { type: 'length' } | { type: 'ignore' };
 export function parseEvent(frame: string): EventResult {
   const lines = frame.split('\n');

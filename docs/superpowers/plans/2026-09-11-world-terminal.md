@@ -2,7 +2,7 @@
 
 目标：在现有 Astro / React launcher 中实现有来源的多轮对话、三站检索、有限额的语义同步和桌面/手机入口。
 
-设计：保留 DeepSeek 与 Upstash。src/content/posts 归 WORLD，blog/world/zero 递归读取；共用 launcher-v2 namespace，以 site 元数据过滤。标题层级和段落决定分片，正文有长度兜底；离线生成推荐问题。容量使用截图配额的 70% 作为停止阈值，不人为扩充语料。客户端只可选择三个服务端预设提示词。
+设计：保留 DeepSeek 与 Upstash。src/content/posts 归 WORLD，blog/world/zero 递归读取；共用 launcher-v2 namespace，以 category 元数据过滤（world=文明体系，blog=经验分享与技术博客，zero=核心内容与关键信息）。标题层级和段落决定分片，正文有长度兜底；离线生成推荐问题。容量使用截图配额的 70% 作为停止阈值，不人为扩充语料。客户端只可选择三个服务端预设提示词。
 
 - [x] 输入与转发：server/chat-policy.js 负责白名单、长度、风险规则和人格；api/chat.js 负责可信部署 IP、Redis 限额、检索、来源与流式转发。测试伪造角色、超长历史、异常限流、断流和站点过滤。
 - [x] 语料：scripts/vector-content.js 负责 Markdown 清洗、标题层级分片、来源和稳定 ID；scripts/sync-vector.js 先规划配额、增量上传，上传完成再清理本 namespace 旧片段。测试短词条、代码块、站点冲突与容量上限。

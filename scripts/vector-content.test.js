@@ -6,7 +6,9 @@ describe('语义分片', () => {
     const records = articleRecords('---\ntitle: 宇宙\n---\n## 规则\n简短定义。\n### 例子\n```js\n# not heading\n```', 'world', 'nested/a.md');
     expect(records.some(r => r.data.includes('简短定义'))).toBe(true);
     expect(records.some(r => r.metadata.section === '规则 / 例子')).toBe(true);
-    expect(records.every(r => r.metadata.site === 'world')).toBe(true);
+    expect(records.every(r => r.metadata.category === 'world')).toBe(true);
+    expect(records.every(r => !('site' in r.metadata))).toBe(true);
+    expect(records[0].metadata.categoryName).toBe('文明体系');
     expect(records.some(r => r.metadata.section.includes('not heading'))).toBe(false);
   });
   it('缺少标题仍可同步；长段落不会丢失；跨站 ID 不冲突', () => {
@@ -22,6 +24,16 @@ describe('语义分片', () => {
     expect(articleRecords('---\ndraft: true\n---\nsecret', 'blog', 'draft.md')).toEqual([]);
     const [r] = articleRecords('---\nurl: javascript:alert(1)\n---\n正文', 'blog', 'a.md');
     expect(r.metadata.url).toBe('https://blog.sch-nie.com/');
+  });
+  it('把同分类 frontmatter url 写入每个向量片段的元数据', () => {
+    const [r] = articleRecords('---\ntitle: 可跳转\nurl: /archives/ke-tiao-zhuan\n---\n正文', 'world', 'a.md');
+    expect(r.metadata.url).toBe('https://world.sch-nie.com/archives/ke-tiao-zhuan');
+    expect(r.metadata.urlKind).toBe('article');
+  });
+  it('允许 frontmatter category 按内容性质覆盖默认文件夹分类', () => {
+    const [r] = articleRecords('---\ntitle: 方法论\ncategory: blog\n---\n正文', 'world', 'a.md');
+    expect(r.metadata.category).toBe('blog');
+    expect(r.metadata.categoryName).toBe('经验分享与技术博客');
   });
   it('以当前全库占用和新增记录判断 70% 阈值', () => {
     expect(() => capacityPlan({ vectorCount: 98000, indexSize: 0, dimension: 1024 }, [{ data: 'x', metadata: {} }], 1)).toThrow(/容量/);

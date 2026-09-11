@@ -16,14 +16,15 @@ export function prepareRecords(records, mode, embeddingIdentity = 'unconfigured'
     return record;
   });
 }
-const sites = ['blog', 'world', 'zero'];
+export const categories = ['blog', 'world', 'zero'];
+export const CATEGORY_NAMES = { world: '文明体系', blog: '经验分享与技术博客', zero: '核心内容与关键信息' };
 export const digest = value => createHash('sha256').update(value).digest('hex');
 const textValue = (v, max = 180) => String(v ?? '').slice(0, max);
 const dateValue = v => v instanceof Date ? v.toISOString() : textValue(v, 60);
 const listValue = v => (Array.isArray(v) ? v.flat(Infinity) : v ? [v] : []).map(v => textValue(v, 60)).slice(0, 16);
 
-export function sourceUrl(frontmatter, site) {
-  const base = `https://${site}.sch-nie.com/`;
+export function sourceUrl(frontmatter, category) {
+  const base = `https://${category}.sch-nie.com/`;
   try {
     const value = frontmatter.url || frontmatter.permalink;
     if (!value) return { url: base, urlKind: 'site' };
@@ -33,14 +34,16 @@ export function sourceUrl(frontmatter, site) {
   return { url: base, urlKind: 'site' };
 }
 
-export function articleRecords(raw, site, relativePath) {
+export function articleRecords(raw, category, relativePath) {
   raw = raw.replace(/\r\n/g, '\n');
-  if (!sites.includes(site)) throw new Error(`未知站点：${site}`);
+  if (!categories.includes(category)) throw new Error(`未知分类：${category}`);
   const { data: fm, content } = matter(raw);
+  const effectiveCategory = String(fm.category || category).trim().toLowerCase();
+  if (!categories.includes(effectiveCategory)) throw new Error(`文章分类必须是 blog、world 或 zero：${relativePath}`);
   if (fm.draft === true || fm.published === false || fm.private === true || fm.password || fm.encrypted === true) return [];
   const title = textValue(fm.title || path.basename(relativePath).replace(/\.mdx?$/i, ''), 120);
-  const source = `${site}/${relativePath.replaceAll('\\', '/')}`;
-  const articleId = digest(source).slice(0, 24);
+  const source = relativePath.replaceAll('\\', '/');
+  const articleId = digest(`${effectiveCategory}:${source}`).slice(0, 24);
   const cleaned = content.replace(/<!--[\s\S]*?-->/g, '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/{%[\s\S]*?%}/g, '').replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\r/g, '');
   const sections = [];
@@ -62,7 +65,7 @@ export function articleRecords(raw, site, relativePath) {
   for (const [sectionIndex, item] of sections.entries()) {
     const section = textValue(item.section, 220);
     const labels = [...listValue(fm.categories), ...listValue(fm.tags), ...listValue(fm.aliases || fm.alias)].join(' / ').slice(0, 160);
-    const prefix = `${site.toUpperCase()} | ${title}\n${section}\n${labels ? `主题：${labels}\n` : ''}`;
+    const prefix = `${effectiveCategory.toUpperCase()} | ${title}\n${section}\n${labels ? `主题：${labels}\n` : ''}`;
     // Paragraph packing inside a heading; long paragraphs split at sentence boundaries.
     const limit = 1500 - prefix.length;
     const units = item.text.split(/\n\s*\n/).flatMap(paragraph => {
@@ -72,7 +75,7 @@ export function articleRecords(raw, site, relativePath) {
     let buffer = '';
     const emit = () => {
       if (!buffer.trim()) return;
-      const metadata = { schema: 2, pipelineVersion: '2026-09-11.2', site, siteName: { blog: '第九边缘博客', world: '第九边缘世界', zero: '第九边缘元点' }[site],
+      const metadata = { schema: 3, pipelineVersion: '2026-09-11.3', category: effectiveCategory, categoryName: CATEGORY_NAMES[effectiveCategory],
         articleId, articleHash: digest(raw), source, title, slug: textValue(fm.slug || path.basename(relativePath).replace(/\.mdx?$/i, ''), 160),
         abbrlink: textValue(fm.abbrlink, 100), section, headingPath: section.split(' / ').filter(Boolean),
         entry: textValue(item.section.split(' / ').at(-1) || title, 160), sectionIndex, sectionCount: sections.length,
@@ -81,7 +84,7 @@ export function articleRecords(raw, site, relativePath) {
         summary: textValue(fm.description || item.text.replace(/[`#*_]/g, '').replace(/\s+/g, ' '), 240),
         summaryMethod: fm.description ? 'frontmatter-description' : 'source-excerpt',
         articleCharacters: cleaned.length, sectionCharacters: item.text.length,
-        ...sourceUrl(fm, site),
+        ...sourceUrl(fm, effectiveCategory),
         categories: listValue(fm.categories), tags: listValue(fm.tags), description: textValue(fm.description, 300),
         chunkIndex: records.length, text: buffer.trim() };
       const data = prefix + metadata.text;
@@ -111,7 +114,7 @@ export function articleRecords(raw, site, relativePath) {
 export function collectRecords(root) {
   const records = [];
   let articles = 0;
-  for (const folder of ['posts', ...sites]) {
+  for (const folder of ['posts', ...categories]) {
     const dir = path.join(root, folder);
     if (!fs.existsSync(dir)) continue;
     const walk = (current) => {
@@ -146,6 +149,6 @@ export function capacityPlan(info, additions, newCount, requestEstimate = 0) {
 export function recommendations(records) {
   const seen = new Set();
   const articles = records.filter(r => { if (seen.has(r.metadata.articleId)) return false; seen.add(r.metadata.articleId); return true; });
-  return sites.flatMap(site => articles.filter(r => r.metadata.site === site).slice(0, 6).map((r, i) => ({ site,
+  return categories.flatMap(category => articles.filter(r => r.metadata.category === category).slice(0, 6).map((r, i) => ({ category,
     question: i % 2 ? `请用初学者能理解的方式解读《${r.metadata.title}》。` : `《${r.metadata.title}》的核心设定是什么？它们如何联系起来？` })));
 }

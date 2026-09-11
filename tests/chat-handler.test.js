@@ -2,7 +2,7 @@
 import { EventEmitter } from 'node:events';
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import { createChatHandler, selectSources } from '../api/chat.js';
-const fixture = { id: 'one', score: .8, metadata: { schema: 2, retrievalMode: 'dense', articleId: 'a', site: 'world', title: '终末阵列', section: '规则', text: '原文资料', url: 'https://world.sch-nie.com/', nextId: 'two' } };
+const fixture = { id: 'one', score: .8, metadata: { schema: 3, retrievalMode: 'dense', articleId: 'a', category: 'world', title: '终末阵列', section: '规则', text: '原文资料', url: 'https://world.sch-nie.com/', nextId: 'two' } };
 function response() {
   const res = new EventEmitter();
   Object.assign(res, { statusCode: 200, headersSent: false, writableEnded: false, output: '', headers: {},
@@ -11,7 +11,7 @@ function response() {
     write(value) { this.headersSent = true; this.output += value.toString(); return true; }, end() { this.writableEnded = true; } });
   return res;
 }
-const request = () => ({ method: 'POST', headers: { 'content-type': 'application/json' }, socket: { remoteAddress: '127.0.0.1' }, body: { messages: [{ role: 'user', content: '终末阵列是什么？' }], site: 'world' } });
+const request = () => ({ method: 'POST', headers: { 'content-type': 'application/json' }, socket: { remoteAddress: '127.0.0.1' }, body: { messages: [{ role: 'user', content: '终末阵列是什么？' }], category: 'world' } });
 let services, fetcher;
 beforeEach(() => {
   vi.stubEnv('VERCEL', '0');
@@ -37,7 +37,7 @@ it('预算耗尽或输入恶意时不调用付费服务', async () => {
 it('发送白名单过滤条件、来源和完整 UTF-8 响应', async () => {
   const res = response(); await createChatHandler(() => services, fetcher)(request(), res);
   expect(res.statusCode).toBe(200); expect(res.output).toContain('event: sources'); expect(res.output).toContain('你好');
-  expect(services.index.query.mock.calls[0][0].filter).toContain("site = 'world'");
+  expect(services.index.query.mock.calls[0][0].filter).toContain("category = 'world'");
   const payload = JSON.parse(fetcher.mock.calls[0][1].body);
   expect(payload.max_tokens).toBe(1200); expect(payload.messages[1].content).toContain('原文资料');
 });
@@ -49,8 +49,8 @@ it('日常寒暄不查询向量资料，也不发送来源上下文', async () =
   expect(services.index.fetch).not.toHaveBeenCalled();
   expect(res.output).toContain('event: sources');
   const payload = JSON.parse(fetcher.mock.calls[0][1].body);
-  expect(payload.messages[0].content).toContain('不要调用、提及或引用站点资料');
-  expect(payload.messages[1].content).toContain('不附加资料来源');
+  expect(payload.messages[0].content).toContain('不要调用、提及或引用分类资料');
+  expect(payload.messages[1].content).toContain('不附加分类资料来源');
   expect(payload.messages[1].content).not.toContain('原文资料');
 });
 it('允许正式 launcher 域名作为跨站来源', async () => {
@@ -64,7 +64,7 @@ it('检索故障时停止，不能退回无来源模型调用', async () => {
   expect(res.statusCode).toBe(503); expect(fetcher).not.toHaveBeenCalled();
 });
 it('来源筛选排除跨站记录、重复文本和危险链接', () => {
-  const output = selectSources([fixture, fixture, { ...fixture, metadata: { ...fixture.metadata, site: 'blog' } }], 'world');
+  const output = selectSources([fixture, fixture, { ...fixture, metadata: { ...fixture.metadata, category: 'blog' } }], 'world');
   expect(output).toHaveLength(1);
   expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'javascript:alert(1)' } }], 'all')[0].url).toBe('https://world.sch-nie.com/');
 });

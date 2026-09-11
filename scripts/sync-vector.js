@@ -22,7 +22,7 @@ async function main() {
   const records = prepareRecords(collected.records, mode, identity), articles = collected.articles;
   if (!records.length) throw new Error('没有可同步文章，拒绝清空远端；请检查目录');
   const summary = { mode: dryRun ? 'offline-dry-run' : 'live', retrievalMode: mode, articles, chunks: records.length,
-    sites: Object.fromEntries(['blog', 'world', 'zero'].map(site => [site, records.filter(r => r.metadata.site === site).length])) };
+    categories: Object.fromEntries(['blog', 'world', 'zero'].map(category => [category, records.filter(r => r.metadata.category === category).length])) };
   if (dryRun) {
     writeReport({ ...summary, embeddingMode: configuredMode, embeddingIdentity: identity,
       ...capacityPlan({ vectorCount: 0, indexSize: 0, dimension: Number(process.env.VECTOR_EMBEDDING_DIMENSION || 0) }, records, records.length, records.length),

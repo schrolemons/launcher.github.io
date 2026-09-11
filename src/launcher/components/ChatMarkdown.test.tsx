@@ -15,3 +15,8 @@ it('支持单行 note 语法', () => {
   expect(screen.getByText('warning')).toBeInTheDocument();
   expect(screen.getByText('这是一条提示')).toBeInTheDocument();
 });
+it('把大 ASCII 表情保留为等宽视觉块', () => {
+  render(<ChatMarkdown content={'回答完毕。\n\n*#################*\n#      ^_^      #\n*#################*'} />);
+  expect(document.querySelector('.chat-markdown__ascii')).toBeInTheDocument();
+  expect(document.querySelector('.chat-markdown__ascii')?.textContent).toContain('^_^');
+});

@@ -2,7 +2,7 @@
 
 ## 使用现有的一个数据库
 
-保留当前 Dense 索引，嵌入模型和服务通过环境变量接入。**无需创建第二个数据库，无需升级套餐。** `launcher-v2` 是这个库里面的 namespace（分区），三个站点共享它，使用 `site` 元数据筛选。原默认分区的 598 条记录不会被脚本删除；容量预检会把它们算进去。
+保留当前 Dense 索引，嵌入模型和服务通过环境变量接入。**无需创建第二个数据库，无需升级套餐。** `launcher-v2` 是这个库里面的 namespace（分区），三类内容共享它，使用 `category` 元数据筛选。ARK 与 WORLD 是同一世界档案的不同呈现入口，不是第四个内容分类。原默认分区的 598 条记录不会被脚本删除；容量预检会把它们算进去。
 
 重要：数据库存储的 Free 套餐不等同于外部嵌入服务免费。默认 `upstash-data` 模式直接使用索引创建时配置的托管嵌入能力，不需要在 GitHub Actions 中填写模型变量。只有索引没有托管嵌入能力时，才改用 `external` 模式，把文本发送到你配置的兼容嵌入端点；模型名、端点、密钥和维度都由环境变量决定。不要把 `query({data})` 用在未配置托管嵌入的 Dense 索引上。
 
@@ -12,12 +12,12 @@
 
 ## 放置文章与元数据
 
-| 文件夹 | 站点 |
+| 文件夹 | 内容分类 |
 | --- | --- |
-| `src/content/posts/**` | WORLD（兼容现有文章） |
-| `src/content/world/**` | WORLD |
-| `src/content/blog/**` | BLOG |
-| `src/content/zero/**` | ZERO |
+| `src/content/posts/**` | WORLD：文明体系（兼容现有文章） |
+| `src/content/world/**` | WORLD：文明体系 |
+| `src/content/blog/**` | BLOG：经验分享与技术博客 |
+| `src/content/zero/**` | ZERO：核心内容与关键信息 |
 
 递归读取 `.md` 和 `.mdx`，忽略隐藏文件、符号链接，以及 `draft: true`、`private: true`、`published: false` 的文章。不要同时在 posts 和 world 放同一篇的副本；直接移动后，下次成功同步会清理旧路径对应片段。缺少标题时使用文件名。
 
@@ -31,6 +31,7 @@ updated: 2026-08-25
 categories: [终末文明, 基础]
 tags: [文明, 机械造物]
 aliases: [终末系统]
+category: world # 可按内容性质覆盖文件夹默认分类：blog / world / zero
 description: 这里填写原文已有的简介。
 # url: https://world.sch-nie.com/实际文章路径
 ```
@@ -43,14 +44,14 @@ Metadata 保存以下实际信息，并有长度上限：
 
 | 用途 | 字段 |
 | --- | --- |
-| 身份与版本 | `schema`, `pipelineVersion`, `retrievalMode`, `site`, `siteName`, `articleId`, `source` |
+| 身份与版本 | `schema`, `pipelineVersion`, `retrievalMode`, `category`, `categoryName`, `articleId`, `source` |
 | 来源 | `title`, `slug`, `abbrlink`, `url`, `urlKind`, `author`, `publishedAt`, `updatedAt`（日期规范为 ISO） |
 | 语义与主题 | `categories`, `tags`, `aliases`, `description`, `language`, `format` |
 | 章节结构 | `headingPath`, `section`, `entry`, `sectionIndex`, `sectionCount`, `relatedSections` |
 | 可恢复上下文 | `text`, `summary`, `summaryMethod`, `chunkIndex`, `chunkCount`, `previousId`, `nextId` |
 | 校验与规模 | `articleHash`, `contentHash`, `hash`, `articleCharacters`, `sectionCharacters`, `characterCount` |
 
-`summary` 是原简介或原文开头摘录，不是模型生成摘要。检索使用 site/schema/mode 过滤；标题、词条、别名的字面命中可微调排序；同一词条被拆开时用 previousId/nextId 补取相邻片段；最多返回 6 个来源、同篇最多 3 片、正文合计不超过 6000 字符。作者、更新日期、分类、摘要和正文提供给模型，来源在前端可展开。相关度阈值 0.45 是待真实问题评估的起点，不是“准确率 45%”。
+`summary` 是原简介或原文开头摘录，不是模型生成摘要。检索使用 category/schema/mode 过滤；标题、词条、别名的字面命中可微调排序；同一词条被拆开时用 previousId/nextId 补取相邻片段；最多返回 6 个来源、同篇最多 3 片、正文合计不超过 6000 字符。作者、更新日期、内容分类、摘要和正文提供给模型，来源在前端可展开。相关度阈值 0.45 是待真实问题评估的起点，不是“准确率 45%”。
 
 ## 设置环境变量
 

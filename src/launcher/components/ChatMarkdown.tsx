@@ -35,6 +35,8 @@ function table(lines: string[], key: string) {
   return <div className="chat-markdown__table-wrap" key={key}><table><thead><tr>{head.map((cell, i) => <th key={i}>{inline(cell)}</th>)}</tr></thead><tbody>{body.map((row, i) => <tr key={i}>{head.map((_, j) => <td key={j}>{inline(row[j] || '')}</td>)}</tr>)}</tbody></table></div>;
 }
 
+const isAsciiFrame = (line: string) => /^\s*\*#{5,}\*?\s*$/.test(line);
+
 export default function ChatMarkdown({ content }: { content: string }) {
   const lines = content.replace(/\r\n/g, '\n').split('\n');
   const blocks: ReactNode[] = [], paragraph: string[] = [], list: string[] = [];
@@ -51,6 +53,16 @@ export default function ChatMarkdown({ content }: { content: string }) {
     if (fence) { if (line.trim().startsWith(fence)) { flushCode(); fence = ''; } else code.push(line); continue; }
     const fenceStart = line.trim().match(/^(`{3,}|~{3,})\s*\w*$/);
     if (fenceStart) { flushParagraph(); flushList(); fence = fenceStart[1]; continue; }
+    if (isAsciiFrame(line)) {
+      flushParagraph(); flushList();
+      const art = [line];
+      while (i + 1 < lines.length && art.length < 12) {
+        art.push(lines[++i]);
+        if (isAsciiFrame(art.at(-1)!)) break;
+      }
+      blocks.push(<pre className="chat-markdown__ascii" key={`ascii-${blockIndex++}`}><code>{art.join('\n')}</code></pre>);
+      continue;
+    }
     const heading = line.match(/^\s*(#{1,4})\s+(.+?)\s*#*$/);
     if (heading) { flushParagraph(); flushList(); const Tag = `h${heading[1].length}` as keyof JSX.IntrinsicElements; blocks.push(<Tag key={`h-${blockIndex++}`}>{inline(heading[2])}</Tag>); continue; }
     if (/^\s*[-*+]\s+/.test(line)) { flushParagraph(); list.push(line.replace(/^\s*[-*+]\s+/, '')); continue; }
