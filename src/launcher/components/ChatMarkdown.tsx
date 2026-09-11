@@ -6,29 +6,38 @@ const safeUrl = (value: string) => {
     return ['http:', 'https:', 'mailto:'].includes(url.protocol) ? url.href : '';
   } catch { return ''; }
 };
+const normalizeChinesePunctuation = (value: string) => value
+  .replace(/(?<=[\u3400-\u9fff])\s*:\s*(?=[\u3400-\u9fff])/g, '：')
+  .replace(/(?<=[\u3400-\u9fff])\s*,\s*(?=[\u3400-\u9fff])/g, '，')
+  .replace(/(?<=[\u3400-\u9fff])\s*;\s*(?=[\u3400-\u9fff])/g, '；')
+  .replace(/(?<=[\u3400-\u9fff])\s*\?\s*(?=[\u3400-\u9fff])/g, '？')
+  .replace(/(?<=[\u3400-\u9fff])\s*!\s*(?=[\u3400-\u9fff])/g, '！')
+  .replace(/(?<=[\u3400-\u9fff])\s*\(\s*(?=[\u3400-\u9fff])/g, '（')
+  .replace(/(?<=[\u3400-\u9fff])\s*\)\s*(?=[\u3400-\u9fff])/g, '）');
+const citationPattern = '(?:［\\d{1,3}］|\\[\\d{1,3}\\])';
 
 function inline(text: string): ReactNode[] {
-  const token = /(［\d{1,3}］|\[\d{1,3}\]|\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\[[^\]]+\]\([^\s)]+\)|~~[^~]+~~|==[^=]+==|\*[^*]+\*|_[^_]+_)/g;
+  const token = new RegExp(`(\\*\\*${citationPattern}\\*\\*|__${citationPattern}__|\\*${citationPattern}\\*|${citationPattern}|\\*\\*[^*]+\\*\\*|__[^_]+__|\`[^\`]+\`|\\[[^\\]]+\\]\\([^\\s)]+\\)|~~[^~]+~~|==[^=]+==|\\*[^*]+\\*|_[^_]+_)`, 'g');
   const nodes: ReactNode[] = [];
   let last = 0, index = 0, match: RegExpExecArray | null;
   while ((match = token.exec(text))) {
-    if (match.index > last) nodes.push(text.slice(last, match.index));
+    if (match.index > last) nodes.push(normalizeChinesePunctuation(text.slice(last, match.index)));
     const value = match[0], key = `inline-${index++}`;
-    if (/^(?:［\d{1,3}］|\[\d{1,3}\])$/.test(value)) {
+    if (/^(?:\*\*|__|\*)?(?:［\d{1,3}］|\[\d{1,3}\])(?:\*\*|__|\*)?$/.test(value)) {
       const number = value.replace(/[^\d]/g, '');
       nodes.push(<sup className="chat-markdown__citation" key={key} aria-label={`参考资料 ${number}`}>［{number}］</sup>);
-    } else if (value.startsWith('**') || value.startsWith('__')) nodes.push(<strong key={key}>{value.slice(2, -2)}</strong>);
-    else if (value.startsWith('~~')) nodes.push(<del key={key}>{value.slice(2, -2)}</del>);
-    else if (value.startsWith('==')) nodes.push(<mark key={key}>{value.slice(2, -2)}</mark>);
+    } else if (value.startsWith('**') || value.startsWith('__')) nodes.push(<strong key={key}>{normalizeChinesePunctuation(value.slice(2, -2))}</strong>);
+    else if (value.startsWith('~~')) nodes.push(<del key={key}>{normalizeChinesePunctuation(value.slice(2, -2))}</del>);
+    else if (value.startsWith('==')) nodes.push(<mark key={key}>{normalizeChinesePunctuation(value.slice(2, -2))}</mark>);
     else if (value.startsWith('`')) nodes.push(<code key={key}>{value.slice(1, -1)}</code>);
     else if (value.startsWith('[')) {
       const link = value.match(/^\[([^\]]+)\]\(([^\s)]+)\)$/);
       const href = link && safeUrl(link[2]);
-      nodes.push(href ? <a key={key} href={href} target="_blank" rel="noopener noreferrer">{link[1]}</a> : link?.[1] || value);
-    } else if (value.startsWith('*') || value.startsWith('_')) nodes.push(<em key={key}>{value.slice(1, -1)}</em>);
+      nodes.push(href ? <a key={key} href={href} target="_blank" rel="noopener noreferrer">{normalizeChinesePunctuation(link[1])}</a> : normalizeChinesePunctuation(link?.[1] || value));
+    } else if (value.startsWith('*') || value.startsWith('_')) nodes.push(<em key={key}>{normalizeChinesePunctuation(value.slice(1, -1))}</em>);
     last = match.index + value.length;
   }
-  if (last < text.length) nodes.push(text.slice(last));
+  if (last < text.length) nodes.push(normalizeChinesePunctuation(text.slice(last)));
   return nodes;
 }
 

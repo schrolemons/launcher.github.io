@@ -15,6 +15,10 @@ it('限制累计历史并保留追问检索上下文', () => {
   expect(() => validateChat({ messages: Array.from({ length: 9 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: '字'.repeat(1000) })) })).toThrow();
   expect(retrievalQuery([{ role: 'user', content: '终末阵列是什么' }, { role: 'assistant', content: '回答' }, { role: 'user', content: '那它如何运作？' }])).toContain('终末阵列');
 });
+it('清理访客称呼并保留可调整的界面状态', () => {
+  expect(validateChat(request('你好', { visitorName: '  档案访客\u0007  ', interactionState: { trust: 120, affinity: -4 } }))).toMatchObject({ visitorName: '档案访客', interactionState: { trust: 100, affinity: 0 } });
+  expect(() => validateChat(request('你好', { visitorName: 'a'.repeat(21) }))).toThrow(/20/);
+});
 it('人格包含推断边界、安全边界和可选择模式', () => {
   const prompt = buildPrompt('tutor', 'blog');
   expect(prompt).toContain('第九边缘');
@@ -26,6 +30,7 @@ it('人格包含推断边界、安全边界和可选择模式', () => {
   expect(prompt).toContain('affinity');
   expect(prompt).toContain('中文逗号');
   expect(prompt).toContain('大 ASCII 表情');
+  expect(prompt).toContain('至少变化 8–15 点');
   expect(prompt).toContain('BLOG（经验分享与技术博客）');
   expect(prompt).not.toContain('WORLD（文明体系）');
   expect(buildPrompt('chat', 'all')).not.toBe(buildPrompt('chat', 'zero'));

@@ -16,10 +16,12 @@ it('支持单行 note 语法', () => {
   expect(screen.getByText('这是一条提示')).toBeInTheDocument();
 });
 it('把半角和全角引用渲染为彩色上标角标', () => {
-  render(<ChatMarkdown content="依据资料［1］与补充说明 [2]。" />);
+  render(<ChatMarkdown content="三篇风格差别挺大:想读思辨选**［3］**,想读抒情选［1］,想读叙事张力选 [2]。" />);
   expect(screen.getByLabelText('参考资料 1').tagName).toBe('SUP');
   expect(screen.getByLabelText('参考资料 1')).toHaveTextContent('［1］');
   expect(screen.getByLabelText('参考资料 2')).toHaveTextContent('［2］');
+  expect(screen.getByLabelText('参考资料 3')).toHaveTextContent('［3］');
+  expect(screen.getByText((_, element) => element?.tagName === 'P' && element.textContent?.startsWith('三篇风格差别挺大：想读思辨选') === true)).toBeInTheDocument();
 });
 it('把大 ASCII 表情保留为等宽视觉块', () => {
   render(<ChatMarkdown content={'回答完毕。\n\n*#################*\n#      ^_^      #\n*#################*'} />);

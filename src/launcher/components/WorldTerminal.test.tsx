@@ -40,7 +40,7 @@ it('仅主动发送时请求 API，展示错误且可以重试', async () => {
 });
 it('读取模型状态控制行，更新可信度并隐藏控制语法', async () => {
   const body = new Response([
-    'event: sources\ndata: [{"number":1,"title":"终末阵列","section":"规则","category":"world","url":"https://world.sch-nie.com/articles/end","urlKind":"article"}]\n\n',
+    'event: sources\ndata: [{"number":1,"title":"终末阵列","section":"规则","category":"world","url":"https://world.sch-nie.com/articles/end","urlKind":"article"},{"number":2,"title":"终末阵列","section":"规则 / 延伸","category":"world","url":"https://world.sch-nie.com/articles/end","urlKind":"article"}]\n\n',
     'data: {"choices":[{"delta":{"content":"已核对。\\n%status trust=88 affinity=76 mood=focused label=证据清晰%"}}]}\n\n',
     'data: [DONE]\n\n',
   ].join('')).body;
@@ -54,6 +54,7 @@ it('读取模型状态控制行，更新可信度并隐藏控制语法', async (
   expect(screen.getByRole('meter', { name: '好感度' })).toHaveAttribute('aria-valuenow', '76');
   expect(screen.getByText('证据清晰')).toBeInTheDocument();
   expect(screen.getByText('已核对。')).toBeInTheDocument();
+  expect(screen.getAllByRole('link', { name: '阅读《终末阵列》 ↗' })).toHaveLength(1);
   expect(screen.getByRole('link', { name: '阅读《终末阵列》 ↗' })).toHaveAttribute('href', 'https://world.sch-nie.com/articles/end');
   expect(screen.queryByText(/%status trust/)).not.toBeInTheDocument();
 });
