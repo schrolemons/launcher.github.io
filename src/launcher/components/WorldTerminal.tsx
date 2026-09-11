@@ -7,10 +7,13 @@ import '../world-terminal.css';
 
 const LLM_CONFIG_KEY = 'sch-nie:llm-config';
 type ModelConfig = {
-  apiKey: string; baseUrl: string; model: string;
+  apiKey: string; baseUrl: string; model: string; context_limit: string;
   temperature: string; top_p: string; top_k: string; presence_penalty: string; frequency_penalty: string; max_tokens: string;
 };
 const SAMPLING_FIELDS = ['temperature', 'top_p', 'top_k', 'presence_penalty', 'frequency_penalty', 'max_tokens'] as const;
+const CONTEXT_LIMIT_DEFAULT = 6000;
+const CONTEXT_LIMIT_MIN = 1200;
+const CONTEXT_LIMIT_MAX = 16000;
 const SAMPLING_CONTROLS: readonly { key: typeof SAMPLING_FIELDS[number]; label: string; min: number; max: number; step: number; hint?: string }[] = [
   { key: 'temperature', label: '温度 temperature', min: 0, max: 2, step: 0.05 },
   { key: 'top_p', label: 'Top-P', min: 0, max: 1, step: 0.05 },
@@ -19,7 +22,7 @@ const SAMPLING_CONTROLS: readonly { key: typeof SAMPLING_FIELDS[number]; label: 
   { key: 'frequency_penalty', label: '频率惩罚', min: -2, max: 2, step: 0.1 },
   { key: 'max_tokens', label: '输出上限 max_tokens', min: 1, max: 8192, step: 1 },
 ];
-const defaultModelConfig = (): ModelConfig => ({ apiKey: '', baseUrl: '', model: '', temperature: '', top_p: '', top_k: '', presence_penalty: '', frequency_penalty: '', max_tokens: '' });
+const defaultModelConfig = (): ModelConfig => ({ apiKey: '', baseUrl: '', model: '', context_limit: '', temperature: '', top_p: '', top_k: '', presence_penalty: '', frequency_penalty: '', max_tokens: '' });
 function loadModelConfig(): ModelConfig {
   try {
     if (typeof localStorage === 'undefined') return defaultModelConfig();
@@ -28,7 +31,7 @@ function loadModelConfig(): ModelConfig {
       const value = JSON.parse(raw);
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         const str = (key: string) => typeof value[key] === 'string' ? value[key] : '';
-        return { apiKey: str('apiKey'), baseUrl: str('baseUrl'), model: str('model'), temperature: str('temperature'), top_p: str('top_p'), top_k: str('top_k'), presence_penalty: str('presence_penalty'), frequency_penalty: str('frequency_penalty'), max_tokens: str('max_tokens') };
+        return { apiKey: str('apiKey'), baseUrl: str('baseUrl'), model: str('model'), context_limit: str('context_limit'), temperature: str('temperature'), top_p: str('top_p'), top_k: str('top_k'), presence_penalty: str('presence_penalty'), frequency_penalty: str('frequency_penalty'), max_tokens: str('max_tokens') };
       }
     }
   } catch {}
@@ -37,7 +40,7 @@ function loadModelConfig(): ModelConfig {
 
 function normalizeConfig(draft: ModelConfig): ModelConfig {
   return {
-    apiKey: draft.apiKey.trim().slice(0, 200), baseUrl: draft.baseUrl.trim(), model: draft.model.trim().slice(0, 80),
+    apiKey: draft.apiKey.trim().slice(0, 200), baseUrl: draft.baseUrl.trim(), model: draft.model.trim().slice(0, 80), context_limit: draft.context_limit.trim(),
     temperature: draft.temperature.trim(), top_p: draft.top_p.trim(), top_k: draft.top_k.trim(),
     presence_penalty: draft.presence_penalty.trim(), frequency_penalty: draft.frequency_penalty.trim(), max_tokens: draft.max_tokens.trim(),
   };
@@ -88,6 +91,8 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const busyRef = useRef(false);
   const scope = categoryCopy[category as keyof typeof categoryCopy];
   const gridPrompts = suggestionPrompts[mode as 'chat' | 'tutor' | 'scholar'](scope.short).map(question => ({ tag: modeLabels[mode as keyof typeof modeLabels], question }));
+  const configuredContext = Number(modelConfig.context_limit);
+  const contextLimit = Number.isFinite(configuredContext) && configuredContext >= CONTEXT_LIMIT_MIN && configuredContext <= CONTEXT_LIMIT_MAX ? Math.round(configuredContext) : CONTEXT_LIMIT_DEFAULT;
   useEffect(() => {
     if (open) { dialog.current?.showModal(); editor.current?.focus({ preventScroll: true }); }
     onOpenChange?.(open);
@@ -133,7 +138,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     for (let i = 0; i + 1 < previous.length; i += 2) {
       if (previous[i].role === 'user' && previous[i + 1].complete) history.push(previous[i], previous[i + 1]);
     }
-    while (history.length > 8 || history.reduce((n, m) => n + m.content.length, question.length) > 6000) history.splice(0, 2);
+    while (history.length > 8 || history.reduce((n, m) => n + m.content.length, question.length) > contextLimit) history.splice(0, 2);
     const requestMessages = [...history.map(({ role, content }) => ({ role, content })), { role: 'user', content: question.trim() }];
     const next: Message[] = [...previous, { role: 'user', content: question.trim() }, { role: 'assistant', content: '' }];
     setMessages(next); setInput(''); setError(null); setNotice(''); setBusy(true); busyRef.current = true; stick.current = true;
@@ -155,7 +160,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         if (raw.trim() !== '' && Number.isFinite(Number(raw))) sampling[field] = Number(raw);
       }
       const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model, ...sampling }), signal: abort.signal });
+        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model, context_limit: contextLimit, ...sampling }), signal: abort.signal });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         throw new TerminalRequestError({ message: payload.error || `接口返回 HTTP ${response.status}`, ...payload, status: response.status });
@@ -191,7 +196,6 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const affinity = error ? 0 : lastAssistant?.control?.affinity ?? fallbackAffinity;
   const status = error ? '连接异常' : lastAssistant?.control?.label || (busy ? '检索与生成' : messages.length ? '已完成' : '待机');
   const mood = lastAssistant?.control?.mood;
-  const contextLimit = 6000;
   const contextChars = messages.reduce((total, message) => total + message.content.length, input.length);
   const contextPercent = Math.min(100, Math.round((contextChars / contextLimit) * 100));
   const modal = open && <dialog ref={dialog} className={`world-terminal world-terminal--${mode} ${mobile ? 'world-terminal--mobile' : ''}`} aria-labelledby={mobile ? 'mobile-terminal-title' : 'terminal-title'}
@@ -254,6 +258,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
           <label>API Key<input type="password" value={configDraft.apiKey} onChange={e => setConfigDraft({ ...configDraft, apiKey: e.target.value })} placeholder="留空使用站点默认 DeepSeek Key" autoComplete="off" aria-label="API Key" /></label>
           <label>接口地址<input value={configDraft.baseUrl} onChange={e => setConfigDraft({ ...configDraft, baseUrl: e.target.value })} placeholder="https://api.deepseek.com/chat/completions" autoComplete="off" aria-label="接口地址" /></label>
           <label>模型名称<input value={configDraft.model} onChange={e => setConfigDraft({ ...configDraft, model: e.target.value })} placeholder="deepseek-chat" autoComplete="off" aria-label="模型名称" /></label>
+          <label>上下文窗口上限（{CONTEXT_LIMIT_MIN} ~ {CONTEXT_LIMIT_MAX} 字符）<input type="number" min={CONTEXT_LIMIT_MIN} max={CONTEXT_LIMIT_MAX} step={100} value={configDraft.context_limit} onChange={e => setConfigDraft({ ...configDraft, context_limit: e.target.value })} placeholder={`${CONTEXT_LIMIT_DEFAULT}（默认）`} aria-label="上下文窗口上限" /></label>
           <details className="world-terminal__config-advanced">
             <summary>高级采样参数 <span>留空即用默认</span></summary>
             <p className="world-terminal__config-advhint">仅对 OpenAI 兼容接口生效；服务商不支持的参数会被忽略。</p>

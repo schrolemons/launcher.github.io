@@ -1,6 +1,6 @@
 import { isIP } from 'node:net';
 
-export const CHAT_LIMITS = Object.freeze({ input: 1200, history: 6000, messages: 9, output: 1200, bodyBytes: 24000 });
+export const CHAT_LIMITS = Object.freeze({ input: 1200, history: 6000, messages: 9, output: 1200, bodyBytes: 24000, contextMin: 1200, contextMax: 16000 });
 export const CATEGORIES = ['all', 'blog', 'world', 'zero'];
 const MODES = {
   chat: '轻松畅聊模式：专业、礼貌、自然。理解用户真正想问的内容，简洁回应并适度追问；每次回复最后都附上一个较大的纯 ASCII 表情。请在下面的表情库中轮换选择，不要连续重复同一张脸；表情至少 3 行，外框宽度约 15–31 字符，必须使用 *#########################* 这类边框，不要使用 Emoji：\n*#########################*\n#          ^_^            #\n#       /       \\         #\n*#########################*\n\n*#########################*\n#          o_o            #\n#        [  ?  ]          #\n*#########################*\n\n*#########################*\n#          >_<            #\n#        .-===-.          #\n*#########################*\n\n*#########################*\n#          -_-            #\n#        (     )          #\n*#########################*\n\n*#########################*\n#          ^o^            #\n#        <(   )>          #\n*#########################*\n\n*#########################*\n#          0_0            #\n#        [  !  ]          #\n*#########################*\n\n*#########################*\n#          -.-            #\n#         z   z           #\n*#########################*\n\n*#########################*\n#          ^w^            #\n#        [     ]          #\n*#########################*\n可以根据语气调整眼睛、手势和边框内留白；严肃、伤痛话题保持克制，表情也要相应收敛。可以用一句冷幽默形成反差。',
@@ -25,7 +25,7 @@ const dangerPatterns = [
 export function validateChat(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('请求格式不正确');
   if (Buffer.byteLength(JSON.stringify(body), 'utf8') > CHAT_LIMITS.bodyBytes) throw new Error('输入过长，请缩短对话');
-  const { messages, category = 'all', mode = 'chat', visitorName = '访客', interactionState, apiKey = '', baseUrl = '', model = '' } = body;
+  const { messages, category = 'all', mode = 'chat', visitorName = '访客', interactionState, apiKey = '', baseUrl = '', model = '', context_limit } = body;
   if (!CATEGORIES.includes(category) || !Object.hasOwn(MODES, mode)) throw new Error('请选择有效的内容分类和对话模式');
   if (typeof visitorName !== 'string') throw new Error('访客称呼格式不正确');
   const cleanVisitorName = visitorName.normalize('NFKC').replace(/[\u0000-\u001F\u007F]/g, '').trim();
@@ -45,7 +45,13 @@ export function validateChat(body) {
     if (expected === 'user' && dangerPatterns.some(p => p.test(content.replace(/\s+/g, ' ')))) throw new Error('无法协助危险或违法操作；可以讨论安全防范、合法知识或作品分析。');
     return { role: expected, content };
   });
-  if (total > CHAT_LIMITS.history) throw new Error('对话过长，请开启新对话');
+  const cleanContextLimit = (() => {
+    if (context_limit === undefined || context_limit === null || context_limit === '') return CHAT_LIMITS.history;
+    const n = Number(context_limit);
+    if (!Number.isFinite(n)) throw new Error('上下文上限必须是有效数字');
+    return Math.round(Math.min(CHAT_LIMITS.contextMax, Math.max(CHAT_LIMITS.contextMin, n)));
+  })();
+  if (total > cleanContextLimit) throw new Error('对话过长，请开启新对话');
   const cleanApiKey = typeof apiKey === 'string' ? apiKey.replace(/[\u0000-\u001F\u007F]/g, '').trim() : '';
   const cleanModel = typeof model === 'string' ? model.replace(/[\u0000-\u001F\u007F]/g, '').trim() : '';
   if (cleanApiKey.length > 200) throw new Error('模型密钥过长');
