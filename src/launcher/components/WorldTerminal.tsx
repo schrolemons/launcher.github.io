@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import suggestions from '../generated/chat-suggestions.json';
 import { readTerminalStream, type Source } from '../terminal-stream';
 import { parseTerminalOutput, type TerminalControl } from '../terminal-control';
 import ChatMarkdown from './ChatMarkdown';
@@ -13,14 +12,21 @@ const categoryCopy = {
   world: { eyebrow: 'WORLD', label: 'WORLD · 文明体系', short: 'WORLD' },
   zero: { eyebrow: 'ZERO', label: 'ZERO · 核心信息', short: 'ZERO' },
 } as const;
+const modeLabels = { chat: '轻松畅聊', tutor: '耐心讲解', scholar: '资料考据' } as const;
 const uniqueArticleSources = (sources: Source[] = []) => sources.filter(source => (() => {
   try { const u = new URL(source.url); return u.protocol === 'https:' && !u.username && !u.password && !!u.hostname; } catch { return false; }
 })()).filter((source, index, all) => all.findIndex(item => item.url === source.url) === index).slice(0, 3);
 const modeCopy = {
-  chat: { tag: 'CHAT WITH AI', title: '从资料出发，找到新的联系。', description: (scope: string) => scope === '三类资料' ? '我会在 BLOG、WORLD、ZERO 三类资料中查找，再自然地和你聊下去；ARK 与 WORLD 是同一世界档案的不同呈现入口。' : `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…`, promptLabel: '试着问我' },
-  tutor: { tag: 'EXPLAINER', title: '把复杂内容讲得更容易懂。', description: (scope: string) => `我会把${scope}里的概念拆开，按你的节奏一步步解释。`, placeholder: (scope: string) => `请让我解释${scope}里的一个概念…`, promptLabel: '从这里开始' },
-  scholar: { tag: 'RESEARCH', title: '沿着来源，核对每一层细节。', description: (scope: string) => `我会优先核对${scope}的资料，区分原文、推断和仍待确认的部分。`, placeholder: (scope: string) => `请帮我考据${scope}里的一个设定…`, promptLabel: '开始考据' },
+  chat: { tag: 'CHAT WITH AI', title: '从资料出发，找到新的联系。', description: (scope: string) => scope === '三类资料' ? '我会在 BLOG、WORLD、ZERO 三类资料中查找，再自然地和你聊下去；ARK 与 WORLD 是同一世界档案的不同呈现入口。' : `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…` },
+  tutor: { tag: 'EXPLAINER', title: '把复杂内容讲得更容易懂。', description: (scope: string) => `我会把${scope}里的概念拆开，按你的节奏一步步解释。`, placeholder: (scope: string) => `请让我解释${scope}里的一个概念…` },
+  scholar: { tag: 'RESEARCH', title: '沿着来源，核对每一层细节。', description: (scope: string) => `我会优先核对${scope}的资料，区分原文、推断和仍待确认的部分。`, placeholder: (scope: string) => `请帮我考据${scope}里的一个设定…` },
 } as const;
+// 每个交流模式对应三条与当前分类相关的推荐问题，一次只展示三条。
+const suggestionPrompts: Record<'chat' | 'tutor' | 'scholar', (scope: string) => string[]> = {
+  chat: (scope) => [`和我聊聊${scope}里最难忘的部分`, `${scope}里有哪些值得先读的内容？`, `如果我是第一次接触${scope}，你会怎么带我入门？`],
+  tutor: (scope) => [`请用初学者能懂的方式解释${scope}里的一个概念`, `${scope}里有哪些基础概念需要先了解？`, `一步一步给我讲讲${scope}的核心内容`],
+  scholar: (scope) => [`请考据${scope}里一个设定的原文出处`, `${scope}里的设定与原文如何一一对应？`, `帮我核对${scope}里的一个细节，并标明来源`],
+};
 type TerminalErrorInfo = { message: string; code?: string; phase?: string; requestId?: string; status?: number; hint?: string };
 class TerminalRequestError extends Error {
   info: TerminalErrorInfo;
@@ -36,12 +42,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true);
   const busyRef = useRef(false);
   const scope = categoryCopy[category as keyof typeof categoryCopy];
-  const options = suggestions.filter(s => category === 'all' || s.category === category);
-  const gridPrompts = options.length >= 9 ? options.slice(0, 9) : [...options, ...Array.from({ length: Math.max(0, 9 - options.length) }, (_, i) => ({
-    category, question: category === 'all'
-      ? [`你能怎样帮我理解 BLOG 的内容？`, `请解读 WORLD 的核心设定。`, `ZERO 的关键信息有哪些？`][i % 3]
-      : `你能怎样帮我理解${scope.label}的内容？`,
-  }))];
+  const gridPrompts = suggestionPrompts[mode as 'chat' | 'tutor' | 'scholar'](scope.short).map(question => ({ tag: modeLabels[mode as keyof typeof modeLabels], question }));
   useEffect(() => {
     if (open) { dialog.current?.showModal(); editor.current?.focus({ preventScroll: true }); }
     onOpenChange?.(open);
@@ -106,7 +107,6 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const eyebrow = `${scope.eyebrow} / ${copy.tag}`;
   const description = copy.description(scope.label);
   const placeholder = copy.placeholder(scope.short);
-  const modeLabel = mode === 'chat' ? '轻松畅聊' : mode === 'tutor' ? '耐心讲解' : '资料考据';
   const lastAssistant = [...messages].reverse().find(message => message.role === 'assistant');
   const sourceCount = lastAssistant?.sources?.length || 0;
   const fallbackTrust = error ? 0 : busy ? 48 : !messages.length ? 72 : lastAssistant?.complete ? Math.min(96, 54 + sourceCount * 7) : 36;
@@ -149,7 +149,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
           <div className="world-terminal__suggestions">
             {gridPrompts.map((item, i) => (
               <button key={i} type="button" className="world-terminal__suggestion-card" onClick={() => { setInput(item.question); editor.current?.focus(); }}>
-                <span className="world-terminal__suggestion-card-cat">{item.category.toUpperCase()}</span>
+                <span className="world-terminal__suggestion-card-cat">{item.tag}</span>
                 <strong>{item.question}</strong>
               </button>
             ))}
