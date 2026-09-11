@@ -60,7 +60,7 @@ Metadata 保存以下实际信息，并有长度上限：
 - Variables：默认 `VECTOR_EMBEDDING_MODE=upstash-data`，不需要模型变量。若改用 `external`，再填写 `VECTOR_EMBEDDING_MODEL`（你选择的模型标识）、`VECTOR_EMBEDDING_DIMENSION`（现有 Dense 维度）和 `VECTOR_EMBEDDING_URL`（兼容端点）。
 - Secrets：`VECTOR_EMBEDDING_API_KEY`（若端点需要）；旧的 `OPENAI_API_KEY` 仍可作为兼容回退。Vercel 同时需要 `UPSTASH_REDIS_REST_URL`、`UPSTASH_REDIS_REST_TOKEN`、`DEEPSEEK_API_KEY`。
 - API 的 `UPSTASH_VECTOR_NAMESPACE` 必须与 workflow 的 `launcher-v2` 相同。API 可使用只读 Vector token。
-- `CHAT_ALLOWED_ORIGINS` 填实际 launcher 的完整来源地址，以逗号分隔；默认已包含 sch-nie、ark、blog、world、zero 域名，预览域名需要明确加入。
+- `CHAT_ALLOWED_ORIGINS` 填实际 launcher 的完整来源地址，以逗号分隔；默认已包含 `launcher.sch-nie.com`、sch-nie、ark、blog、world、zero 域名，预览域名需要明确加入。
 
 `astro dev` / 静态预览只运行页面，不托管根目录的 Vercel `/api/chat`。本地看到“暂时无法连接”并不表示线上接口已验证。要联调真实接口，请在已配置环境变量的 Vercel 环境或 Vercel 本地开发环境测试。GitHub Pages 等纯静态托管不能独立运行此接口。
 

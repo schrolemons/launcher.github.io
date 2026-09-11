@@ -6,21 +6,26 @@ import '../world-terminal.css';
 
 type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; complete?: boolean };
 const siteCopy = {
-  all: { eyebrow: 'THREE PROJECTS', label: '三个站点', short: '三个站点' },
+  all: { eyebrow: 'SCHNIE', label: '三个站点', short: '三个站点' },
   blog: { eyebrow: 'BLOG', label: 'BLOG · 第九边缘博客', short: 'BLOG' },
   world: { eyebrow: 'WORLD', label: 'WORLD · 第九边缘世界', short: 'WORLD' },
   zero: { eyebrow: 'ZERO', label: 'ZERO · 第九边缘元点', short: 'ZERO' },
 } as const;
 const modeCopy = {
-  chat: { tag: 'CHAT', title: '从资料出发，找到新的联系。', description: (scope: string) => `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…`, promptLabel: '试着问我' },
+  chat: { tag: 'CHAT WITH AI', title: '从资料出发，找到新的联系。', description: (scope: string) => `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…`, promptLabel: '试着问我' },
   tutor: { tag: 'EXPLAINER', title: '把复杂内容讲得更容易懂。', description: (scope: string) => `我会把${scope}里的概念拆开，按你的节奏一步步解释。`, placeholder: (scope: string) => `请让我解释${scope}里的一个概念…`, promptLabel: '从这里开始' },
   scholar: { tag: 'RESEARCH', title: '沿着来源，核对每一层细节。', description: (scope: string) => `我会优先核对${scope}的资料，区分原文、推断和仍待确认的部分。`, placeholder: (scope: string) => `请帮我考据${scope}里的一个设定…`, promptLabel: '开始考据' },
 } as const;
+type TerminalErrorInfo = { message: string; code?: string; phase?: string; requestId?: string; status?: number; hint?: string };
+class TerminalRequestError extends Error {
+  info: TerminalErrorInfo;
+  constructor(info: TerminalErrorInfo) { super(info.message); this.info = info; }
+}
 export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOpenChange }: { mobile?: boolean; accent?: string; onOpenChange?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false), [input, setInput] = useState('');
   const [site, setSite] = useState('all'), [mode, setMode] = useState('chat');
   const [messages, setMessages] = useState<Message[]>([]), [busy, setBusy] = useState(false);
-  const [error, setError] = useState(''), [notice, setNotice] = useState(''), [tip, setTip] = useState(0);
+  const [error, setError] = useState<{ message: string; code?: string; phase?: string; requestId?: string; status?: number; hint?: string } | null>(null), [notice, setNotice] = useState(''), [tip, setTip] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), editor = useRef<HTMLTextAreaElement>(null);
   const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true);
   const busyRef = useRef(false);
@@ -44,7 +49,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   }, [messages, busy, error]);
   function close() { controller.current?.abort(); setOpen(false); trigger.current?.focus(); }
   function reset(nextSite = site, nextMode = mode) {
-    controller.current?.abort(); setMessages([]); setError(''); setNotice(''); setSite(nextSite); setMode(nextMode); setTip(0);
+    controller.current?.abort(); setMessages([]); setError(null); setNotice(''); setSite(nextSite); setMode(nextMode); setTip(0);
   }
   async function send(question = input, retry = false) {
     if (busyRef.current || !question.trim() || question.length > 1200) return;
@@ -57,19 +62,21 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     while (history.length > 8 || history.reduce((n, m) => n + m.content.length, question.length) > 6000) history.splice(0, 2);
     const requestMessages = [...history.map(({ role, content }) => ({ role, content })), { role: 'user', content: question.trim() }];
     const next: Message[] = [...previous, { role: 'user', content: question.trim() }, { role: 'assistant', content: '' }];
-    setMessages(next); setInput(''); setError(''); setNotice(''); setBusy(true); busyRef.current = true; stick.current = true;
+    setMessages(next); setInput(''); setError(null); setNotice(''); setBusy(true); busyRef.current = true; stick.current = true;
     const abort = new AbortController(); controller.current = abort;
     const timer = window.setTimeout(() => abort.abort('timeout'), 35000);
-    let answer = '', sources: Source[] = [];
+    let answer = '', sources: Source[] = [], phase = '连接对话接口';
     const update = (complete = false) => setMessages([...next.slice(0, -1), { role: 'assistant', content: answer, sources, complete }]);
     try {
+      phase = '连接对话接口';
       const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: requestMessages, site, mode }), signal: abort.signal });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.error || '终端暂时无法连接，请稍后重试');
+        throw new TerminalRequestError({ message: payload.error || `接口返回 HTTP ${response.status}`, ...payload, status: response.status });
       }
       if (!response.body) throw new Error('浏览器未收到响应流');
+      phase = '读取流式回答';
       await readTerminalStream(response.body, event => {
         if (event.type === 'text') { answer += event.value; if (answer.length > 12000) throw new Error('回答过长，已停止'); update(); }
         if (event.type === 'sources') { sources = event.value; update(); }
@@ -79,7 +86,11 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       update(true);
     } catch (e) {
       update(false);
-      setError(abort.signal.aborted ? (abort.signal.reason === 'timeout' ? '连接超时，请重试' : '已停止生成，可重试或提出新问题') : e instanceof Error ? e.message : '连接失败，请重试');
+      const fallback: TerminalErrorInfo = abort.signal.aborted
+        ? { message: abort.signal.reason === 'timeout' ? '连接超时，请重试' : '已停止生成，可重试或提出新问题', code: 'REQUEST_ABORTED' }
+        : { message: e instanceof Error ? e.message : '连接失败，请重试', code: 'CLIENT_ERROR' };
+      const info = e instanceof TerminalRequestError ? e.info : fallback;
+      setError({ ...info, phase: info.phase || phase });
     } finally { window.clearTimeout(timer); setBusy(false); busyRef.current = false; controller.current = null; }
   }
   const retryQuestion = messages.at(-2)?.role === 'user' ? messages.at(-2)!.content : '';
@@ -92,7 +103,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     onClick={e => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) close(); } }}>
     <div className="world-terminal__shell">
       <header className="world-terminal__header">
-        <div><span className="world-terminal__eyebrow">{eyebrow}</span><h2 id={mobile ? 'mobile-terminal-title' : 'terminal-title'}>THREE PROJECTS</h2></div>
+        <div><span className="world-terminal__eyebrow">{eyebrow}</span><h2 id={mobile ? 'mobile-terminal-title' : 'terminal-title'}>SCHNIE: CHAT WITH AI</h2></div>
         <button type="button" className="world-terminal__close" onClick={close} aria-label="关闭世界终端">×</button>
       </header>
       <div className="world-terminal__settings">
@@ -122,7 +133,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         </article>)}
       </div>
       <div className="world-terminal__feedback" aria-live="polite">
-        {error && <p role="alert">{error} {retryQuestion && !busy && <button type="button" onClick={() => send(retryQuestion, true)}>重试上次问题</button>}</p>}
+        {error && <div className="world-terminal__error" role="alert"><p><strong>{error.message}</strong>{error.status ? ` · HTTP ${error.status}` : ''}</p><p className="world-terminal__error-meta">阶段：{error.phase || '未知'}{error.code ? ` · ${error.code}` : ''}{error.requestId ? ` · 请求 ${error.requestId}` : ''}</p>{error.hint && <p className="world-terminal__error-hint">建议：{error.hint}</p>}{retryQuestion && !busy && <button type="button" onClick={() => send(retryQuestion, true)}>重试上次问题</button>}</div>}
         {notice && <p>{notice}</p>}
         {busy && <p role="status">终端正在回应…</p>}
       </div>

@@ -34,7 +34,7 @@ it('切换交流模式会同步更新简介、推荐入口和输入提示', () =
   render(<WorldTerminal />);
   fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
   fireEvent.change(screen.getByRole('combobox', { name: '交流模式' }), { target: { value: 'scholar' } });
-  expect(screen.getByRole('heading', { name: 'THREE PROJECTS' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'SCHNIE: CHAT WITH AI' })).toBeInTheDocument();
   expect(screen.getByText('沿着来源，核对每一层细节。')).toBeInTheDocument();
   expect(screen.getByPlaceholderText('请帮我考据三个站点里的一个设定…')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /开始考据/ })).toBeInTheDocument();

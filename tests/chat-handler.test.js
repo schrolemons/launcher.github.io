@@ -41,6 +41,11 @@ it('发送白名单过滤条件、来源和完整 UTF-8 响应', async () => {
   const payload = JSON.parse(fetcher.mock.calls[0][1].body);
   expect(payload.max_tokens).toBe(1200); expect(payload.messages[1].content).toContain('原文资料');
 });
+it('允许正式 launcher 域名作为跨站来源', async () => {
+  const req = request(); req.headers.origin = 'https://launcher.sch-nie.com'; req.headers['sec-fetch-site'] = 'cross-site';
+  const res = response(); await createChatHandler(() => services, fetcher)(req, res);
+  expect(res.statusCode).toBe(200);
+});
 it('检索故障时停止，不能退回无来源模型调用', async () => {
   services.index.query.mockRejectedValue(new Error('offline'));
   const res = response(); await createChatHandler(() => services, fetcher)(request(), res);
