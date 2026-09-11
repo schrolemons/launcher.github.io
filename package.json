@@ -3,6 +3,10 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
+    "predev": "node scripts/generate-chat-suggestions.js",
+    "prebuild": "node scripts/generate-chat-suggestions.js",
+    "sync:vector": "node scripts/sync-vector.js",
+    "sync:vector:check": "node scripts/sync-vector.js --dry-run",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro check && astro build",

@@ -1,37 +1,50 @@
-name: Sync Blog Posts to Vector DB
-
+name: Sync Three Sites to Vector DB
 on:
   push:
-    branches:
-      - main           # 你的主分支名，可能是 master
+    branches: [main]
     paths:
-      - 'src/content/posts/**'    # 只在文章有变化时触发
-  workflow_dispatch:          # 支持手动触发
-
+      - 'src/content/**'
+      - 'scripts/*vector*'
+      - 'lib/retrieval-text.js'
+      - '.github/workflows/sync-vector.yml'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: launcher-vector-sync
+  cancel-in-progress: false
 jobs:
   sync:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Sync to Vector DB
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test -- scripts/vector-content.test.js scripts/vector-sync.test.js tests/chat-policy.test.js tests/chat-handler.test.js
+      - run: pnpm sync:vector:check
+      - name: Sync changed records
         env:
           UPSTASH_VECTOR_REST_URL: ${{ secrets.UPSTASH_VECTOR_REST_URL }}
           UPSTASH_VECTOR_REST_TOKEN: ${{ secrets.UPSTASH_VECTOR_REST_TOKEN }}
-        run: node scripts/sync-vector.js
+          UPSTASH_VECTOR_NAMESPACE: launcher-v2
+          VECTOR_EMBEDDING_MODE: external
+          VECTOR_EMBEDDING_MODEL: ${{ vars.VECTOR_EMBEDDING_MODEL }}
+          VECTOR_EMBEDDING_DIMENSION: ${{ vars.VECTOR_EMBEDDING_DIMENSION }}
+          VECTOR_EMBEDDING_URL: ${{ vars.VECTOR_EMBEDDING_URL }}
+          VECTOR_EMBEDDING_API_KEY: ${{ secrets.VECTOR_EMBEDDING_API_KEY }}
+          VECTOR_RETRIEVAL_MODE: dense
+        run: pnpm sync:vector
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vector-sync-report
+          path: .reports/vector-sync.json
+          retention-days: 14

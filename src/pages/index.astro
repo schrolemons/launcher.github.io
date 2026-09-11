@@ -1,6 +1,7 @@
 ---
 import LauncherLayout from "../layouts/LauncherLayout.astro";
 import DesktopLauncher from "../launcher/DesktopLauncher";
+import WorldTerminal from "../launcher/components/WorldTerminal";
 import { launcherProjects } from "../launcher/config";
 
 const base = import.meta.env.BASE_URL;
@@ -27,6 +28,7 @@ const logo = base + "images/logo.png";
       <p class="launcher-mobile-hero__eyebrow">SCHNIE // 第九边缘</p>
       <h1 class="launcher-mobile-hero__title">浊尘点墨，画境寻音</h1>
       <p class="launcher-mobile-hero__desc">请使用桌面设备访问，体验完整启动器功能</p>
+      <WorldTerminal mobile client:only="react" />
     </section>
 
     <section class="launcher-mobile-projects">

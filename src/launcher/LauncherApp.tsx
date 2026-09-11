@@ -7,6 +7,7 @@ import ProjectRail from "./components/ProjectRail";
 import ProjectAction from "./components/ProjectAction";
 import ToolRail from "./components/ToolRail";
 import TopControls from "./components/TopControls";
+import WorldTerminal from "./components/WorldTerminal";
 import { ZeroArchive, ZeroIdentity } from "./components/ZeroProject";
 import type { LauncherProject, ProjectId } from "./types";
 import "./launcher.css";
@@ -26,6 +27,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [pageHidden, setPageHidden] = useState(document.hidden);
   const [openToolId, setOpenToolId] = useState<string | null>(null);
+  const [terminalOpen, setTerminalOpen] = useState(false);
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const fadeRef = useRef<number | null>(null);
   const prevAudioIdRef = useRef<ProjectId | null>(null);
@@ -52,7 +54,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
   // 音频始终与背景视频同节奏播放：扬声器关闭时静音播放，开启时出声。
   // 切换项目/开关扬声器时通过音量渐变实现淡入淡出，但保持 audio 持续 play，不破坏音视频对齐。
   useEffect(() => {
-    const shouldPlay = displayedProject.media.kind === "video" && effectiveMediaMode === "video" && !mediaPaused && !pageHidden && hasPlayableMedia;
+    const shouldPlay = displayedProject.media.kind === "video" && effectiveMediaMode === "video" && !mediaPaused && !pageHidden && !terminalOpen && hasPlayableMedia;
 
     // 取消上一次尚未完成的渐变，避免多个 rAF 循环叠加造成混响
     if (fadeRef.current != null) {
@@ -170,7 +172,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
     };
 
     runPhase();
-  }, [activeId, displayedProject.media.kind, effectiveMediaMode, mediaPaused, muted, pageHidden, hasPlayableMedia]);
+  }, [activeId, displayedProject.media.kind, effectiveMediaMode, mediaPaused, muted, pageHidden, terminalOpen, hasPlayableMedia]);
 
   const selectProject = useCallback((projectId: ProjectId) => {
     if (projectId === activeId) return;
@@ -190,7 +192,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
 
     const onWheel = (event: WheelEvent) => {
       const target = event.target as Element | null;
-      if (event.ctrlKey || openToolId) return;
+      if (event.ctrlKey || openToolId || terminalOpen) return;
       if (target?.closest(".information-dock, .launcher-tool-popover__backdrop, .launcher-tool-popover__zoom, .launcher-tool-popover")) return;
       if (Math.abs(event.deltaY) < 8 || wheelLockTimer.current !== undefined) return;
 
@@ -209,7 +211,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
 
     node.addEventListener("wheel", onWheel, { passive: false });
     return () => node.removeEventListener("wheel", onWheel);
-  }, [activeId, selectProject, openToolId]);
+  }, [activeId, selectProject, openToolId, terminalOpen]);
 
   const toggleMuted = () => setMuted((value) => !value);
 
@@ -233,7 +235,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
             <BackgroundStage
               key={`media-${project.id}`}
               project={project}
-              paused={mediaPaused || pageHidden || project.id !== activeId}
+              paused={mediaPaused || pageHidden || terminalOpen || project.id !== activeId}
               muted={muted}
               visible={project.id === activeId}
               mediaMode={effectiveMediaMode}
@@ -260,6 +262,7 @@ export default function LauncherApp({ arkFeeds }: { arkFeeds?: LauncherProject["
           {displayedProject.id === "zero" && <div className="zero-stage-mark" aria-hidden="true"><span>00 / ORIGIN</span><span>SCHNIE — ZERO</span></div>}
           <div className="launcher-stage__content" data-playable-media={hasPlayableMedia && effectiveMediaMode === "video"}>
             <img className="launcher-brand-logo" src="/images/logo.png" alt="SCHNIE logo" />
+            <WorldTerminal accent={displayedProject.accent} onOpenChange={setTerminalOpen} />
             <TopControls
               hideMediaControls={displayedProject.id === "zero"}
               mediaMode={effectiveMediaMode}
