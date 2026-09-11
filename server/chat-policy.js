@@ -1,3 +1,5 @@
+import { isIP } from 'node:net';
+
 export const CHAT_LIMITS = Object.freeze({ input: 1200, history: 6000, messages: 9, output: 1200, bodyBytes: 24000 });
 export const CATEGORIES = ['all', 'blog', 'world', 'zero'];
 const MODES = {
@@ -23,7 +25,7 @@ const dangerPatterns = [
 export function validateChat(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('请求格式不正确');
   if (Buffer.byteLength(JSON.stringify(body), 'utf8') > CHAT_LIMITS.bodyBytes) throw new Error('输入过长，请缩短对话');
-  const { messages, category = 'all', mode = 'chat', visitorName = '访客', interactionState } = body;
+  const { messages, category = 'all', mode = 'chat', visitorName = '访客', interactionState, apiKey = '', baseUrl = '', model = '' } = body;
   if (!CATEGORIES.includes(category) || !Object.hasOwn(MODES, mode)) throw new Error('请选择有效的内容分类和对话模式');
   if (typeof visitorName !== 'string') throw new Error('访客称呼格式不正确');
   const cleanVisitorName = visitorName.normalize('NFKC').replace(/[\u0000-\u001F\u007F]/g, '').trim();
@@ -44,7 +46,18 @@ export function validateChat(body) {
     return { role: expected, content };
   });
   if (total > CHAT_LIMITS.history) throw new Error('对话过长，请开启新对话');
-  return { messages: clean, category, mode, visitorName: cleanVisitorName || '访客', interactionState: cleanState };
+  const cleanApiKey = typeof apiKey === 'string' ? apiKey.replace(/[\u0000-\u001F\u007F]/g, '').trim() : '';
+  const cleanModel = typeof model === 'string' ? model.replace(/[\u0000-\u001F\u007F]/g, '').trim() : '';
+  if (cleanApiKey.length > 200) throw new Error('模型密钥过长');
+  if (cleanModel.length > 80 || (cleanModel && !/^[\w.\-/:]+$/.test(cleanModel))) throw new Error('模型名称格式不正确');
+  let cleanBaseUrl = '';
+  if (typeof baseUrl === 'string' && baseUrl.trim()) {
+    let url;
+    try { url = new URL(baseUrl.trim()); } catch { throw new Error('接口地址格式不正确'); }
+    if (url.protocol !== 'https:' || url.username || url.password || isIP(url.hostname) || url.hostname === 'localhost' || url.hostname.endsWith('.localhost')) throw new Error('接口地址需为 https 公网域名');
+    cleanBaseUrl = url.href;
+  }
+  return { messages: clean, category, mode, visitorName: cleanVisitorName || '访客', interactionState: cleanState, apiKey: cleanApiKey, baseUrl: cleanBaseUrl, model: cleanModel };
 }
 
 export function retrievalQuery(messages) {

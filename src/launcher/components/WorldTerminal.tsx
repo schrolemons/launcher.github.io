@@ -5,6 +5,26 @@ import { parseTerminalOutput, type TerminalControl } from '../terminal-control';
 import ChatMarkdown from './ChatMarkdown';
 import '../world-terminal.css';
 
+const LLM_CONFIG_KEY = 'sch-nie:llm-config';
+const defaultModelConfig = () => ({ apiKey: '', baseUrl: '', model: '' });
+function loadModelConfig(): { apiKey: string; baseUrl: string; model: string } {
+  try {
+    if (typeof localStorage === 'undefined') return defaultModelConfig();
+    const raw = localStorage.getItem(LLM_CONFIG_KEY);
+    if (raw) {
+      const value = JSON.parse(raw);
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        return {
+          apiKey: typeof value.apiKey === 'string' ? value.apiKey : '',
+          baseUrl: typeof value.baseUrl === 'string' ? value.baseUrl : '',
+          model: typeof value.model === 'string' ? value.model : '',
+        };
+      }
+    }
+  } catch {}
+  return defaultModelConfig();
+}
+
 type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; control?: TerminalControl; complete?: boolean };
 const categoryCopy = {
   all: { eyebrow: 'SCHNIE', label: '三类资料', short: '三类资料' },
@@ -44,6 +64,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const [messages, setMessages] = useState<Message[]>([]), [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ message: string; code?: string; phase?: string; requestId?: string; status?: number; hint?: string } | null>(null), [notice, setNotice] = useState('');
   const [visitorName, setVisitorName] = useState('访客'), [nameDraft, setNameDraft] = useState(''), [editingSpeaker, setEditingSpeaker] = useState<number | null>(null);
+  const [modelConfig, setModelConfig] = useState(loadModelConfig), [configOpen, setConfigOpen] = useState(false), [configDraft, setConfigDraft] = useState(modelConfig);
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), editor = useRef<HTMLTextAreaElement>(null);
   const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true);
   const busyRef = useRef(false);
@@ -62,6 +83,17 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   function commitName() { const nextName = nameDraft.trim().slice(0, 20); if (nextName) setVisitorName(nextName); setEditingSpeaker(null); }
   function reset(nextCategory = category, nextMode = mode) {
     controller.current?.abort(); setMessages([]); setError(null); setNotice(''); setCategory(nextCategory); setMode(nextMode);
+  }
+  function openConfig() { setConfigDraft(modelConfig); setConfigOpen(true); }
+  function saveConfig() {
+    const next = { apiKey: configDraft.apiKey.trim().slice(0, 200), baseUrl: configDraft.baseUrl.trim(), model: configDraft.model.trim().slice(0, 80) };
+    setModelConfig(next); setConfigOpen(false);
+    try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(next)); } catch {}
+  }
+  function clearConfig() {
+    const next = defaultModelConfig();
+    setConfigDraft(next); setModelConfig(next); setConfigOpen(false);
+    try { localStorage.removeItem(LLM_CONFIG_KEY); } catch {}
   }
   async function send(question = input, retry = false) {
     if (busyRef.current || !question.trim() || question.length > 1200) return;
@@ -85,7 +117,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     try {
       phase = '连接对话接口';
       const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity } }), signal: abort.signal });
+        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model }), signal: abort.signal });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         throw new TerminalRequestError({ message: payload.error || `接口返回 HTTP ${response.status}`, ...payload, status: response.status });
@@ -178,10 +210,24 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         {busy && <p role="status">终端正在回应…</p>}
       </div>
       <form className="world-terminal__composer" onSubmit={e => { e.preventDefault(); void send(); }}>
+        {configOpen && <div className="world-terminal__config-panel" role="dialog" aria-label="模型设置" onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}>
+          <p className="world-terminal__config-title">模型设置 · BYOK</p>
+          <label>API Key<input type="password" value={configDraft.apiKey} onChange={e => setConfigDraft({ ...configDraft, apiKey: e.target.value })} placeholder="留空使用站点默认 DeepSeek Key" autoComplete="off" aria-label="API Key" /></label>
+          <label>接口地址<input value={configDraft.baseUrl} onChange={e => setConfigDraft({ ...configDraft, baseUrl: e.target.value })} placeholder="https://api.deepseek.com/chat/completions" autoComplete="off" aria-label="接口地址" /></label>
+          <label>模型名称<input value={configDraft.model} onChange={e => setConfigDraft({ ...configDraft, model: e.target.value })} placeholder="deepseek-chat" autoComplete="off" aria-label="模型名称" /></label>
+          <p className="world-terminal__config-hint">配置保存在本机浏览器；密钥仅随本次请求发送给服务器用于调用对应模型，留空即使用站点默认。</p>
+          <div className="world-terminal__config-actions">
+            <button type="button" onClick={saveConfig}>保存设置</button>
+            <button type="button" onClick={clearConfig}>恢复默认</button>
+          </div>
+        </div>}
         <textarea ref={editor} value={input} onChange={e => setInput(e.target.value)} maxLength={1200} rows={2} aria-label="输入你的问题" placeholder={placeholder} disabled={busy}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !mobile) { e.preventDefault(); void send(); } }} />
         <div className="world-terminal__compose-bottom"><span>{input.length} / 1200 <span className="world-terminal__keyhint"> · Shift + Enter 换行</span></span>
-          {busy ? <button type="button" onClick={() => controller.current?.abort()}>停止生成 ■</button> : <button type="submit" disabled={!input.trim()} aria-label="发送问题">发送 ↗</button>}
+          <div className="world-terminal__compose-actions">
+            {busy ? <button type="button" onClick={() => controller.current?.abort()}>停止生成 ■</button> : <button type="submit" disabled={!input.trim()} aria-label="发送问题">发送 ↗</button>}
+            <button type="button" className="world-terminal__config" onClick={openConfig} aria-label="模型设置" aria-haspopup="dialog" aria-expanded={configOpen} title="自定义模型 Key">i</button>
+          </div>
         </div>
       </form>
       <footer className="world-terminal__footer">回答由 AI 生成，请结合来源判断 · 切换范围或模式会开启新对话</footer>
