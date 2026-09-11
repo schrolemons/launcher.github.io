@@ -57,7 +57,22 @@ export function validateChat(body) {
     if (url.protocol !== 'https:' || url.username || url.password || isIP(url.hostname) || url.hostname === 'localhost' || url.hostname.endsWith('.localhost')) throw new Error('接口地址需为 https 公网域名');
     cleanBaseUrl = url.href;
   }
-  return { messages: clean, category, mode, visitorName: cleanVisitorName || '访客', interactionState: cleanState, apiKey: cleanApiKey, baseUrl: cleanBaseUrl, model: cleanModel };
+  const clampNumber = (value, min, max, integer = false) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const n = Number(value);
+    if (!Number.isFinite(n)) throw new Error('采样参数必须是有效数字');
+    const bounded = Math.min(max, Math.max(min, n));
+    return integer ? Math.round(bounded) : bounded;
+  };
+  const sampling = {
+    temperature: clampNumber(body.temperature, 0, 2),
+    top_p: clampNumber(body.top_p, 0, 1),
+    top_k: clampNumber(body.top_k, 1, 200, true),
+    presence_penalty: clampNumber(body.presence_penalty, -2, 2),
+    frequency_penalty: clampNumber(body.frequency_penalty, -2, 2),
+    max_tokens: clampNumber(body.max_tokens, 1, 8192, true),
+  };
+  return { messages: clean, category, mode, visitorName: cleanVisitorName || '访客', interactionState: cleanState, apiKey: cleanApiKey, baseUrl: cleanBaseUrl, model: cleanModel, sampling };
 }
 
 export function retrievalQuery(messages) {

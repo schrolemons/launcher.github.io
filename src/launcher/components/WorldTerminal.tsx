@@ -6,19 +6,29 @@ import ChatMarkdown from './ChatMarkdown';
 import '../world-terminal.css';
 
 const LLM_CONFIG_KEY = 'sch-nie:llm-config';
-const defaultModelConfig = () => ({ apiKey: '', baseUrl: '', model: '' });
-function loadModelConfig(): { apiKey: string; baseUrl: string; model: string } {
+type ModelConfig = {
+  apiKey: string; baseUrl: string; model: string;
+  temperature: string; top_p: string; top_k: string; presence_penalty: string; frequency_penalty: string; max_tokens: string;
+};
+const SAMPLING_FIELDS = ['temperature', 'top_p', 'top_k', 'presence_penalty', 'frequency_penalty', 'max_tokens'] as const;
+const SAMPLING_CONTROLS: readonly { key: typeof SAMPLING_FIELDS[number]; label: string; min: number; max: number; step: number; hint?: string }[] = [
+  { key: 'temperature', label: '温度 temperature', min: 0, max: 2, step: 0.05 },
+  { key: 'top_p', label: 'Top-P', min: 0, max: 1, step: 0.05 },
+  { key: 'top_k', label: 'Top-K', min: 1, max: 200, step: 1, hint: '仅部分模型支持' },
+  { key: 'presence_penalty', label: '存在惩罚', min: -2, max: 2, step: 0.1 },
+  { key: 'frequency_penalty', label: '频率惩罚', min: -2, max: 2, step: 0.1 },
+  { key: 'max_tokens', label: '输出上限 max_tokens', min: 1, max: 8192, step: 1 },
+];
+const defaultModelConfig = (): ModelConfig => ({ apiKey: '', baseUrl: '', model: '', temperature: '', top_p: '', top_k: '', presence_penalty: '', frequency_penalty: '', max_tokens: '' });
+function loadModelConfig(): ModelConfig {
   try {
     if (typeof localStorage === 'undefined') return defaultModelConfig();
     const raw = localStorage.getItem(LLM_CONFIG_KEY);
     if (raw) {
       const value = JSON.parse(raw);
       if (value && typeof value === 'object' && !Array.isArray(value)) {
-        return {
-          apiKey: typeof value.apiKey === 'string' ? value.apiKey : '',
-          baseUrl: typeof value.baseUrl === 'string' ? value.baseUrl : '',
-          model: typeof value.model === 'string' ? value.model : '',
-        };
+        const str = (key: string) => typeof value[key] === 'string' ? value[key] : '';
+        return { apiKey: str('apiKey'), baseUrl: str('baseUrl'), model: str('model'), temperature: str('temperature'), top_p: str('top_p'), top_k: str('top_k'), presence_penalty: str('presence_penalty'), frequency_penalty: str('frequency_penalty'), max_tokens: str('max_tokens') };
       }
     }
   } catch {}
@@ -86,7 +96,11 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   }
   function openConfig() { setConfigDraft(modelConfig); setConfigOpen(true); }
   function saveConfig() {
-    const next = { apiKey: configDraft.apiKey.trim().slice(0, 200), baseUrl: configDraft.baseUrl.trim(), model: configDraft.model.trim().slice(0, 80) };
+    const next: ModelConfig = {
+      apiKey: configDraft.apiKey.trim().slice(0, 200), baseUrl: configDraft.baseUrl.trim(), model: configDraft.model.trim().slice(0, 80),
+      temperature: configDraft.temperature.trim(), top_p: configDraft.top_p.trim(), top_k: configDraft.top_k.trim(),
+      presence_penalty: configDraft.presence_penalty.trim(), frequency_penalty: configDraft.frequency_penalty.trim(), max_tokens: configDraft.max_tokens.trim(),
+    };
     setModelConfig(next); setConfigOpen(false);
     try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(next)); } catch {}
   }
@@ -116,8 +130,13 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     };
     try {
       phase = '连接对话接口';
+      const sampling: Record<string, number> = {};
+      for (const field of SAMPLING_FIELDS) {
+        const raw = modelConfig[field];
+        if (raw.trim() !== '' && Number.isFinite(Number(raw))) sampling[field] = Number(raw);
+      }
       const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model }), signal: abort.signal });
+        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model, ...sampling }), signal: abort.signal });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         throw new TerminalRequestError({ message: payload.error || `接口返回 HTTP ${response.status}`, ...payload, status: response.status });
@@ -216,6 +235,15 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
           <label>API Key<input type="password" value={configDraft.apiKey} onChange={e => setConfigDraft({ ...configDraft, apiKey: e.target.value })} placeholder="留空使用站点默认 DeepSeek Key" autoComplete="off" aria-label="API Key" /></label>
           <label>接口地址<input value={configDraft.baseUrl} onChange={e => setConfigDraft({ ...configDraft, baseUrl: e.target.value })} placeholder="https://api.deepseek.com/chat/completions" autoComplete="off" aria-label="接口地址" /></label>
           <label>模型名称<input value={configDraft.model} onChange={e => setConfigDraft({ ...configDraft, model: e.target.value })} placeholder="deepseek-chat" autoComplete="off" aria-label="模型名称" /></label>
+          <details className="world-terminal__config-advanced">
+            <summary>高级采样参数 <span>留空即用默认</span></summary>
+            <p className="world-terminal__config-advhint">仅对 OpenAI 兼容接口生效；服务商不支持的参数会被忽略。</p>
+            <div className="world-terminal__config-grid">
+              {SAMPLING_CONTROLS.map(({ key: field, label, min, max, step, hint }) => (
+                <label key={field}>{label}{hint && <em>{hint}</em>}<input type="number" min={min} max={max} step={step} value={configDraft[field]} onChange={e => setConfigDraft({ ...configDraft, [field]: e.target.value })} placeholder="自动" /></label>
+              ))}
+            </div>
+          </details>
           <p className="world-terminal__config-hint">配置保存在本机浏览器；密钥仅随本次请求发送给服务器用于调用对应模型，留空即使用站点默认。</p>
           <div className="world-terminal__config-actions">
             <button type="button" onClick={saveConfig}>保存设置</button>
