@@ -10,8 +10,10 @@ it('使用运行时模型配置生成有序向量，不泄漏密钥', async () =
   expect(JSON.parse(fetcher.mock.calls[0][1].body).model).toBe('embedding-test-model');
   expect(fetcher.mock.calls[0][1].body).not.toContain('test-key');
 });
-it('默认使用外部模式，模型配置可随环境切换，禁止未知模式', () => {
-  expect(embeddingMode()).toBe('external');
+it('默认使用无需模型变量的 Upstash 模式，外部模型配置可随环境切换', () => {
+  vi.stubEnv('VECTOR_EMBEDDING_MODE', '');
+  expect(embeddingMode()).toBe('upstash-data');
+  vi.stubEnv('VECTOR_EMBEDDING_MODE', 'external');
   expect(embeddingConfig().model).toBe('embedding-test-model');
   vi.stubEnv('VECTOR_EMBEDDING_MODEL', 'another-model');
   expect(embeddingConfig().model).toBe('another-model');

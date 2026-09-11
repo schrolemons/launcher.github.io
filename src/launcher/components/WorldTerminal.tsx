@@ -6,6 +6,11 @@ import '../world-terminal.css';
 
 type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; complete?: boolean };
 const fallback = [{ site: 'all', question: '你能怎样帮我理解这些站点的内容？' }];
+const modeCopy = {
+  terminal: { eyebrow: 'THREE PROJECTS / TERMINAL', title: '从资料出发，找到新的联系。', description: '我会先查阅三个站点的内容，再用清晰的方式回答。你也可以继续追问。', placeholder: '问问三个站点里的内容…', promptLabel: '试着问我' },
+  tutor: { eyebrow: 'THREE PROJECTS / EXPLAINER', title: '把复杂内容讲得更容易懂。', description: '我会拆开概念、补充上下文，并按你的节奏一步步解释。', placeholder: '请让我解释一个概念…', promptLabel: '从这里开始' },
+  scholar: { eyebrow: 'THREE PROJECTS / RESEARCH', title: '沿着来源，核对每一层细节。', description: '我会优先引用站点资料，区分原文、推断和仍待确认的部分。', placeholder: '请帮我考据一个设定…', promptLabel: '开始考据' },
+} as const;
 export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOpenChange }: { mobile?: boolean; accent?: string; onOpenChange?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false), [input, setInput] = useState('');
   const [site, setSite] = useState('all'), [mode, setMode] = useState('terminal');
@@ -72,13 +77,13 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     } finally { window.clearTimeout(timer); setBusy(false); busyRef.current = false; controller.current = null; }
   }
   const retryQuestion = messages.at(-2)?.role === 'user' ? messages.at(-2)!.content : '';
-  const modal = open && <dialog ref={dialog} className={`world-terminal ${mobile ? 'world-terminal--mobile' : ''}`} aria-labelledby={mobile ? 'mobile-terminal-title' : 'terminal-title'}
+  const copy = modeCopy[mode as keyof typeof modeCopy];
+  const modal = open && <dialog ref={dialog} className={`world-terminal world-terminal--${mode} ${mobile ? 'world-terminal--mobile' : ''}`} aria-labelledby={mobile ? 'mobile-terminal-title' : 'terminal-title'}
     style={{ '--terminal-accent': accent } as CSSProperties} onCancel={e => { e.preventDefault(); close(); }} onClose={close}
     onClick={e => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) close(); } }}>
     <div className="world-terminal__shell">
       <header className="world-terminal__header">
-        <div className="world-terminal__mark" aria-hidden="true">{'[o_o]'}</div>
-        <div><span className="world-terminal__eyebrow">SCHNIE / INTELLIGENCE INTERFACE</span><h2 id={mobile ? 'mobile-terminal-title' : 'terminal-title'}>世界终端 <span>09</span></h2></div>
+        <div><span className="world-terminal__eyebrow">{copy.eyebrow}</span><h2 id={mobile ? 'mobile-terminal-title' : 'terminal-title'}>THREE PROJECTS</h2></div>
         <button type="button" className="world-terminal__close" onClick={close} aria-label="关闭世界终端">×</button>
       </header>
       <div className="world-terminal__settings">
@@ -92,12 +97,10 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       </div>
       <div className="world-terminal__thread" ref={scroll} onScroll={() => { const el = scroll.current; if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 90; }}>
         {!messages.length && <section className="world-terminal__welcome">
-          <div className="world-terminal__orb" aria-hidden="true"><span>{'(^_^)'}</span></div>
-          <p className="world-terminal__eyebrow">THREE WORLDS. ONE CONVERSATION.</p>
-          <h3>从一个问题，<br />抵达另一个世界。</h3>
-          <p>我是第九边缘开发的智能终端。<br />可以帮你梳理设定、解释概念，也可以一起讨论。<br /><span>资料负责严谨，我负责偶尔不那么严肃。</span></p>
-          <button type="button" className="world-terminal__suggestion" onClick={() => { setInput(suggested); editor.current?.focus(); }}><span>试着问我</span><strong key={suggested}>{suggested}</strong><span aria-hidden="true">↗</span></button>
-          <div className="world-terminal__capabilities"><span>01 / 有据可循</span><span>02 / 追问与理解</span><span>03 / 跨站探索</span></div>
+          <p className="world-terminal__eyebrow">{copy.eyebrow}</p>
+          <h3>{copy.title}</h3>
+          <p>{copy.description}</p>
+          <button type="button" className="world-terminal__suggestion" onClick={() => { setInput(suggested); editor.current?.focus(); }}><span>{copy.promptLabel}</span><strong key={`${mode}-${suggested}`}>{suggested}</strong><span aria-hidden="true">↗</span></button>
         </section>}
         {messages.map((message, i) => <article className={`world-terminal__message world-terminal__message--${message.role}`} key={i}>
           <p className="world-terminal__speaker">{message.role === 'user' ? 'YOU / 访客' : '09 / 世界终端'}{message.role === 'assistant' && !message.complete && message.content && !busy ? ' · 未完成' : ''}</p>
@@ -115,7 +118,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         {busy && <p role="status">终端正在回应…</p>}
       </div>
       <form className="world-terminal__composer" onSubmit={e => { e.preventDefault(); void send(); }}>
-        <textarea ref={editor} value={input} onChange={e => setInput(e.target.value)} maxLength={1200} rows={2} aria-label="输入你的问题" placeholder="输入问题，或接着聊下去…" disabled={busy}
+        <textarea ref={editor} value={input} onChange={e => setInput(e.target.value)} maxLength={1200} rows={2} aria-label="输入你的问题" placeholder={copy.placeholder} disabled={busy}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !mobile) { e.preventDefault(); void send(); } }} />
         <div className="world-terminal__compose-bottom"><span>{input.length} / 1200 <span className="world-terminal__keyhint"> · Shift + Enter 换行</span></span>
           {busy ? <button type="button" onClick={() => controller.current?.abort()}>停止生成 ■</button> : <button type="submit" disabled={!input.trim()} aria-label="发送问题">发送 ↗</button>}
@@ -125,8 +128,8 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     </div>
   </dialog>;
   return <>
-    <button ref={trigger} type="button" className={`terminal-trigger ${mobile ? 'terminal-trigger--mobile' : ''}`} onClick={() => setOpen(true)} aria-label="打开世界终端，开始 AI 对话" aria-haspopup="dialog">
-      <span className="terminal-trigger__icon" aria-hidden="true">⌘</span><span className="terminal-trigger__label">世界终端 <small>AI</small></span><span className="terminal-trigger__hint">提问、理解，或发现新的联系</span><span className="terminal-trigger__arrow" aria-hidden="true">↗</span>
+    <button ref={trigger} type="button" className={`terminal-trigger ${mobile ? 'terminal-trigger--mobile' : ''}`} onClick={() => setOpen(true)} aria-label="打开世界终端对话入口" aria-haspopup="dialog">
+      <span className="terminal-trigger__label">打开对话</span><span className="terminal-trigger__hint">Ask the archive</span><span className="terminal-trigger__arrow" aria-hidden="true">↗</span>
     </button>
     {typeof document !== 'undefined' && modal && createPortal(modal, document.body)}
   </>;

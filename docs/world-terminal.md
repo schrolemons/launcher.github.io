@@ -4,7 +4,7 @@
 
 保留当前 Dense 索引，嵌入模型和服务通过环境变量接入。**无需创建第二个数据库，无需升级套餐。** `launcher-v2` 是这个库里面的 namespace（分区），三个站点共享它，使用 `site` 元数据筛选。原默认分区的 598 条记录不会被脚本删除；容量预检会把它们算进去。
 
-重要：数据库存储的 Free 套餐不等同于外部嵌入服务免费。`external` 模式会把文本发送到你配置的 OpenAI 兼容嵌入端点；模型名、端点、密钥和维度都由环境变量决定。它保证查询和同步使用同一套配置，不把 `query({data})` 错当作自动嵌入。只有控制台明确显示该索引提供原始文本自动嵌入，才可以改为 `upstash-data`；此时仍需确认控制台显示的 Dense 维度。
+重要：数据库存储的 Free 套餐不等同于外部嵌入服务免费。默认 `upstash-data` 模式直接使用索引创建时配置的托管嵌入能力，不需要在 GitHub Actions 中填写模型变量。只有索引没有托管嵌入能力时，才改用 `external` 模式，把文本发送到你配置的兼容嵌入端点；模型名、端点、密钥和维度都由环境变量决定。不要把 `query({data})` 用在未配置托管嵌入的 Dense 索引上。
 
 若更换嵌入模型或端点，必须重新嵌入整套文章；不同模型的向量不能混用。脚本会把嵌入身份写进 metadata 和记录 ID，在同一个 namespace 内生成新版本，并在新向量完成后清理旧版本。本次代码不会自动重建数据库，也不会自动切换套餐。
 
@@ -57,7 +57,7 @@ Metadata 保存以下实际信息，并有长度上限：
 把 `.env.example` 中的变量填入 Vercel 项目设置的 Environment Variables。令牌只存服务端。GitHub 仓库 Settings → Secrets and variables → Actions：
 
 - Secrets：`UPSTASH_VECTOR_REST_URL`、`UPSTASH_VECTOR_REST_TOKEN`（同步需读写令牌）。
-- Variables：`VECTOR_EMBEDDING_MODE=external`、`VECTOR_EMBEDDING_MODEL`（你选择的模型标识）、`VECTOR_EMBEDDING_DIMENSION`（现有 Dense 维度）、`VECTOR_EMBEDDING_URL`（OpenAI 兼容端点）。只有确认 Upstash 原始文本自动嵌入时才改成 `upstash-data`。
+- Variables：默认 `VECTOR_EMBEDDING_MODE=upstash-data`，不需要模型变量。若改用 `external`，再填写 `VECTOR_EMBEDDING_MODEL`（你选择的模型标识）、`VECTOR_EMBEDDING_DIMENSION`（现有 Dense 维度）和 `VECTOR_EMBEDDING_URL`（兼容端点）。
 - Secrets：`VECTOR_EMBEDDING_API_KEY`（若端点需要）；旧的 `OPENAI_API_KEY` 仍可作为兼容回退。Vercel 同时需要 `UPSTASH_REDIS_REST_URL`、`UPSTASH_REDIS_REST_TOKEN`、`DEEPSEEK_API_KEY`。
 - API 的 `UPSTASH_VECTOR_NAMESPACE` 必须与 workflow 的 `launcher-v2` 相同。API 可使用只读 Vector token。
 - `CHAT_ALLOWED_ORIGINS` 填实际 launcher 的完整来源地址，以逗号分隔；默认已包含 sch-nie、ark、blog、world、zero 域名，预览域名需要明确加入。
@@ -68,7 +68,7 @@ Metadata 保存以下实际信息，并有长度上限：
 
 先运行无凭据、无网络的预检：`pnpm sync:vector:check`。报告写入 `.reports/vector-sync.json`，含 metadata 示例。正式同步命令是 `pnpm sync:vector`，会消耗数据库更新及其自动嵌入服务的额度；请确认控制台配置后再执行。
 
-工作流监听三站目录、兼容 posts、同步代码及依赖锁文件；在 main 推送时运行，也可手动运行。同一仓库的同步串行执行。`external` 模式先按 64 条分批调用你配置的端点，再上传；上传成功且待嵌入数为 0 后才删除本分区旧片段。远端仍在处理时保留旧片段，下次重跑收尾；失败可重跑。不要同时从本地和 CI 运行同步。
+工作流监听三站目录、兼容 posts、同步代码及依赖锁文件；在 main 推送时运行，也可手动运行。同一仓库的同步串行执行。默认 `upstash-data` 模式直接上传原文；若切换为 `external`，则按 64 条分批调用配置端点后上传。上传成功且待嵌入数为 0 后才删除本分区旧片段。远端仍在处理时保留旧片段，下次重跑收尾；失败可重跑。不要同时从本地和 CI 运行同步。
 
 根据用户截图设置上限：98,000 条记录、700 MB 估算存储、单次同步 14,000 次保守估算操作、35 GB 估算新增传输量。这些是 70% 保护阈值，**不是目标填充量**。检查当前全库占用与新增记录峰值；储存估算含向量、正文、元数据和余量。报告的存储/带宽是估算，不能替代 Dashboard；同步操作预算是单次运行上限，不是账户累计用量监控。其他应用和多次同步共享的日/月额度仍以控制台为准。免费套餐是否阻止超额收费也以账号实际设置为准。
 

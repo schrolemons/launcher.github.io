@@ -2,7 +2,7 @@ const DEFAULT_URL = 'https://api.openai.com/v1/embeddings';
 const MODES = ['external', 'upstash-data'];
 
 export function embeddingMode() {
-  const mode = process.env.VECTOR_EMBEDDING_MODE || 'external';
+  const mode = process.env.VECTOR_EMBEDDING_MODE || 'upstash-data';
   if (!MODES.includes(mode)) throw new Error(`VECTOR_EMBEDDING_MODE must be ${MODES.join(' or ')}`);
   return mode;
 }
@@ -12,7 +12,7 @@ export function embeddingConfig() {
   const mode = embeddingMode();
   if (mode === 'upstash-data') return { mode, model: process.env.VECTOR_EMBEDDING_MODEL || '' };
   const model = String(process.env.VECTOR_EMBEDDING_MODEL || '').trim();
-  if (!model) throw new Error('缺少 VECTOR_EMBEDDING_MODEL；请填写与现有 Dense 索引兼容的嵌入模型标识');
+  if (!model) throw new Error('外部嵌入配置不完整，请检查模型标识、端点和密钥配置');
   const dimensionValue = String(process.env.VECTOR_EMBEDDING_DIMENSION || '').trim();
   const dimension = dimensionValue ? Number(dimensionValue) : undefined;
   if (dimensionValue && (!Number.isInteger(dimension) || dimension <= 0)) throw new Error('VECTOR_EMBEDDING_DIMENSION 必须是正整数');

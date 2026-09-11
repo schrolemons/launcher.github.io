@@ -29,3 +29,13 @@ it('仅主动发送时请求 API，展示错误且可以重试', async () => {
   expect(JSON.parse(fetcher.mock.calls[0][1].body).messages[0].role).toBe('user');
   expect(screen.getByRole('button', { name: '重试上次问题' })).toBeInTheDocument();
 });
+it('切换交流模式会同步更新简介、推荐入口和输入提示', () => {
+  const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
+  render(<WorldTerminal />);
+  fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
+  fireEvent.change(screen.getByRole('combobox', { name: '交流模式' }), { target: { value: 'scholar' } });
+  expect(screen.getByRole('heading', { name: 'THREE PROJECTS' })).toBeInTheDocument();
+  expect(screen.getByText('沿着来源，核对每一层细节。')).toBeInTheDocument();
+  expect(screen.getByPlaceholderText('请帮我考据一个设定…')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /开始考据/ })).toBeInTheDocument();
+});
