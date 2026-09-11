@@ -16,6 +16,12 @@ const modeLabels = { chat: '轻松畅聊', tutor: '耐心讲解', scholar: '资�
 const uniqueArticleSources = (sources: Source[] = []) => sources.filter(source => (() => {
   try { const u = new URL(source.url); return u.protocol === 'https:' && !u.username && !u.password && !!u.hostname; } catch { return false; }
 })()).filter((source, index, all) => all.findIndex(item => item.url === source.url) === index).slice(0, 3);
+// 推荐卡片只跟随回答中真正引用（角标 ［n］）过的来源：仅提及名字、未使用具体内容的来源不生成卡片。
+const citedSources = (sources: Source[] = [], content = '') => {
+  const cited = new Set<number>();
+  for (const match of content.matchAll(/[［\[](\d{1,3})[］\]]/g)) cited.add(Number(match[1]));
+  return uniqueArticleSources(sources.filter(source => cited.has(source.number)));
+};
 const modeCopy = {
   chat: { tag: 'CHAT WITH AI', title: '从资料出发，找到新的联系。', description: (scope: string) => scope === '三类资料' ? '我会在 BLOG、WORLD、ZERO 三类资料中查找，再自然地和你聊下去；ARK 与 WORLD 是同一世界档案的不同呈现入口。' : `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…` },
   tutor: { tag: 'EXPLAINER', title: '把复杂内容讲得更容易懂。', description: (scope: string) => `我会把${scope}里的概念拆开，按你的节奏一步步解释。`, placeholder: (scope: string) => `请让我解释${scope}里的一个概念…` },
@@ -163,7 +169,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
             try { const u = new URL(source.url); safe = /^https:$/.test(u.protocol) && !u.username && !u.password && !!u.hostname; } catch {}
             return safe && <a href={source.url} target="_blank" rel="noopener noreferrer" key={source.number}><span>[{source.number}] {source.category.toUpperCase()} · {source.categoryName || '资料'}</span> {source.title}<small>{source.section}{source.categories?.length ? ` · ${source.categories.join(' / ')}` : ''}{source.urlKind === 'launcher-home' ? ' · 终端入口（未提供文章直链）' : ' · 阅读原文'} ↗</small></a>;
           })}</details>}
-          {message.role === 'assistant' && !!message.content?.trim() && !!message.sources?.length && message.control?.sources !== 'none' && <div className="world-terminal__article-links">{uniqueArticleSources(message.sources).map(source => <a href={source.url} target="_blank" rel="noopener noreferrer" key={`article-${source.url}`}>阅读《{source.title}》 ↗</a>)}</div>}
+          {message.role === 'assistant' && !!message.content?.trim() && message.control?.sources !== 'none' && citedSources(message.sources, message.content).length > 0 && <div className="world-terminal__article-links">{citedSources(message.sources, message.content).map(source => <a href={source.url} target="_blank" rel="noopener noreferrer" key={`article-${source.url}`}>阅读《{source.title}》 ↗</a>)}</div>}
         </article>)}
       </div>
       <div className="world-terminal__feedback" aria-live="polite">
