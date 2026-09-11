@@ -124,6 +124,9 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     const abort = new AbortController(); controller.current = abort;
     const timer = window.setTimeout(() => abort.abort('timeout'), 35000);
     let answer = '', sources: Source[] = [], phase = '连接对话接口';
+    const configuredTokens = Number(modelConfig.max_tokens);
+    // 输出保险上限随用户配置的 max_tokens 放大（英文约 4 字符/token 为最宽情形），未配置时沿用 12000（对应默认 1200 token 的既有余量）。
+    const outputCap = Number.isFinite(configuredTokens) && configuredTokens > 0 ? Math.max(12000, configuredTokens * 4) : 12000;
     const update = (complete = false) => {
       const parsed = parseTerminalOutput(answer);
       setMessages([...next.slice(0, -1), { role: 'assistant', content: parsed.content, sources, control: parsed.control, complete }]);
@@ -144,7 +147,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       if (!response.body) throw new Error('浏览器未收到响应流');
       phase = '读取流式回答';
       await readTerminalStream(response.body, event => {
-        if (event.type === 'text') { answer += event.value; if (answer.length > 12000) throw new Error('回答过长，已停止'); update(); }
+        if (event.type === 'text') { answer += event.value; if (answer.length > outputCap) throw new Error('回答过长，已停止'); update(); }
         if (event.type === 'sources') { sources = event.value; update(); }
         if (event.type === 'length') setNotice('本次回答达到长度上限，你可以继续追问。');
       });
