@@ -35,6 +35,14 @@ function loadModelConfig(): ModelConfig {
   return defaultModelConfig();
 }
 
+function normalizeConfig(draft: ModelConfig): ModelConfig {
+  return {
+    apiKey: draft.apiKey.trim().slice(0, 200), baseUrl: draft.baseUrl.trim(), model: draft.model.trim().slice(0, 80),
+    temperature: draft.temperature.trim(), top_p: draft.top_p.trim(), top_k: draft.top_k.trim(),
+    presence_penalty: draft.presence_penalty.trim(), frequency_penalty: draft.frequency_penalty.trim(), max_tokens: draft.max_tokens.trim(),
+  };
+}
+
 type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; control?: TerminalControl; complete?: boolean };
 const categoryCopy = {
   all: { eyebrow: 'SCHNIE', label: '三类资料', short: '三类资料' },
@@ -76,7 +84,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const [visitorName, setVisitorName] = useState('访客'), [nameDraft, setNameDraft] = useState(''), [editingSpeaker, setEditingSpeaker] = useState<number | null>(null);
   const [modelConfig, setModelConfig] = useState(loadModelConfig), [configOpen, setConfigOpen] = useState(false), [configDraft, setConfigDraft] = useState(modelConfig);
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), editor = useRef<HTMLTextAreaElement>(null);
-  const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true);
+  const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true), configPanel = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
   const scope = categoryCopy[category as keyof typeof categoryCopy];
   const gridPrompts = suggestionPrompts[mode as 'chat' | 'tutor' | 'scholar'](scope.short).map(question => ({ tag: modeLabels[mode as keyof typeof modeLabels], question }));
@@ -85,6 +93,18 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     onOpenChange?.(open);
   }, [open, onOpenChange]);
   useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => {
+    if (!configOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (configPanel.current?.contains(event.target as Node)) return;
+      if ((event.target as Element)?.closest?.('.world-terminal__config')) return;
+      const next = normalizeConfig(configDraft);
+      setModelConfig(next); setConfigOpen(false);
+      try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(next)); } catch {}
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [configOpen, configDraft]);
   useEffect(() => {
     if (stick.current && scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight;
   }, [messages, busy, error]);
@@ -96,11 +116,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   }
   function openConfig() { setConfigDraft(modelConfig); setConfigOpen(true); }
   function saveConfig() {
-    const next: ModelConfig = {
-      apiKey: configDraft.apiKey.trim().slice(0, 200), baseUrl: configDraft.baseUrl.trim(), model: configDraft.model.trim().slice(0, 80),
-      temperature: configDraft.temperature.trim(), top_p: configDraft.top_p.trim(), top_k: configDraft.top_k.trim(),
-      presence_penalty: configDraft.presence_penalty.trim(), frequency_penalty: configDraft.frequency_penalty.trim(), max_tokens: configDraft.max_tokens.trim(),
-    };
+    const next = normalizeConfig(configDraft);
     setModelConfig(next); setConfigOpen(false);
     try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(next)); } catch {}
   }
@@ -232,7 +248,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         {busy && <p role="status">终端正在回应…</p>}
       </div>
       <form className="world-terminal__composer" onSubmit={e => { e.preventDefault(); void send(); }}>
-        {configOpen && <div className="world-terminal__config-panel" role="dialog" aria-label="模型设置" onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}>
+        {configOpen && <div ref={configPanel} className="world-terminal__config-panel" role="dialog" aria-label="模型设置" onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}>
           <p className="world-terminal__config-title">模型设置 · BYOK</p>
           <p className="world-terminal__config-warning">警告：自定义 Key 会发送到本站服务器、由服务器代你调用大模型，请自行评估风险后再决定是否填入。</p>
           <label>API Key<input type="password" value={configDraft.apiKey} onChange={e => setConfigDraft({ ...configDraft, apiKey: e.target.value })} placeholder="留空使用站点默认 DeepSeek Key" autoComplete="off" aria-label="API Key" /></label>
@@ -243,7 +259,11 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
             <p className="world-terminal__config-advhint">仅对 OpenAI 兼容接口生效；服务商不支持的参数会被忽略。</p>
             <div className="world-terminal__config-grid">
               {SAMPLING_CONTROLS.map(({ key: field, label, min, max, step, hint }) => (
-                <label key={field}>{label}{hint && <em>{hint}</em>}<input type="number" min={min} max={max} step={step} value={configDraft[field]} onChange={e => setConfigDraft({ ...configDraft, [field]: e.target.value })} placeholder="自动" /></label>
+                <label key={field}>
+                  <span className="world-terminal__config-name">{label}</span>
+                  <input type="number" min={min} max={max} step={step} value={configDraft[field]} onChange={e => setConfigDraft({ ...configDraft, [field]: e.target.value })} placeholder="自动" />
+                  <span className="world-terminal__config-range">{min} ~ {max}{hint ? ` · ${hint}` : ''}</span>
+                </label>
               ))}
             </div>
           </details>

@@ -104,9 +104,11 @@
 .world-terminal__config-advanced[open] summary::before { transform:rotate(90deg); }
 .world-terminal__config-advanced summary span { color:#5f7279; font-size:9px; }
 .world-terminal__config-advhint { margin:8px 0 2px; color:#7f9299; font-size:9px; line-height:1.6; }
-.world-terminal__config-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin-top:6px; }
-.world-terminal__config-grid label { margin-top:0; }
-.world-terminal__config-grid label em { display:block; font-style:normal; color:#6d8087; font-size:9px; margin-top:2px; }
+.world-terminal__config-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px; align-items:start; }
+.world-terminal__config-grid label { margin-top:0; display:flex; flex-direction:column; gap:5px; }
+.world-terminal__config-grid input { margin-top:0; }
+.world-terminal__config-name { color:#8ea39d; }
+.world-terminal__config-range { color:#5f7279; font-size:9px; line-height:1.4; }
 .world-terminal__footer { flex-shrink:0; padding:10px 20px 14px; text-align:center; color:#7f949d; font-size:10px; line-height:1.5; }
 .world-terminal--tutor { --terminal-accent:#a8d8ff; }
 .world-terminal--scholar { --terminal-accent:#d8b8ff; }
