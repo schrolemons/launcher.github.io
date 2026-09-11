@@ -41,6 +41,18 @@ it('发送白名单过滤条件、来源和完整 UTF-8 响应', async () => {
   const payload = JSON.parse(fetcher.mock.calls[0][1].body);
   expect(payload.max_tokens).toBe(1200); expect(payload.messages[1].content).toContain('原文资料');
 });
+it('日常寒暄不查询向量资料，也不发送来源上下文', async () => {
+  const req = request(); req.body.messages[0].content = '你好';
+  const res = response(); await createChatHandler(() => services, fetcher)(req, res);
+  expect(res.statusCode).toBe(200);
+  expect(services.index.query).not.toHaveBeenCalled();
+  expect(services.index.fetch).not.toHaveBeenCalled();
+  expect(res.output).toContain('event: sources');
+  const payload = JSON.parse(fetcher.mock.calls[0][1].body);
+  expect(payload.messages[0].content).toContain('不要调用、提及或引用站点资料');
+  expect(payload.messages[1].content).toContain('不附加资料来源');
+  expect(payload.messages[1].content).not.toContain('原文资料');
+});
 it('允许正式 launcher 域名作为跨站来源', async () => {
   const req = request(); req.headers.origin = 'https://launcher.sch-nie.com'; req.headers['sec-fetch-site'] = 'cross-site';
   const res = response(); await createChatHandler(() => services, fetcher)(req, res);

@@ -2,9 +2,11 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import suggestions from '../generated/chat-suggestions.json';
 import { readTerminalStream, type Source } from '../terminal-stream';
+import { parseTerminalOutput, type TerminalControl } from '../terminal-control';
+import ChatMarkdown from './ChatMarkdown';
 import '../world-terminal.css';
 
-type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; complete?: boolean };
+type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; control?: TerminalControl; complete?: boolean };
 const siteCopy = {
   all: { eyebrow: 'SCHNIE', label: '三个站点', short: '三个站点' },
   blog: { eyebrow: 'BLOG', label: 'BLOG · 第九边缘博客', short: 'BLOG' },
@@ -66,7 +68,10 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     const abort = new AbortController(); controller.current = abort;
     const timer = window.setTimeout(() => abort.abort('timeout'), 35000);
     let answer = '', sources: Source[] = [], phase = '连接对话接口';
-    const update = (complete = false) => setMessages([...next.slice(0, -1), { role: 'assistant', content: answer, sources, complete }]);
+    const update = (complete = false) => {
+      const parsed = parseTerminalOutput(answer);
+      setMessages([...next.slice(0, -1), { role: 'assistant', content: parsed.content, sources, control: parsed.control, complete }]);
+    };
     try {
       phase = '连接对话接口';
       const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -98,6 +103,13 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const eyebrow = `${scope.eyebrow} / ${copy.tag}`;
   const description = copy.description(scope.label);
   const placeholder = copy.placeholder(scope.short);
+  const modeLabel = mode === 'chat' ? '轻松畅聊' : mode === 'tutor' ? '耐心讲解' : '资料考据';
+  const lastAssistant = [...messages].reverse().find(message => message.role === 'assistant');
+  const sourceCount = lastAssistant?.sources?.length || 0;
+  const fallbackTrust = error ? 0 : busy ? 48 : !messages.length ? 72 : lastAssistant?.complete ? Math.min(96, 54 + sourceCount * 7) : 36;
+  const trust = error ? 0 : lastAssistant?.control?.trust ?? fallbackTrust;
+  const status = error ? '连接异常' : lastAssistant?.control?.label || (busy ? '检索与生成' : messages.length ? '已完成' : '待机');
+  const mood = lastAssistant?.control?.mood;
   const modal = open && <dialog ref={dialog} className={`world-terminal world-terminal--${mode} ${mobile ? 'world-terminal--mobile' : ''}`} aria-labelledby={mobile ? 'mobile-terminal-title' : 'terminal-title'}
     style={{ '--terminal-accent': accent } as CSSProperties} onCancel={e => { e.preventDefault(); close(); }} onClose={close}
     onClick={e => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) close(); } }}>
@@ -115,6 +127,12 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         </select></label>
         <button type="button" disabled={busy || !messages.length} onClick={() => reset()}>新对话 ↗</button>
       </div>
+      <div className="world-terminal__statusbar" aria-label="终端状态">
+        <div className={`world-terminal__status world-terminal__status--${error ? 'error' : busy ? 'busy' : 'ready'}`} title={mood ? `模型状态：${mood}` : undefined}><span className="world-terminal__status-dot" aria-hidden="true" /> <span>AI 状态</span><strong>{status}</strong>{mood && <small className="world-terminal__mood">{mood}</small>}</div>
+        <div className="world-terminal__status"><span>模式</span><strong>{modeLabel}</strong></div>
+        <div className="world-terminal__status"><span>来源</span><strong>{sourceCount ? `${sourceCount} 条` : '待检索'}</strong></div>
+        <div className="world-terminal__trust" title="模型可根据证据、推断边界和回答完整度调整本次回答的可信度；缺少状态时使用保守估算"><span>回答可信度</span><div className="world-terminal__meter" role="meter" aria-label="回答可信度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={trust}><i style={{ width: `${trust}%` }} /></div><strong>{trust}%</strong></div>
+      </div>
       <div className="world-terminal__thread" ref={scroll} onScroll={() => { const el = scroll.current; if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 90; }}>
         {!messages.length && <section className="world-terminal__welcome">
           <p className="world-terminal__eyebrow">{eyebrow}</p>
@@ -124,7 +142,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         </section>}
         {messages.map((message, i) => <article className={`world-terminal__message world-terminal__message--${message.role}`} key={i}>
           <p className="world-terminal__speaker">{message.role === 'user' ? 'YOU / 访客' : '09 / 世界终端'}{message.role === 'assistant' && !message.complete && message.content && !busy ? ' · 未完成' : ''}</p>
-          <div className="world-terminal__text">{message.content || (busy ? '正在检索资料，组织回答…' : '')}</div>
+          <div className="world-terminal__text">{message.content ? (message.role === 'assistant' ? <ChatMarkdown content={message.content} /> : message.content) : (busy ? '正在检索资料，组织回答…' : '')}</div>
           {!!message.sources?.length && <details className="world-terminal__sources"><summary>参考资料 · {message.sources.length}</summary>{message.sources.map(source => {
             let safe = false;
             try { const u = new URL(source.url); safe = /^https:$/.test(u.protocol) && ['blog.sch-nie.com', 'world.sch-nie.com', 'zero.sch-nie.com'].includes(u.hostname); } catch {}

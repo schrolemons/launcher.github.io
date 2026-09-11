@@ -1,0 +1,17 @@
+import { render, screen } from '@testing-library/react';
+import { expect, it } from 'vitest';
+import ChatMarkdown from './ChatMarkdown';
+
+it('渲染受控 Markdown、提示块和安全链接', () => {
+  render(<ChatMarkdown content={'## 核心设定\n\n**重点**与 *推测*。\n\n%note primary%\n请注意：这是资料摘要。\n%endnote%\n\n- 第一条\n- 第二条\n\n[阅读来源](https://world.sch-nie.com/article) [危险链接](javascript:alert(1)'} />);
+  expect(screen.getByRole('heading', { name: '核心设定' })).toBeInTheDocument();
+  expect(screen.getByText('重点')).toBeInTheDocument();
+  expect(screen.getByText('primary')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '阅读来源' })).toHaveAttribute('href', 'https://world.sch-nie.com/article');
+  expect(screen.queryByRole('link', { name: '危险链接' })).not.toBeInTheDocument();
+});
+it('支持单行 note 语法', () => {
+  render(<ChatMarkdown content="%note warning% 这是一条提示" />);
+  expect(screen.getByText('warning')).toBeInTheDocument();
+  expect(screen.getByText('这是一条提示')).toBeInTheDocument();
+});

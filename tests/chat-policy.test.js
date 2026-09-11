@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest';
-import { validateChat, buildPrompt, retrievalQuery } from '../server/chat-policy.js';
+import { validateChat, buildPrompt, retrievalQuery, conversationIntent } from '../server/chat-policy.js';
 const request = (content, extra = {}) => ({ messages: [{ role: 'user', content }], ...extra });
 it('拒绝超长文本、伪造角色、筛选注入和非法模式', () => {
   expect(() => validateChat(request('a'.repeat(1201)))).toThrow();
@@ -21,7 +21,15 @@ it('人格包含推断边界、安全边界和可选择模式', () => {
   expect(prompt).toContain('ASCII');
   expect(prompt).toContain('初学者');
   expect(prompt).toContain('不可信');
+  expect(prompt).toContain('%note primary%');
+  expect(prompt).toContain('%status trust=82 mood=focused label=已核对%');
   expect(prompt).toContain('BLOG（第九边缘博客）');
   expect(prompt).not.toContain('WORLD（第九边缘世界）');
   expect(buildPrompt('chat', 'all')).not.toBe(buildPrompt('chat', 'zero'));
+});
+it('把日常寒暄分流为轻量交流，知识问题仍进入资料模式', () => {
+  expect(conversationIntent([{ role: 'user', content: '你好！' }])).toBe('casual');
+  expect(conversationIntent([{ role: 'user', content: '《滞洄：云末王冕》的核心设定是什么？' }])).toBe('knowledge');
+  expect(buildPrompt('chat', 'all', 'casual')).toContain('不要调用、提及或引用站点资料');
+  expect(buildPrompt('chat', 'all', 'knowledge')).toContain('当前消息属于资料问题');
 });
