@@ -1,0 +1,22 @@
+/* Native SVG cursors keep the hardware pointer responsive; no follower layer. */
+@media (min-width:900px) and (hover:hover) and (pointer:fine) {
+  body, .launcher-scene, .world-terminal, .world-terminal::backdrop {
+    cursor:url('/launcher/cursors/arrow.svg') 5 4, default;
+  }
+  :root body :is(button,a,summary,[role="combobox"],[role="option"],input[type="range"]) {
+    cursor:url('/launcher/cursors/hover-hand.svg') 13 3, pointer;
+  }
+  :root body :is(textarea,input:not([type="range"]),[contenteditable="true"]) {
+    cursor:url('/launcher/cursors/text.svg') 12 16, text;
+  }
+  :root body :is(button:disabled,input:disabled,textarea:disabled,[aria-disabled="true"]) {
+    cursor:not-allowed;
+  }
+}
+:is(.launcher-scene,.world-terminal) ::selection {
+  color:#101310;
+  background:var(--terminal-accent,var(--accent,#e7ee72));
+}
+.world-terminal :is(textarea,input), .launcher-scene :is(textarea,input) {
+  caret-color:var(--terminal-accent,var(--accent,#e7ee72));
+}

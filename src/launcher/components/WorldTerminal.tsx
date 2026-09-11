@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { readTerminalStream, type Source } from '../terminal-stream';
 import { parseTerminalOutput, type TerminalControl } from '../terminal-control';
 import ChatMarkdown from './ChatMarkdown';
+import LauncherIcon from './LauncherIcon';
+import TerminalSelect from './TerminalSelect';
 import '../world-terminal.css';
 
 const LLM_CONFIG_KEY = 'sch-nie:llm-config';
@@ -55,7 +57,6 @@ const categoryCopy = {
   world: { eyebrow: 'WORLD', label: 'WORLD · 文明体系', short: 'WORLD' },
   zero: { eyebrow: 'ZERO', label: 'ZERO · 核心信息', short: 'ZERO' },
 } as const;
-const modeLabels = { chat: '轻松畅聊', tutor: '耐心讲解', scholar: '资料考据' } as const;
 const uniqueArticleSources = (sources: Source[] = []) => sources.filter(source => (() => {
   try { const u = new URL(source.url); return u.protocol === 'https:' && !u.username && !u.password && !!u.hostname; } catch { return false; }
 })()).filter((source, index, all) => all.findIndex(item => item.url === source.url) === index).slice(0, 3);
@@ -66,7 +67,7 @@ const citedSources = (sources: Source[] = [], content = '') => {
   return uniqueArticleSources(sources.filter(source => cited.has(source.number)));
 };
 const modeCopy = {
-  chat: { tag: 'CHAT WITH AI', title: '从资料出发，找到新的联系。', description: (scope: string) => scope === '三类资料' ? '我会在 BLOG、WORLD、ZERO 三类资料中查找，再自然地和你聊下去；ARK 与 WORLD 是同一世界档案的不同呈现入口。' : `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…` },
+  chat: { tag: 'CHAT WITH AI', title: '从一个问题开始。', description: (scope: string) => scope === '三类资料' ? '查阅 BLOG、WORLD、ZERO，聊聊你感兴趣的内容。' : `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…` },
   tutor: { tag: 'EXPLAINER', title: '把复杂内容讲得更容易懂。', description: (scope: string) => `我会把${scope}里的概念拆开，按你的节奏一步步解释。`, placeholder: (scope: string) => `请让我解释${scope}里的一个概念…` },
   scholar: { tag: 'RESEARCH', title: '沿着来源，核对每一层细节。', description: (scope: string) => `我会优先核对${scope}的资料，区分原文、推断和仍待确认的部分。`, placeholder: (scope: string) => `请帮我考据${scope}里的一个设定…` },
 } as const;
@@ -91,15 +92,36 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), editor = useRef<HTMLTextAreaElement>(null);
   const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true), configPanel = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
+  const configTrigger = useRef<HTMLButtonElement>(null);
   const scope = categoryCopy[category as keyof typeof categoryCopy];
-  const gridPrompts = suggestionPrompts[mode as 'chat' | 'tutor' | 'scholar'](scope.short).map(question => ({ tag: modeLabels[mode as keyof typeof modeLabels], question }));
+  const gridPrompts = suggestionPrompts[mode as 'chat' | 'tutor' | 'scholar'](scope.short);
   const configuredContext = Number(modelConfig.context_limit);
   const contextLimit = Number.isFinite(configuredContext) && configuredContext >= CONTEXT_LIMIT_MIN && configuredContext <= CONTEXT_LIMIT_MAX ? Math.round(configuredContext) : CONTEXT_LIMIT_DEFAULT;
   useEffect(() => {
-    if (open) { dialog.current?.showModal(); editor.current?.focus({ preventScroll: true }); }
+    if (open) { dialog.current?.showModal(); if (!mobile) editor.current?.focus({ preventScroll: true }); }
     onOpenChange?.(open);
-  }, [open, onOpenChange]);
+  }, [open, mobile, onOpenChange]);
+  useEffect(() => {
+    if (!open || !mobile || !window.visualViewport) return;
+    const viewport = window.visualViewport;
+    const syncViewport = () => {
+      // Follow the visible area when the on-screen keyboard opens; retain pinch zoom.
+      if (viewport.scale !== 1) return;
+      dialog.current?.style.setProperty('--terminal-height', `${viewport.height}px`);
+      dialog.current?.style.setProperty('--terminal-top', `${viewport.offsetTop}px`);
+      if (viewport.height < 500) dialog.current?.setAttribute('data-compact', 'true');
+      else dialog.current?.removeAttribute('data-compact');
+    };
+    syncViewport();
+    viewport.addEventListener('resize', syncViewport);
+    viewport.addEventListener('scroll', syncViewport);
+    return () => { viewport.removeEventListener('resize', syncViewport); viewport.removeEventListener('scroll', syncViewport); };
+  }, [open, mobile]);
   useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => {
+    if (!configOpen) return;
+    configPanel.current?.querySelector('button')?.focus({ preventScroll: true });
+  }, [configOpen]);
   useEffect(() => {
     if (!configOpen) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -114,9 +136,10 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [configOpen, configDraft]);
   useEffect(() => {
-    if (stick.current && scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight;
+    if (scroll.current && (!messages.length || stick.current)) scroll.current.scrollTop = messages.length ? scroll.current.scrollHeight : 0;
   }, [messages, busy, error]);
-  function close() { controller.current?.abort(); setOpen(false); trigger.current?.focus(); }
+  function close() { controller.current?.abort(); setConfigOpen(false); setOpen(false); trigger.current?.focus(); }
+  function closeConfig() { setConfigOpen(false); configTrigger.current?.focus({ preventScroll: true }); }
   function beginNameEdit(index: number) { setNameDraft(visitorName); setEditingSpeaker(index); }
   function commitName() { const nextName = nameDraft.trim().slice(0, 20); if (nextName) setVisitorName(nextName); setEditingSpeaker(null); }
   function reset(nextCategory = category, nextMode = mode) {
@@ -138,7 +161,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   async function send(question = input, retry = false) {
     if (busyRef.current || !question.trim() || question.length > 1200) return;
     if (hasCustomValues(modelConfig) && !modelConfig.apiKey.trim()) {
-      setError({ message: '你自定义了模型参数，但未提供自己的 API Key。请点击输入框旁的“i”补填。', code: 'API_KEY_REQUIRED', phase: '校验配置' });
+      setError({ message: '你自定义了模型参数，但未提供自己的 API Key。请打开“模型设置”补填。', code: 'API_KEY_REQUIRED', phase: '校验配置' });
       return;
     }
     const previous = retry ? messages.slice(0, -2) : messages;
@@ -212,34 +235,38 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     onClick={e => { if (e.target === e.currentTarget) { const box = e.currentTarget.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) close(); } }}>
     <div className="world-terminal__shell">
       <header className="world-terminal__header">
-        <div><span className="world-terminal__eyebrow">{eyebrow}</span><h2 id={mobile ? 'mobile-terminal-title' : 'terminal-title'}>SCHNIE: CHAT WITH AI</h2></div>
-        <button type="button" className="world-terminal__close" onClick={close} aria-label="关闭世界终端">×</button>
+        <div className="world-terminal__brand"><span className="world-terminal__brand-mark" aria-hidden="true">09</span><div><span className="world-terminal__eyebrow">SCHNIE / ARCHIVE</span><h2 id={mobile ? 'mobile-terminal-title' : 'terminal-title'}>世界终端 <span>CHAT WITH AI</span></h2></div></div>
+        <button type="button" className="world-terminal__close" onClick={close} aria-label="关闭世界终端"><LauncherIcon name="close" /></button>
       </header>
       <div className="world-terminal__settings">
-        <label>内容分类<select aria-label="内容分类" value={category} disabled={busy} onChange={e => reset(e.target.value, mode)}>
-          <option value="all">全部资料</option><option value="blog">BLOG · 经验与技术</option><option value="world">WORLD · 文明体系</option><option value="zero">ZERO · 核心信息</option>
-        </select></label>
-        <label>交流模式<select aria-label="交流模式" value={mode} disabled={busy} onChange={e => reset(category, e.target.value)}>
-          <option value="chat">轻松畅聊</option><option value="tutor">耐心讲解</option><option value="scholar">资料考据</option>
-        </select></label>
-        <button type="button" disabled={busy || !messages.length} onClick={() => reset()}>新对话 ↗</button>
+        <TerminalSelect label="内容分类" value={category} disabled={busy} onChange={value => reset(value, mode)} options={[
+          { value: 'all', label: '全部资料', detail: 'BLOG / WORLD / ZERO' }, { value: 'blog', label: 'BLOG', detail: '经验与技术' }, { value: 'world', label: 'WORLD', detail: '文明体系' }, { value: 'zero', label: 'ZERO', detail: '核心信息' },
+        ]} />
+        <TerminalSelect label="交流模式" value={mode} disabled={busy} onChange={value => reset(category, value)} options={[
+          { value: 'chat', label: '轻松畅聊', detail: '从资料出发，自然交流' }, { value: 'tutor', label: '耐心讲解', detail: '拆解概念，循序渐进' }, { value: 'scholar', label: '资料考据', detail: '核对原文，追溯来源' },
+        ]} />
+        <button className="world-terminal__new" type="button" disabled={busy || !messages.length} onClick={() => reset()}>新对话 ↗</button>
       </div>
       <div className="world-terminal__statusbar" aria-label="终端状态">
-        <div className={`world-terminal__status world-terminal__status--${error ? 'error' : busy ? 'busy' : 'ready'}`} title={mood ? `模型状态：${mood}` : undefined}><span className="world-terminal__status-dot" aria-hidden="true" /> <span>AI 状态</span><strong>{status}</strong>{mood && <small className="world-terminal__mood">{mood}</small>}</div>
-        <div className="world-terminal__status" title={`当前对话约占 ${contextChars} / ${contextLimit} 字符`}><span>上下文窗口</span><strong>{contextPercent}%</strong></div>
-        <div className="world-terminal__trust" title="模型可根据证据、推断边界和回答完整度调整本次回答的可信度；缺少状态时使用保守估算"><span>回答可信度</span><div className="world-terminal__meter" role="meter" aria-label="回答可信度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={trust}><i style={{ width: `${trust}%` }} /></div><strong>{trust}%</strong></div>
-        <div className="world-terminal__affinity" title="模型可根据本轮交流的态度调整好感度，并据此改变语气"><span>好感度</span><div className="world-terminal__meter" role="meter" aria-label="好感度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={affinity}><i style={{ width: `${affinity}%` }} /></div><strong>{affinity}%</strong></div>
+        <div className={`world-terminal__status world-terminal__status--${error ? 'error' : busy ? 'busy' : 'ready'}`} title={`${status}${mood ? ` · ${mood}` : ''}`}><span className="world-terminal__status-dot" aria-hidden="true" /> <span className="world-terminal__status-label" data-short="AI">AI 状态</span><strong>{status}</strong>{mood && <small className="world-terminal__mood">{mood}</small>}</div>
+        <div className="world-terminal__status" title={`当前对话约占 ${contextChars} / ${contextLimit} 字符`}><span className="world-terminal__status-label" data-short="上下文">上下文窗口</span><strong>{contextPercent}%</strong></div>
+        <div className="world-terminal__trust" title="模型可根据证据、推断边界和回答完整度调整本次回答的可信度；缺少状态时使用保守估算"><span className="world-terminal__status-label" data-short="可信度">回答可信度</span><div className="world-terminal__meter" role="meter" aria-label="回答可信度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={trust}><i style={{ width: `${trust}%` }} /></div><strong>{trust}%</strong></div>
+        <div className="world-terminal__affinity" title="模型可根据本轮交流的态度调整好感度，并据此改变语气"><span className="world-terminal__status-label" data-short="好感度">好感度</span><div className="world-terminal__meter" role="meter" aria-label="好感度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={affinity}><i style={{ width: `${affinity}%` }} /></div><strong>{affinity}%</strong></div>
       </div>
       <div className="world-terminal__thread" ref={scroll} onScroll={() => { const el = scroll.current; if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 90; }}>
         {!messages.length && <section className="world-terminal__welcome">
+          <div className="world-terminal__welcome-copy">
           <p className="world-terminal__eyebrow">{eyebrow}</p>
           <h3>{copy.title}</h3>
           <p>{description}</p>
+          </div>
+          <div className="world-terminal__insignia" aria-hidden="true"><span>09</span><svg viewBox="0 0 160 160" fill="none"><path d="M80 2 158 80 80 158 2 80Z M80 16 144 80 80 144 16 80Z" stroke="currentColor" /><path d="M64 18 80 2 96 18M142 64 158 80 142 96M96 142 80 158 64 142M18 96 2 80 18 64" stroke="var(--terminal-accent)" /></svg></div>
           <div className="world-terminal__suggestions">
-            {gridPrompts.map((item, i) => (
-              <button key={i} type="button" className="world-terminal__suggestion-card" onClick={() => { setInput(item.question); editor.current?.focus(); }}>
-                <span className="world-terminal__suggestion-card-cat">{item.tag}</span>
-                <strong>{item.question}</strong>
+            {gridPrompts.map((question, i) => (
+              <button key={i} type="button" className="world-terminal__suggestion-card" onClick={() => { setInput(question); editor.current?.focus(); }}>
+                <span className="world-terminal__suggestion-card-cat" aria-hidden="true">0{i + 1}</span>
+                <strong>{question}</strong>
+                <LauncherIcon name="outbound" />
               </button>
             ))}
           </div>
@@ -260,9 +287,8 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         {notice && <p>{notice}</p>}
         {busy && <p role="status">终端正在回应…</p>}
       </div>
-      <form className="world-terminal__composer" onSubmit={e => { e.preventDefault(); void send(); }}>
-        {configOpen && <div ref={configPanel} className="world-terminal__config-panel" role="dialog" aria-label="模型设置" onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}>
-          <p className="world-terminal__config-title">模型设置 · BYOK</p>
+        {configOpen && <div ref={configPanel} className="world-terminal__config-panel" role="dialog" aria-label="模型设置" onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeConfig(); } }}>
+          <div className="world-terminal__config-heading"><p className="world-terminal__config-title">模型设置</p><button type="button" className="world-terminal__close" aria-label="关闭模型设置" onClick={closeConfig}><LauncherIcon name="close" /></button></div>
           <p className="world-terminal__config-warning">警告：自定义 Key 会发送到本站服务器、由服务器代你调用大模型，请自行评估风险后再决定是否填入。</p>
           <label>API Key<input type="password" value={configDraft.apiKey} onChange={e => setConfigDraft({ ...configDraft, apiKey: e.target.value })} placeholder="留空使用站点默认 DeepSeek Key" autoComplete="off" aria-label="API Key" /></label>
           <label>接口地址<input value={configDraft.baseUrl} onChange={e => setConfigDraft({ ...configDraft, baseUrl: e.target.value })} placeholder="https://api.deepseek.com/chat/completions" autoComplete="off" aria-label="接口地址" /></label>
@@ -288,12 +314,13 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
             <button type="button" onClick={clearConfig}>恢复默认</button>
           </div>
         </div>}
+      <form className="world-terminal__composer" onSubmit={e => { e.preventDefault(); void send(); }}>
         <textarea ref={editor} value={input} onChange={e => setInput(e.target.value)} maxLength={1200} rows={2} aria-label="输入你的问题" placeholder={placeholder} disabled={busy}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !mobile) { e.preventDefault(); void send(); } }} />
         <div className="world-terminal__compose-bottom"><span>{input.length} / 1200 <span className="world-terminal__keyhint"> · Shift + Enter 换行</span></span>
           <div className="world-terminal__compose-actions">
+            <button ref={configTrigger} type="button" className="world-terminal__config" onClick={configOpen ? closeConfig : openConfig} aria-label="模型设置" aria-haspopup="dialog" aria-expanded={configOpen} title="模型设置"><LauncherIcon name="info" /></button>
             {busy ? <button type="button" onClick={() => controller.current?.abort()}>停止生成 ■</button> : <button type="submit" disabled={!input.trim()} aria-label="发送问题">发送 ↗</button>}
-            <button type="button" className="world-terminal__config" onClick={openConfig} aria-label="模型设置" aria-haspopup="dialog" aria-expanded={configOpen} title="自定义模型 Key">i</button>
           </div>
         </div>
       </form>

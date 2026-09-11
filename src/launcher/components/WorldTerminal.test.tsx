@@ -7,6 +7,41 @@ beforeEach(() => {
   HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new Event('close')); };
 });
 afterEach(() => vi.unstubAllGlobals());
+it('手机打开时不主动聚焦输入框，Enter 保留换行', () => {
+  const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
+  render(<WorldTerminal mobile />);
+  fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
+  const editor = screen.getByRole('textbox', { name: '输入你的问题' });
+  expect(editor).not.toHaveFocus();
+  fireEvent.change(editor, { target: { value: '测试问题' } });
+  fireEvent.keyDown(editor, { key: 'Enter' });
+  expect(fetcher).not.toHaveBeenCalled();
+});
+it('Escape 先关闭模型设置并恢复焦点，保留对话窗口', () => {
+  render(<WorldTerminal />);
+  fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
+  fireEvent.click(screen.getByRole('button', { name: '模型设置' }));
+  fireEvent.keyDown(screen.getByLabelText('API Key'), { key: 'Escape' });
+  expect(screen.queryByRole('dialog', { name: '模型设置' })).not.toBeInTheDocument();
+  expect(screen.getByRole('dialog')).toBeVisible();
+  expect(screen.getByRole('button', { name: '模型设置' })).toHaveFocus();
+});
+it('手机键盘缩小可视区域时对话框同步高度并进入紧凑布局', () => {
+  const viewport = Object.assign(new EventTarget(), { height: 844, offsetTop: 0, scale: 1 });
+  vi.stubGlobal('visualViewport', viewport);
+  render(<WorldTerminal mobile />);
+  fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
+  const modal = screen.getByRole('dialog');
+  viewport.height = 380;
+  viewport.offsetTop = 12;
+  viewport.dispatchEvent(new Event('resize'));
+  expect(modal.style.getPropertyValue('--terminal-height')).toBe('380px');
+  expect(modal.style.getPropertyValue('--terminal-top')).toBe('12px');
+  expect(modal).toHaveAttribute('data-compact', 'true');
+  viewport.height = 844;
+  viewport.dispatchEvent(new Event('resize'));
+  expect(modal).not.toHaveAttribute('data-compact');
+});
 it('打开终端及推荐轮播不发起模型请求，关闭后恢复入口', () => {
   const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
   render(<WorldTerminal />);
@@ -77,13 +112,15 @@ it('切换交流模式会同步更新简介、推荐入口和输入提示', () =
   const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
   render(<WorldTerminal />);
   fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
-  fireEvent.change(screen.getByRole('combobox', { name: '交流模式' }), { target: { value: 'scholar' } });
-  expect(screen.getByRole('heading', { name: 'SCHNIE: CHAT WITH AI' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('combobox', { name: '交流模式' }));
+  fireEvent.click(screen.getByRole('option', { name: /资料考据/ }));
+  expect(screen.getByRole('heading', { name: '世界终端 CHAT WITH AI' })).toBeInTheDocument();
   expect(screen.getByText('沿着来源，核对每一层细节。')).toBeInTheDocument();
   expect(screen.getByPlaceholderText('请帮我考据三类资料里的一个设定…')).toBeInTheDocument();
   const cards = screen.getAllByRole('button').filter(b => b.className.includes('suggestion-card'));
   expect(cards.length).toBe(3);
-  fireEvent.change(screen.getByRole('combobox', { name: '内容分类' }), { target: { value: 'blog' } });
+  fireEvent.click(screen.getByRole('combobox', { name: '内容分类' }));
+  fireEvent.click(screen.getByRole('option', { name: /BLOG 经验与技术/ }));
   expect(screen.getByText('我会优先核对BLOG · 经验与技术的资料，区分原文、推断和仍待确认的部分。')).toBeInTheDocument();
   expect(screen.getByPlaceholderText('请帮我考据BLOG里的一个设定…')).toBeInTheDocument();
   expect(screen.queryByText(/问问三类资料/)).not.toBeInTheDocument();

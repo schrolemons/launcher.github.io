@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36">
+  <defs><filter id="halo"><feGaussianBlur stdDeviation="1.2"/></filter></defs>
+  <path d="M11 19V4.5a2 2 0 0 1 4 0V14a2 2 0 0 1 4 0v1a2 2 0 0 1 4 0v2a2 2 0 0 1 4 0v7c0 3-3 5-3 8H12c0-3-3-5-5-8l-3-5c-1-2 1-4 3-2l4 4" fill="#e2f4f7" fill-opacity=".07"/>
+  <path d="M11 17V4.5a2 2 0 0 1 4 0V14m0-1a2 2 0 0 1 4 1v1a2 2 0 0 1 4 0v2a2 2 0 0 1 4 0v7c0 3-3 5-3 8H12m-2-4-6-9c-1-2 1-4 3-2l4 4" fill="none" stroke="#cceef6" stroke-width="2" stroke-opacity=".4" filter="url(#halo)"/>
+  <path d="M11 17V4.5a2 2 0 0 1 4 0V14m0-1a2 2 0 0 1 4 1v1a2 2 0 0 1 4 0v2a2 2 0 0 1 4 0v7c0 3-3 5-3 8H12m-2-4-6-9c-1-2 1-4 3-2l4 4" fill="none" stroke="#080d12" stroke-opacity=".7" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11 17V4.5a2 2 0 0 1 4 0V14m0-1a2 2 0 0 1 4 1v1a2 2 0 0 1 4 0v2a2 2 0 0 1 4 0v7c0 3-3 5-3 8H12m-2-4-6-9c-1-2 1-4 3-2l4 4" fill="none" stroke="#e4f6fa" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16 21v5m4-5v3M12 34h7" stroke="#c3e2ed" stroke-width=".7" stroke-opacity=".35"/>
+</svg>
