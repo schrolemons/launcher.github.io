@@ -30,21 +30,18 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const [open, setOpen] = useState(false), [input, setInput] = useState('');
   const [category, setCategory] = useState('all'), [mode, setMode] = useState('chat');
   const [messages, setMessages] = useState<Message[]>([]), [busy, setBusy] = useState(false);
-  const [error, setError] = useState<{ message: string; code?: string; phase?: string; requestId?: string; status?: number; hint?: string } | null>(null), [notice, setNotice] = useState(''), [tip, setTip] = useState(0);
+  const [error, setError] = useState<{ message: string; code?: string; phase?: string; requestId?: string; status?: number; hint?: string } | null>(null), [notice, setNotice] = useState('');
   const [visitorName, setVisitorName] = useState('访客'), [nameDraft, setNameDraft] = useState(''), [editingSpeaker, setEditingSpeaker] = useState<number | null>(null);
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), editor = useRef<HTMLTextAreaElement>(null);
   const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true);
   const busyRef = useRef(false);
   const scope = categoryCopy[category as keyof typeof categoryCopy];
   const options = suggestions.filter(s => category === 'all' || s.category === category);
-  const prompts = options.length ? options : [{ category, question: `你能怎样帮我理解${scope.label}的内容？` }];
-  const suggested = prompts[tip % prompts.length].question;
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const timer = window.setInterval(() => { if (!document.hidden) setTip(t => t + 1); }, 8500);
-    return () => window.clearInterval(timer);
-  }, []);
+  const gridPrompts = options.length >= 9 ? options.slice(0, 9) : [...options, ...Array.from({ length: Math.max(0, 9 - options.length) }, (_, i) => ({
+    category, question: category === 'all'
+      ? [`你能怎样帮我理解 BLOG 的内容？`, `请解读 WORLD 的核心设定。`, `ZERO 的关键信息有哪些？`][i % 3]
+      : `你能怎样帮我理解${scope.label}的内容？`,
+  }))];
   useEffect(() => {
     if (open) { dialog.current?.showModal(); editor.current?.focus({ preventScroll: true }); }
     onOpenChange?.(open);
@@ -57,7 +54,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   function beginNameEdit(index: number) { setNameDraft(visitorName); setEditingSpeaker(index); }
   function commitName() { const nextName = nameDraft.trim().slice(0, 20); if (nextName) setVisitorName(nextName); setEditingSpeaker(null); }
   function reset(nextCategory = category, nextMode = mode) {
-    controller.current?.abort(); setMessages([]); setError(null); setNotice(''); setCategory(nextCategory); setMode(nextMode); setTip(0);
+    controller.current?.abort(); setMessages([]); setError(null); setNotice(''); setCategory(nextCategory); setMode(nextMode);
   }
   async function send(question = input, retry = false) {
     if (busyRef.current || !question.trim() || question.length > 1200) return;
@@ -140,7 +137,6 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       </div>
       <div className="world-terminal__statusbar" aria-label="终端状态">
         <div className={`world-terminal__status world-terminal__status--${error ? 'error' : busy ? 'busy' : 'ready'}`} title={mood ? `模型状态：${mood}` : undefined}><span className="world-terminal__status-dot" aria-hidden="true" /> <span>AI 状态</span><strong>{status}</strong>{mood && <small className="world-terminal__mood">{mood}</small>}</div>
-        <div className="world-terminal__status"><span>模式</span><strong>{modeLabel}</strong></div>
         <div className="world-terminal__status" title={`当前对话约占 ${contextChars} / ${contextLimit} 字符`}><span>上下文窗口</span><strong>{contextPercent}%</strong></div>
         <div className="world-terminal__trust" title="模型可根据证据、推断边界和回答完整度调整本次回答的可信度；缺少状态时使用保守估算"><span>回答可信度</span><div className="world-terminal__meter" role="meter" aria-label="回答可信度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={trust}><i style={{ width: `${trust}%` }} /></div><strong>{trust}%</strong></div>
         <div className="world-terminal__affinity" title="模型可根据本轮交流的态度调整好感度，并据此改变语气"><span>好感度</span><div className="world-terminal__meter" role="meter" aria-label="好感度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={affinity}><i style={{ width: `${affinity}%` }} /></div><strong>{affinity}%</strong></div>
@@ -150,7 +146,14 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
           <p className="world-terminal__eyebrow">{eyebrow}</p>
           <h3>{copy.title}</h3>
           <p>{description}</p>
-          <button type="button" className="world-terminal__suggestion" onClick={() => { setInput(suggested); editor.current?.focus(); }}><span>{copy.promptLabel}</span><strong key={`${mode}-${suggested}`}>{suggested}</strong><span aria-hidden="true">↗</span></button>
+          <div className="world-terminal__suggestions">
+            {gridPrompts.map((item, i) => (
+              <button key={i} type="button" className="world-terminal__suggestion-card" onClick={() => { setInput(item.question); editor.current?.focus(); }}>
+                <span className="world-terminal__suggestion-card-cat">{item.category.toUpperCase()}</span>
+                <strong>{item.question}</strong>
+              </button>
+            ))}
+          </div>
         </section>}
         {messages.map((message, i) => <article className={`world-terminal__message world-terminal__message--${message.role}`} key={i}>
           <div className="world-terminal__speaker">{message.role === 'user' ? (editingSpeaker === i ? <form className="world-terminal__name-editor" onSubmit={e => { e.preventDefault(); commitName(); }}><span>YOU /</span><input autoFocus value={nameDraft} maxLength={20} aria-label="临时昵称" onChange={e => setNameDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setEditingSpeaker(null); }} /><button type="submit">保存</button></form> : <button type="button" className="world-terminal__speaker-button" onClick={() => beginNameEdit(i)} aria-label="修改临时昵称">YOU / {visitorName}</button>) : '09 / 世界终端'}{message.role === 'assistant' && !message.complete && message.content && !busy ? ' · 未完成' : ''}</div>

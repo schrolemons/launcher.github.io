@@ -57,6 +57,8 @@ export function retrievalQuery(messages) {
 const casualPatterns = [
   /^(?:你好|您好|嗨|哈喽|hello|hi|hey|早上好|晚上好|晚安|谢谢|多谢|感谢|辛苦了|再见|拜拜|哈哈|嘿嘿|你好吗|最近怎么样|讲个笑话|陪我聊聊)[!！。.,，\s~～]*$/iu,
   /^(?:你是谁|你叫什么|你能做什么|在吗|忙吗|吃饭了吗)[?？!！。\s]*$/iu,
+  /^(?:你是什么模型|你是哪个模型|你用的什么模型|你基于什么|你是什么AI|你是AI吗|你的名字|我叫什么|你认识我吗|你知道我是谁)[?？!！。\s]*$/iu,
+  /^(?:我叫.{0,15}|我是.{0,15}|我的名字.{0,15})[。！!？?]*$/iu,
 ];
 export function conversationIntent(messages) {
   const latest = messages.filter(message => message.role === 'user').at(-1)?.content?.trim() || '';
