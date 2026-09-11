@@ -46,6 +46,8 @@ function normalizeConfig(draft: ModelConfig): ModelConfig {
   };
 }
 
+const hasCustomValues = (cfg: ModelConfig) => Boolean(cfg.baseUrl.trim() || cfg.model.trim() || cfg.context_limit.trim() || SAMPLING_FIELDS.some(field => cfg[field].trim()));
+
 type Message = { role: 'user' | 'assistant'; content: string; sources?: Source[]; control?: TerminalControl; complete?: boolean };
 const categoryCopy = {
   all: { eyebrow: 'SCHNIE', label: '三类资料', short: '三类资料' },
@@ -85,7 +87,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const [messages, setMessages] = useState<Message[]>([]), [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ message: string; code?: string; phase?: string; requestId?: string; status?: number; hint?: string } | null>(null), [notice, setNotice] = useState('');
   const [visitorName, setVisitorName] = useState('访客'), [nameDraft, setNameDraft] = useState(''), [editingSpeaker, setEditingSpeaker] = useState<number | null>(null);
-  const [modelConfig, setModelConfig] = useState(loadModelConfig), [configOpen, setConfigOpen] = useState(false), [configDraft, setConfigDraft] = useState(modelConfig);
+  const [modelConfig, setModelConfig] = useState(loadModelConfig), [configOpen, setConfigOpen] = useState(false), [configDraft, setConfigDraft] = useState(modelConfig), [configError, setConfigError] = useState('');
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), editor = useRef<HTMLTextAreaElement>(null);
   const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true), configPanel = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
@@ -104,6 +106,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       if (configPanel.current?.contains(event.target as Node)) return;
       if ((event.target as Element)?.closest?.('.world-terminal__config')) return;
       const next = normalizeConfig(configDraft);
+      if (hasCustomValues(next) && !next.apiKey) { setConfigError('自定义了参数时，请填写你自己的 API Key（不可使用站点默认 Key）。'); return; }
       setModelConfig(next); setConfigOpen(false);
       try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(next)); } catch {}
     };
@@ -119,9 +122,11 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   function reset(nextCategory = category, nextMode = mode) {
     controller.current?.abort(); setMessages([]); setError(null); setNotice(''); setCategory(nextCategory); setMode(nextMode);
   }
-  function openConfig() { setConfigDraft(modelConfig); setConfigOpen(true); }
+  function openConfig() { setConfigDraft(modelConfig); setConfigError(''); setConfigOpen(true); }
   function saveConfig() {
     const next = normalizeConfig(configDraft);
+    if (hasCustomValues(next) && !next.apiKey) { setConfigError('自定义了参数时，请填写你自己的 API Key（不可使用站点默认 Key）。'); return; }
+    setConfigError('');
     setModelConfig(next); setConfigOpen(false);
     try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(next)); } catch {}
   }
@@ -132,6 +137,10 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   }
   async function send(question = input, retry = false) {
     if (busyRef.current || !question.trim() || question.length > 1200) return;
+    if (hasCustomValues(modelConfig) && !modelConfig.apiKey.trim()) {
+      setError({ message: '你自定义了模型参数，但未提供自己的 API Key。请点击输入框旁的“i”补填。', code: 'API_KEY_REQUIRED', phase: '校验配置' });
+      return;
+    }
     const previous = retry ? messages.slice(0, -2) : messages;
     // Only complete pairs enter the next request; a stopped answer cannot become trusted history.
     const history: Message[] = [];
@@ -273,6 +282,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
             </div>
           </details>
           <p className="world-terminal__config-hint">配置保存在本机浏览器；密钥仅随本次请求发送给服务器用于调用对应模型，留空即使用站点默认。</p>
+          {configError && <p className="world-terminal__config-error" role="alert">{configError}</p>}
           <div className="world-terminal__config-actions">
             <button type="button" onClick={saveConfig}>保存设置</button>
             <button type="button" onClick={clearConfig}>恢复默认</button>
