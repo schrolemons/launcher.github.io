@@ -43,17 +43,18 @@ it('发送白名单过滤条件、来源和完整 UTF-8 响应', async () => {
   expect(payload.messages[0].content).toContain('档案访客');
   expect(payload.messages[0].content).toContain('affinity=43');
 });
-it('日常寒暄不查询向量资料，也不发送来源上下文', async () => {
+it('所有消息均检索向量资料，由 AI 通过 %status sources 字段控制展示', async () => {
   const req = request(); req.body.messages[0].content = '你好';
   const res = response(); await createChatHandler(() => services, fetcher)(req, res);
   expect(res.statusCode).toBe(200);
-  expect(services.index.query).not.toHaveBeenCalled();
-  expect(services.index.fetch).not.toHaveBeenCalled();
+  expect(services.index.query).toHaveBeenCalled();
   expect(res.output).toContain('event: sources');
   const payload = JSON.parse(fetcher.mock.calls[0][1].body);
-  expect(payload.messages[0].content).toContain('不要调用、提及或引用分类资料');
-  expect(payload.messages[1].content).toContain('不附加分类资料来源');
-  expect(payload.messages[1].content).not.toContain('原文资料');
+  expect(payload.messages[0].content).toContain('sources=show');
+  expect(payload.messages[0].content).toContain('sources=none');
+  expect(payload.messages[0].content).toContain('来源展示控制');
+  expect(payload.messages[0].content).not.toContain('不要调用、提及或引用分类资料');
+  expect(payload.messages[1].content).toContain('当前分类');
 });
 it('允许正式 launcher 域名作为跨站来源', async () => {
   const req = request(); req.headers.origin = 'https://launcher.sch-nie.com'; req.headers['sec-fetch-site'] = 'cross-site';
