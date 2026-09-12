@@ -19,7 +19,7 @@
 | `src/content/blog/**` | BLOG：经验分享与技术博客 |
 | `src/content/zero/**` | ZERO：核心内容与关键信息 |
 
-递归读取 `.md` 和 `.mdx`，忽略隐藏文件、符号链接，以及 `draft: true`、`private: true`、`published: false` 的文章。不要同时在 posts 和 world 放同一篇的副本；直接移动后，下次成功同步会清理旧路径对应片段。缺少标题时使用文件名。
+递归读取任意层级的 `.md` 和 `.mdx`。可以把原来的整棵文章目录直接放进去，例如 `src/content/blog/_posts/Hexo/教程.md` 或 `src/content/world/core/create/设定.md`，不需要把 Markdown 逐个提到分类目录顶层。内部文件夹只负责整理文件，文章分类始终取 `src/content` 下的第一层目录；相对路径会保留在元数据和记录 ID 中，避免不同子目录的同名文件互相覆盖。隐藏文件、符号链接，以及 `draft: true`、`private: true`、`published: false` 的文章会被忽略。不要同时在 posts 和 world 放同一篇的副本；直接移动后，下次成功同步会清理旧路径对应片段。缺少标题时使用文件名。
 
 支持的 frontmatter 示例（URL 请填写实际文章直链）：
 

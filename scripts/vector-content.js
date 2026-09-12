@@ -118,26 +118,34 @@ export function articleRecords(raw, category, relativePath) {
   return records;
 }
 
+export function markdownFilesUnder(root) {
+  if (!fs.existsSync(root)) return [];
+  const files = [];
+  const walk = current => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (entry.name.startsWith('.') || entry.isSymbolicLink()) continue;
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.mdx?$/i.test(entry.name)) files.push(full);
+    }
+  };
+  walk(root);
+  return files.sort((a, b) => path.relative(root, a).localeCompare(path.relative(root, b), 'en'));
+}
+
 export function collectRecords(root) {
   const records = [];
   let articles = 0;
   for (const folder of ['posts', ...categories]) {
     const dir = path.join(root, folder);
-    if (!fs.existsSync(dir)) continue;
-    const walk = (current) => {
-      for (const entry of fs.readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
-        if (entry.name.startsWith('.') || entry.isSymbolicLink()) continue;
-        const full = path.join(current, entry.name);
-        if (entry.isDirectory()) walk(full);
-        else if (/\.mdx?$/i.test(entry.name)) {
-          const relative = `${folder}/${path.relative(dir, full).replaceAll('\\', '/')}`;
-          const result = articleRecords(fs.readFileSync(full, 'utf8'), folder === 'posts' ? 'world' : folder, relative);
-          if (result.length) articles++;
-          records.push(...result);
-        }
-      }
-    };
-    walk(dir);
+    for (const full of markdownFilesUnder(dir)) {
+      // Nested folders organize source files only. The first directory under
+      // src/content owns the BLOG/WORLD/ZERO classification.
+      const relative = `${folder}/${path.relative(dir, full).replaceAll('\\', '/')}`;
+      const result = articleRecords(fs.readFileSync(full, 'utf8'), folder === 'posts' ? 'world' : folder, relative);
+      if (result.length) articles++;
+      records.push(...result);
+    }
   }
   return { records, articles };
 }

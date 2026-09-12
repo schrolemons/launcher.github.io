@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { articleRecords, capacityPlan, prepareRecords, recommendations } from './vector-content.js';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { articleRecords, capacityPlan, collectRecords, markdownFilesUnder, prepareRecords, recommendations } from './vector-content.js';
 
 describe('语义分片', () => {
   it('保留短词条、标题路径和分类，代码中的标题不分节', () => {
@@ -85,5 +88,32 @@ describe('语义分片', () => {
   it('推荐问题不会因条目同时有入口和解读段落而重复', () => {
     const base = { metadata: { category: 'zero', title: '金泽范式' } };
     expect(recommendations([{ ...base, metadata: { ...base.metadata, articleId: 'entry' } }, { ...base, metadata: { ...base.metadata, articleId: 'overview' } }])).toHaveLength(1);
+  });
+  it('递归读取三类目录内任意层级的 Markdown，嵌套文件夹不改变分类', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'launcher-content-'));
+    try {
+      const fixtures = [
+        ['blog/_posts/Hexo/入门.md', '博客文章'],
+        ['world/core/create/设定.mdx', '世界设定'],
+        ['zero/哲学/内核/条目.md', '核心条目'],
+      ];
+      for (const [relative, title] of fixtures) {
+        const target = path.join(root, ...relative.split('/'));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, `---\ntitle: ${title}\n---\n正文`, 'utf8');
+      }
+      fs.writeFileSync(path.join(root, 'blog', '_posts', '说明.txt'), '忽略', 'utf8');
+
+      expect(markdownFilesUnder(path.join(root, 'blog')).map(file => path.basename(file))).toEqual(['入门.md']);
+      const { records, articles } = collectRecords(root);
+      expect(articles).toBe(3);
+      expect(records.map(record => [record.metadata.source, record.metadata.category])).toEqual([
+        ['blog/_posts/Hexo/入门.md', 'blog'],
+        ['world/core/create/设定.mdx', 'world'],
+        ['zero/哲学/内核/条目.md', 'zero'],
+      ]);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });
