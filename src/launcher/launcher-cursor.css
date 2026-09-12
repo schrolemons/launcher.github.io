@@ -3,11 +3,11 @@
   body, .launcher-scene, .world-terminal, .world-terminal::backdrop {
     cursor:url('/launcher/cursors/arrow.svg') 5 4, default;
   }
-  :root body :is(button,a,summary,[role="combobox"],[role="option"],input[type="range"]) {
-    cursor:url('/launcher/cursors/hover-hand.svg') 13 3, pointer;
+  :root body :is(button,a,summary,[role="button"],[role="combobox"],[role="option"],input[type="range"],.swiper-button-prev,.swiper-button-next) {
+    cursor:url('/launcher/cursors/hover-hand.svg?v=2') 13 3, pointer;
   }
   :root body :is(textarea,input:not([type="range"]),[contenteditable="true"]) {
-    cursor:url('/launcher/cursors/text.svg') 12 16, text;
+    cursor:url('/launcher/cursors/text.svg?v=2') 12 16, text;
   }
   :root body :is(button:disabled,input:disabled,textarea:disabled,[aria-disabled="true"]) {
     cursor:not-allowed;

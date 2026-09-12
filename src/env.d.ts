@@ -12,7 +12,7 @@ declare module "*.scss" {
 
 interface ImportMetaEnv {
   readonly BASE_URL: string;
-  // 更多环境变量...
+  readonly PUBLIC_TURNSTILE_SITE_KEY?: string;
 }
 
 interface ImportMeta {

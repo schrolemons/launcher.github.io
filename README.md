@@ -35,6 +35,25 @@ pnpm test
 pnpm build
 ```
 
+## 公开对话安全配置
+
+`/api/chat` 使用服务端 `DEEPSEEK_API_KEY`，并通过 Upstash Redis 执行 IP 与匿名会话限流、单 IP 生成并发锁、请求防重放和全站每日预算控制。访客自带的 API Key 只保留在当前页面内存，刷新页面即清除；其余非敏感模型偏好仍保存在浏览器。
+
+复制 `.env.example` 中的变量到本地 `.env` 或 Vercel Project Settings → Environment Variables。以下变量与公开对话安全直接相关：
+
+| 变量 | 用途 |
+| --- | --- |
+| `DEEPSEEK_API_KEY` | 站点默认模型密钥，仅服务端可见 |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | 分布式限流、预算、防重放和并发锁 |
+| `CHAT_SESSION_SECRET` | 签名匿名会话 Cookie，至少 32 个随机字符 |
+| `PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile 公开站点密钥，会进入浏览器构建产物 |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 服务端密钥，配置后每次聊天都强制验证 |
+| `CHAT_ALLOWED_MODEL_HOSTS` | 允许访客自定义的模型接口精确主机名，逗号分隔；`api.deepseek.com` 始终允许 |
+| `CHAT_DAILY_REQUESTS` | 全站每日最大请求数，默认 `300` |
+| `CHAT_DAILY_TOKEN_BUDGET` | 全站每日保守 Token 预留预算，默认 `3000000` |
+
+Turnstile 的两个变量应成对设置。若只设置 `TURNSTILE_SECRET_KEY`，服务端会按安全失败处理并拒绝没有验证令牌的请求；设置或修改 `PUBLIC_TURNSTILE_SITE_KEY` 后必须重新部署，让 Astro 将公开站点密钥写入前端构建。生产环境还应在 Vercel Firewall 中为 `/api/chat` 启用 Bot Protection，并先使用 Log 模式观察正常流量，再切换到 Challenge 或 Rate Limit。
+
 ## 启动器配置 - Launcher configuration
 
 启动器由类型化配置模块 [src/launcher/config.ts](src/launcher/config.ts) 维护：

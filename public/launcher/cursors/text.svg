@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><defs><filter id="h"><feGaussianBlur stdDeviation="1"/></filter></defs><path d="M12 5v22" stroke="#d9f1f7" stroke-opacity=".35" stroke-width="2" filter="url(#h)"/><path d="M9 5h6M12 5v22M9 27h6" stroke="#070b10" stroke-width="2.5" stroke-opacity=".65"/><path d="M9 5h6M12 5v22M9 27h6" stroke="#e0f0f3" stroke-width=".85" stroke-opacity=".9"/><path d="M15 10v5" stroke="#c1dce2" stroke-width=".6" stroke-opacity=".3"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32">
+  <defs><filter id="h"><feGaussianBlur stdDeviation="1.4"/></filter></defs>
+  <path d="M10 4v7m0 3v14M14 4v14m0 3v7" stroke="#c9f3fa" stroke-width="2.2" stroke-opacity=".35" filter="url(#h)"/>
+  <path d="m10 3 2 2 2-2M10 29l2-2 2 2" fill="none" stroke="#071016" stroke-width="2.8" stroke-linecap="square"/>
+  <path d="M10 4v7m0 3v14M14 4v14m0 3v7" stroke="#071016" stroke-width="2.6" stroke-opacity=".7"/>
+  <path d="M10 4v7m0 3v14M14 4v14m0 3v7" stroke="#dff8fb" stroke-width=".8"/>
+  <path d="m10 3 2 2 2-2M10 29l2-2 2 2" fill="none" stroke="#dff8fb" stroke-width=".8"/>
+  <path d="M7 12h3m4 7h3" stroke="#9ddce8" stroke-width=".7" stroke-opacity=".7"/>
+</svg>

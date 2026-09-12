@@ -11,14 +11,102 @@ function response() {
     write(value) { this.headersSent = true; this.output += value.toString(); return true; }, end() { this.writableEnded = true; } });
   return res;
 }
-const request = () => ({ method: 'POST', headers: { 'content-type': 'application/json' }, socket: { remoteAddress: '127.0.0.1' }, body: { messages: [{ role: 'user', content: '终末阵列是什么？' }], category: 'world', visitorName: '档案访客', interactionState: { trust: 61, affinity: 43 } } });
+const request = () => ({ method: 'POST', headers: { 'content-type': 'application/json' }, socket: { remoteAddress: '127.0.0.1' }, body: { messages: [{ role: 'user', content: '终末阵列是什么？' }], category: 'world', visitorName: '档案访客', interactionState: { trust: 61, affinity: 43 }, requestId: '11111111-1111-4111-8111-111111111111' } });
 let services, fetcher;
 beforeEach(() => {
   vi.stubEnv('VERCEL', '0');
   vi.stubEnv('VECTOR_EMBEDDING_MODE', 'upstash-data');
+  vi.stubEnv('TURNSTILE_SECRET_KEY', '');
+  vi.stubEnv('CHAT_SESSION_SECRET', '');
   services = { minute: { limit: vi.fn().mockResolvedValue({ success: true }) }, daily: { limit: vi.fn().mockResolvedValue({ success: true }) },
-    redis: { eval: vi.fn().mockResolvedValue(1) }, index: { query: vi.fn().mockResolvedValue([fixture]), fetch: vi.fn().mockResolvedValue([]) } };
+    redis: { eval: vi.fn().mockResolvedValue(1), set: vi.fn().mockResolvedValue('OK') }, index: { query: vi.fn().mockResolvedValue([fixture]), fetch: vi.fn().mockResolvedValue([]) } };
   fetcher = vi.fn().mockResolvedValue(new Response('data: {"choices":[{"delta":{"content":"你好"}}]}\n\ndata: [DONE]\n\n'));
+});
+it('签名匿名会话和 IP 分别经过分钟与每日限流', async () => {
+  vi.stubEnv('CHAT_SESSION_SECRET', '0123456789abcdef0123456789abcdef');
+  const res = response(); await createChatHandler(() => services, fetcher)(request(), res);
+  expect(res.statusCode).toBe(200);
+  expect(String(res.headers['Set-Cookie'])).toMatch(/^terminal_session=[^;]+; Path=\/; Max-Age=86400; HttpOnly; SameSite=Lax/);
+  expect(services.minute.limit).toHaveBeenCalledTimes(2);
+  expect(services.daily.limit).toHaveBeenCalledTimes(2);
+});
+it('损坏的匿名会话 Cookie 会被安全替换', async () => {
+  vi.stubEnv('CHAT_SESSION_SECRET', '0123456789abcdef0123456789abcdef');
+  const req = request(); req.headers.cookie = 'terminal_session=%E0%A4%A';
+  const res = response(); await createChatHandler(() => services, fetcher)(req, res);
+  expect(res.statusCode).toBe(200);
+  expect(String(res.headers['Set-Cookie'])).toContain('terminal_session=');
+});
+it('重复请求标识在检索和模型调用前被拒绝', async () => {
+  services.redis.set.mockImplementation(async key => key.startsWith('terminal:request:') ? null : 'OK');
+  const res = response(); await createChatHandler(() => services, fetcher)(request(), res);
+  expect(res.statusCode).toBe(409);
+  expect(res.body.code).toBe('REQUEST_REPLAYED');
+  expect(services.index.query).not.toHaveBeenCalled();
+  expect(fetcher).not.toHaveBeenCalled();
+});
+it('同一 IP 已有生成流时拒绝并发请求', async () => {
+  services.redis.set.mockImplementation(async key => key.startsWith('terminal:stream:') ? null : 'OK');
+  const res = response(); await createChatHandler(() => services, fetcher)(request(), res);
+  expect(res.statusCode).toBe(429);
+  expect(res.body.code).toBe('CHAT_CONCURRENT');
+  expect(services.index.query).not.toHaveBeenCalled();
+  expect(fetcher).not.toHaveBeenCalled();
+});
+it('启用 Turnstile 后缺少令牌时，在付费服务前拒绝请求', async () => {
+  vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+  const res = response(); await createChatHandler(() => services, fetcher)(request(), res);
+  expect(res.statusCode).toBe(403);
+  expect(res.body.code).toBe('TURNSTILE_REQUIRED');
+  expect(services.index.query).not.toHaveBeenCalled();
+  expect(fetcher).not.toHaveBeenCalled();
+});
+it('空白 Turnstile 密钥按未配置处理', async () => {
+  vi.stubEnv('TURNSTILE_SECRET_KEY', '   ');
+  const res = response(); await createChatHandler(() => services, fetcher)(request(), res);
+  expect(res.statusCode).toBe(200);
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});
+it('Turnstile 验证必须匹配 chat 动作', async () => {
+  vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+  const req = request();
+  req.headers.origin = 'https://launcher.sch-nie.com';
+  req.headers.host = 'launcher.sch-nie.com';
+  req.body.turnstileToken = 'client-token';
+  fetcher.mockResolvedValueOnce(new Response(JSON.stringify({ success: true, action: 'login', hostname: 'launcher.sch-nie.com' }), { headers: { 'Content-Type': 'application/json' } }));
+  const res = response(); await createChatHandler(() => services, fetcher)(req, res);
+  expect(res.statusCode).toBe(403);
+  expect(res.body.code).toBe('TURNSTILE_REJECTED');
+  expect(services.index.query).not.toHaveBeenCalled();
+});
+it('Turnstile 验证必须匹配发起请求的主机', async () => {
+  vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+  const req = request();
+  req.headers.origin = 'https://launcher.sch-nie.com';
+  req.headers.host = 'launcher.sch-nie.com';
+  req.body.turnstileToken = 'client-token';
+  fetcher.mockResolvedValueOnce(new Response(JSON.stringify({ success: true, action: 'chat', hostname: 'attacker.example' }), { headers: { 'Content-Type': 'application/json' } }));
+  const res = response(); await createChatHandler(() => services, fetcher)(req, res);
+  expect(res.statusCode).toBe(403);
+  expect(res.body.code).toBe('TURNSTILE_REJECTED');
+  expect(services.index.query).not.toHaveBeenCalled();
+});
+it('有效 Turnstile 令牌通过后才进入检索和模型流', async () => {
+  vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+  const req = request();
+  req.headers.origin = 'https://launcher.sch-nie.com';
+  req.headers.host = 'launcher.sch-nie.com';
+  req.body.turnstileToken = 'client-token';
+  fetcher
+    .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, action: 'chat', hostname: 'launcher.sch-nie.com' }), { headers: { 'Content-Type': 'application/json' } }))
+    .mockResolvedValueOnce(new Response('data: {"choices":[{"delta":{"content":"已验证"}}]}\n\ndata: [DONE]\n\n'));
+  const res = response(); await createChatHandler(() => services, fetcher)(req, res);
+  expect(res.statusCode).toBe(200);
+  expect(res.output).toContain('已验证');
+  expect(services.index.query).toHaveBeenCalledTimes(1);
+  const verificationBody = new URLSearchParams(fetcher.mock.calls[0][1].body);
+  expect(verificationBody.get('secret')).toBe('turnstile-secret');
+  expect(verificationBody.get('response')).toBe('client-token');
 });
 afterEach(() => vi.unstubAllEnvs());
 it('限流超时虽然 success=true，仍拒绝调用向量库和模型', async () => {

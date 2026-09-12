@@ -5,9 +5,11 @@ import { parseTerminalOutput, type TerminalControl } from '../terminal-control';
 import ChatMarkdown from './ChatMarkdown';
 import LauncherIcon from './LauncherIcon';
 import TerminalSelect from './TerminalSelect';
+import { TurnstileController } from '../turnstile';
 import '../world-terminal.css';
 
 const LLM_CONFIG_KEY = 'sch-nie:llm-config';
+const TURNSTILE_SITE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY?.trim() || '';
 type ModelConfig = {
   apiKey: string; baseUrl: string; model: string; context_limit: string;
   temperature: string; top_p: string; top_k: string; presence_penalty: string; frequency_penalty: string; max_tokens: string;
@@ -33,7 +35,9 @@ function loadModelConfig(): ModelConfig {
       const value = JSON.parse(raw);
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         const str = (key: string) => typeof value[key] === 'string' ? value[key] : '';
-        return { apiKey: str('apiKey'), baseUrl: str('baseUrl'), model: str('model'), context_limit: str('context_limit'), temperature: str('temperature'), top_p: str('top_p'), top_k: str('top_k'), presence_penalty: str('presence_penalty'), frequency_penalty: str('frequency_penalty'), max_tokens: str('max_tokens') };
+        const config = { apiKey: '', baseUrl: str('baseUrl'), model: str('model'), context_limit: str('context_limit'), temperature: str('temperature'), top_p: str('top_p'), top_k: str('top_k'), presence_penalty: str('presence_penalty'), frequency_penalty: str('frequency_penalty'), max_tokens: str('max_tokens') };
+        if (str('apiKey')) localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(config));
+        return config;
       }
     }
   } catch {}
@@ -46,6 +50,10 @@ function normalizeConfig(draft: ModelConfig): ModelConfig {
     temperature: draft.temperature.trim(), top_p: draft.top_p.trim(), top_k: draft.top_k.trim(),
     presence_penalty: draft.presence_penalty.trim(), frequency_penalty: draft.frequency_penalty.trim(), max_tokens: draft.max_tokens.trim(),
   };
+}
+
+function persistModelPreferences(config: ModelConfig) {
+  try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify({ ...config, apiKey: '' })); } catch {}
 }
 
 const hasCustomValues = (cfg: ModelConfig) => Boolean(cfg.baseUrl.trim() || cfg.model.trim() || cfg.context_limit.trim() || SAMPLING_FIELDS.some(field => cfg[field].trim()));
@@ -93,6 +101,9 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const scroll = useRef<HTMLDivElement>(null), controller = useRef<AbortController | null>(null), stick = useRef(true), configPanel = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
   const configTrigger = useRef<HTMLButtonElement>(null);
+  const turnstileMount = useRef<HTMLDivElement>(null);
+  const turnstileController = useRef<TurnstileController | null>(null);
+  if (!turnstileController.current) turnstileController.current = new TurnstileController();
   const scope = categoryCopy[category as keyof typeof categoryCopy];
   const gridPrompts = suggestionPrompts[mode as 'chat' | 'tutor' | 'scholar'](scope.short);
   const configuredContext = Number(modelConfig.context_limit);
@@ -117,7 +128,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     viewport.addEventListener('scroll', syncViewport);
     return () => { viewport.removeEventListener('resize', syncViewport); viewport.removeEventListener('scroll', syncViewport); };
   }, [open, mobile]);
-  useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => () => { controller.current?.abort(); turnstileController.current?.dispose(); }, []);
   useEffect(() => {
     if (!configOpen) return;
     configPanel.current?.querySelector('button')?.focus({ preventScroll: true });
@@ -130,7 +141,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       const next = normalizeConfig(configDraft);
       if (hasCustomValues(next) && !next.apiKey) { setConfigError('自定义了参数时，请填写你自己的 API Key（不可使用站点默认 Key）。'); return; }
       setModelConfig(next); setConfigOpen(false);
-      try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(next)); } catch {}
+      persistModelPreferences(next);
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
@@ -151,7 +162,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
     if (hasCustomValues(next) && !next.apiKey) { setConfigError('自定义了参数时，请填写你自己的 API Key（不可使用站点默认 Key）。'); return; }
     setConfigError('');
     setModelConfig(next); setConfigOpen(false);
-    try { localStorage.setItem(LLM_CONFIG_KEY, JSON.stringify(next)); } catch {}
+    persistModelPreferences(next);
   }
   function clearConfig() {
     const next = defaultModelConfig();
@@ -185,6 +196,8 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
       setMessages([...next.slice(0, -1), { role: 'assistant', content: parsed.content, sources, control: parsed.control, complete }]);
     };
     try {
+      phase = '安全验证';
+      const turnstileToken = TURNSTILE_SITE_KEY ? await turnstileController.current!.execute(turnstileMount.current!, TURNSTILE_SITE_KEY, abort.signal) : '';
       phase = '连接对话接口';
       const sampling: Record<string, number> = {};
       for (const field of SAMPLING_FIELDS) {
@@ -192,7 +205,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         if (raw.trim() !== '' && Number.isFinite(Number(raw))) sampling[field] = Number(raw);
       }
       const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model, context_limit: contextLimit, ...sampling }), signal: abort.signal });
+        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model, context_limit: contextLimit, turnstileToken, requestId: globalThis.crypto.randomUUID(), ...sampling }), signal: abort.signal });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         throw new TerminalRequestError({ message: payload.error || `接口返回 HTTP ${response.status}`, ...payload, status: response.status });
@@ -287,6 +300,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         {notice && <p>{notice}</p>}
         {busy && <p role="status">终端正在回应…</p>}
       </div>
+      {TURNSTILE_SITE_KEY && <div ref={turnstileMount} className="world-terminal__turnstile" aria-label="安全验证" />}
         {configOpen && <div ref={configPanel} className="world-terminal__config-panel" role="dialog" aria-label="模型设置" onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeConfig(); } }}>
           <div className="world-terminal__config-heading"><p className="world-terminal__config-title">模型设置</p><button type="button" className="world-terminal__close" aria-label="关闭模型设置" onClick={closeConfig}><LauncherIcon name="close" /></button></div>
           <p className="world-terminal__config-warning">警告：自定义 Key 会发送到本站服务器、由服务器代你调用大模型，请自行评估风险后再决定是否填入。</p>
@@ -307,7 +321,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
               ))}
             </div>
           </details>
-          <p className="world-terminal__config-hint">配置保存在本机浏览器；密钥仅随本次请求发送给服务器用于调用对应模型，留空即使用站点默认。</p>
+          <p className="world-terminal__config-hint">非敏感配置保存在本机浏览器；API Key 只保留在当前页面内存，并随请求发送给服务器用于调用对应模型，刷新页面后会清除。</p>
           {configError && <p className="world-terminal__config-error" role="alert">{configError}</p>}
           <div className="world-terminal__config-actions">
             <button type="button" onClick={saveConfig}>保存设置</button>
