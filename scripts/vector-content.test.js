@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { articleRecords, capacityPlan, prepareRecords } from './vector-content.js';
+import { articleRecords, capacityPlan, prepareRecords, recommendations } from './vector-content.js';
 
 describe('语义分片', () => {
   it('保留短词条、标题路径和分类，代码中的标题不分节', () => {
@@ -37,6 +37,30 @@ describe('语义分片', () => {
     expect(r.metadata.category).toBe('blog');
     expect(r.metadata.categoryName).toBe('经验分享与技术博客');
   });
+  it('把六个 ZERO 条目的旧文件名统一为规范名称和 ZERO 分类', () => {
+    const cases = [
+      ['posts/人生行迹.md', '人生观', '人生观'],
+      ['posts/宇宙基础.md', '宇宙观', '世界观'],
+      ['posts/自然万态.md', '自然观', '自然观'],
+      ['posts/金泽范式.md', '灵耀体系：金泽范式', '金泽范式'],
+      ['posts/火神契约.md', '灵耀体系：火神契约', '火神契约'],
+      ['posts/光与流辰.md', '灵耀体系：光与流辰', '光引流辰'],
+    ];
+    for (const [source, sourceTitle, canonicalTitle] of cases) {
+      const [record] = articleRecords(`---\ntitle: ${sourceTitle}\n---\n正文`, 'world', source);
+      expect(record.metadata.category).toBe('zero');
+      expect(record.metadata.categoryName).toBe('核心内容与关键信息');
+      expect(record.metadata.title).toBe(canonicalTitle);
+      expect(record.data).toContain(`ZERO | ${canonicalTitle}`);
+    }
+  });
+  it('木缘桑庭本体仍属 WORLD，仅把其中六项条目介绍归入 ZERO', () => {
+    const records = articleRecords(`---\ntitle: 灵耀体系：木缘桑庭\n---\n## 主神时代\n#### [金泽范式](https://world.sch-nie.com/posts/23.html)\n介绍正文。\n#### [其它设定](https://world.sch-nie.com/posts/1.html)\nWORLD 正文。`, 'world', 'posts/木缘桑庭.md');
+    const zero = records.find(r => r.metadata.text.includes('介绍正文'));
+    const world = records.find(r => r.metadata.text.includes('WORLD 正文'));
+    expect(zero.metadata).toMatchObject({ category: 'zero', categoryName: '核心内容与关键信息', title: '金泽范式', url: 'https://zero.sch-nie.com/core/', urlKind: 'article' });
+    expect(world.metadata).toMatchObject({ category: 'world', categoryName: '文明体系', title: '灵耀体系：木缘桑庭' });
+  });
   it('以当前全库占用和新增记录判断 70% 阈值', () => {
     expect(() => capacityPlan({ vectorCount: 98000, indexSize: 0, dimension: 1024 }, [{ data: 'x', metadata: {} }], 1)).toThrow(/容量/);
     expect(capacityPlan({ vectorCount: 598, indexSize: 4000000, dimension: 1024 }, [], 0).recordLimit).toBe(98000);
@@ -57,5 +81,9 @@ describe('语义分片', () => {
     const second = prepareRecords(source, 'dense', 'provider/model-b');
     expect(first[0].metadata.embeddingIdentity).toBe('provider/model-a');
     expect(first[0].id).not.toBe(second[0].id);
+  });
+  it('推荐问题不会因条目同时有入口和解读段落而重复', () => {
+    const base = { metadata: { category: 'zero', title: '金泽范式' } };
+    expect(recommendations([{ ...base, metadata: { ...base.metadata, articleId: 'entry' } }, { ...base, metadata: { ...base.metadata, articleId: 'overview' } }])).toHaveLength(1);
   });
 });

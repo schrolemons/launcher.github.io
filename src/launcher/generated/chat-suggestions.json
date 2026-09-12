@@ -5,15 +5,7 @@
   },
   {
     "category": "world",
-    "question": "请用初学者能理解的方式解读《人生观》。"
-  },
-  {
-    "category": "world",
-    "question": "《御临：借以神名》的核心设定是什么？它们如何联系起来？"
-  },
-  {
-    "category": "world",
-    "question": "请用初学者能理解的方式解读《灵耀体系：光与流辰》。"
+    "question": "请用初学者能理解的方式解读《御临：借以神名》。"
   },
   {
     "category": "world",
@@ -22,5 +14,37 @@
   {
     "category": "world",
     "question": "请用初学者能理解的方式解读《炽晨：初醒之刻》。"
+  },
+  {
+    "category": "world",
+    "question": "《启辉计划-附属“自然工程”基本方案》的核心设定是什么？它们如何联系起来？"
+  },
+  {
+    "category": "world",
+    "question": "请用初学者能理解的方式解读《灵耀体系：土奏琴璃》。"
+  },
+  {
+    "category": "zero",
+    "question": "《人生观》的核心设定是什么？它们如何联系起来？"
+  },
+  {
+    "category": "zero",
+    "question": "请用初学者能理解的方式解读《光引流辰》。"
+  },
+  {
+    "category": "zero",
+    "question": "《世界观》的核心设定是什么？它们如何联系起来？"
+  },
+  {
+    "category": "zero",
+    "question": "请用初学者能理解的方式解读《自然观》。"
+  },
+  {
+    "category": "zero",
+    "question": "《火神契约》的核心设定是什么？它们如何联系起来？"
+  },
+  {
+    "category": "zero",
+    "question": "请用初学者能理解的方式解读《金泽范式》。"
   }
 ]

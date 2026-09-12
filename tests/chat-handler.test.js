@@ -160,13 +160,22 @@ it('来源筛选排除跨站记录、重复文本和危险链接', () => {
   expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'javascript:alert(1)' } }], 'all')[0].url).toBe('https://launcher.sch-nie.com/');
   expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'https://docs.sch-nie.com/article', urlKind: 'article' } }], 'all')[0].url).toBe('https://docs.sch-nie.com/article');
 });
-it('解读性文章里介绍其它文章的文本块，来源指向被介绍的文章', () => {
+it('WORLD 解读文章里的 ZERO 条目不会作为 WORLD 来源返回', () => {
   const block = { ...fixture, metadata: { ...fixture.metadata, title: '灵耀体系：木缘桑庭', section: '主神时代Ⅰ TO:2096 / [金泽范式](https://world.sch-nie.com/posts/23.html)', headingPath: ['主神时代Ⅰ TO:2096', '[金泽范式](https://world.sch-nie.com/posts/23.html)'], url: 'https://world.sch-nie.com/' } };
-  const [source] = selectSources([block], 'world');
+  expect(selectSources([block], 'world')).toEqual([]);
+  expect(selectSources([block], 'zero')).toHaveLength(1);
+  const [source] = selectSources([block], 'all');
   expect(source.title).toBe('金泽范式');
-  expect(source.url).toBe('https://world.sch-nie.com/posts/23.html');
+  expect(source.category).toBe('zero');
+  expect(source.categoryName).toBe('核心内容与关键信息');
+  expect(source.url).toBe('https://zero.sch-nie.com/core/');
   expect(source.urlKind).toBe('article');
   expect(source.section).not.toContain('](');
+});
+it('木缘桑庭介绍的其它条目继续按 WORLD 来源返回', () => {
+  const block = { ...fixture, metadata: { ...fixture.metadata, title: '灵耀体系：木缘桑庭', section: '主神时代 / [其它设定](https://world.sch-nie.com/posts/1.html)', headingPath: ['主神时代', '[其它设定](https://world.sch-nie.com/posts/1.html)'] } };
+  const [source] = selectSources([block], 'world');
+  expect(source).toMatchObject({ title: '其它设定', category: 'world', url: 'https://world.sch-nie.com/posts/1.html' });
 });
 it('只补取同篇同版本同词条的相邻片段', async () => {
   services.index.fetch.mockResolvedValue([{ id: 'two', metadata: { ...fixture.metadata, text: '相邻解释' } }, { id: 'bad', metadata: { ...fixture.metadata, articleHash: 'different', text: '不属于这个版本' } }]);

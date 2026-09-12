@@ -6,6 +6,7 @@ import { isIP } from 'node:net';
 import { CHAT_LIMITS, validateChat, retrievalQuery, buildPrompt } from '../server/chat-policy.js';
 import { retrievalMode } from '../lib/retrieval-text.js';
 import { embedTexts, embeddingMode } from '../server/embedding.js';
+import { normalizeContentMetadata, zeroEntryForMetadata } from '../lib/content-classification.js';
 
 let services;
 function getServices() {
@@ -118,6 +119,8 @@ const SOURCE_CAPS = { chat: 4, tutor: 6, scholar: 10 };
 // 解读性文章（如《木缘桑庭》）里常用「#### [文章名](链接)」这样的标题概括介绍其它文章。
 // 被选中的文本块此时实际属于被介绍的那篇文章，来源标题和链接应指向被介绍的文章，而不是解读性文章本身。
 function introducedArticle(m) {
+  const zeroEntry = zeroEntryForMetadata(m);
+  if (zeroEntry) return { title: zeroEntry.title, url: zeroEntry.url };
   const headings = [...(Array.isArray(m?.headingPath) ? m.headingPath : []), m?.entry, m?.section].filter(v => typeof v === 'string' && v);
   for (const heading of headings) {
     const match = heading.match(/\[([^\]\n]+)\]\(([^)\s]+)\)/);
@@ -130,7 +133,7 @@ export function selectSources(results, category, question = '', mode = 'chat') {
   const cap = SOURCE_CAPS[mode] ?? SOURCE_CAPS.chat;
   const counts = new Map(), seen = new Set();
   let length = 0;
-  const ordered = [...results].sort((a, b) => {
+  const ordered = results.map(result => ({ ...result, metadata: normalizeContentMetadata(result.metadata) })).sort((a, b) => {
     const rank = r => (Number(r.score) || 0) + [r.metadata?.title, r.metadata?.entry, ...(r.metadata?.aliases || [])]
       .filter(v => typeof v === 'string' && v.length > 1 && question.includes(v)).length * 0.08;
     return rank(b) - rank(a);

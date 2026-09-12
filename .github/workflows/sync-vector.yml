@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/content/**'
       - 'scripts/*vector*'
+      - 'lib/content-classification.js'
       - 'lib/retrieval-text.js'
       - '.github/workflows/sync-vector.yml'
       - 'pnpm-lock.yaml'

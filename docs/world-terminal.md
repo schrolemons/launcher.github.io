@@ -36,7 +36,9 @@ description: 这里填写原文已有的简介。
 # url: https://world.sch-nie.com/实际文章路径
 ```
 
-只读取 frontmatter 的 `url` 字段。只要提供合法的 HTTPS `url`，就原样写入每个分片的 `metadata.url`，回答来源和文章按钮都跳转到这个地址；没有提供或 URL 不安全时，统一回退到 `https://launcher.sch-nie.com/`，来源按钮标明“终端入口（未提供文章直链）”。文章类型标签直接保留 Markdown 的 `categories` 数组；`category` 仍只表示 BLOG / WORLD / ZERO 三个内容性质分区。
+通常只读取 frontmatter 的 `url` 字段。只要提供合法的 HTTPS `url`，就原样写入每个分片的 `metadata.url`，回答来源和文章按钮都跳转到这个地址；没有提供或 URL 不安全时，统一回退到 `https://launcher.sch-nie.com/`，来源按钮标明“终端入口（未提供文章直链）”。文章类型标签直接保留 Markdown 的 `categories` 数组；`category` 仍只表示 BLOG / WORLD / ZERO 三个内容性质分区。
+
+六项固定归属使用 [content-classification.js](../lib/content-classification.js) 统一判断：金泽范式、火神契约、光引流辰、人生观、世界观、自然观属于 ZERO。它们的旧 WORLD 跳转文件和《木缘桑庭》中的对应介绍分片都会规范为 ZERO 标题与 ZERO 链接；《木缘桑庭》本体及其中其他条目仍按各自分类处理。
 
 切分方法：优先按 Markdown 的 1–6 级标题建立章节，保留标题路径；章节内按段落聚合，超长段落优先在句尾分割，单个超长单元再按长度兜底。短词条保留，代码围栏里的 `#` 不当成标题。每个嵌入文本带内容分类、文章标题、章节、分类/标签/别名；不是仅嵌入孤立正文。单条不超过 1500 字符。Hexo 标签壳、HTML 注释和脚本被清除，正文保留。
 

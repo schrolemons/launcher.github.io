@@ -33,7 +33,8 @@ it('人格包含内容结构说明、来源控制协议和安全边界', () => {
   expect(prompt).toContain('sources=none');
   expect(prompt).toContain('内容结构说明');
   expect(prompt).toContain('木缘桑庭');
-  expect(prompt).toContain('金泽泛式');
+  expect(prompt).toContain('金泽范式、火神契约、光引流辰、人生观、世界观、自然观');
+  expect(prompt).not.toContain('金泽泛式');
   expect(prompt).toContain('文章推荐');
   expect(prompt).toContain('来源展示控制');
   expect(prompt).toContain('affinity');

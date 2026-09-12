@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import matter from 'gray-matter';
+import { normalizeContentMetadata } from '../lib/content-classification.js';
 
 export const NAMESPACE = 'launcher-v2';
 export function prepareRecords(records, mode, embeddingIdentity = 'unconfigured') {
@@ -38,12 +39,12 @@ export function articleRecords(raw, category, relativePath) {
   raw = raw.replace(/\r\n/g, '\n');
   if (!categories.includes(category)) throw new Error(`未知分类：${category}`);
   const { data: fm, content } = matter(raw);
-  const effectiveCategory = String(fm.category || category).trim().toLowerCase();
-  if (!categories.includes(effectiveCategory)) throw new Error(`文章分类必须是 blog、world 或 zero：${relativePath}`);
+  const configuredCategory = String(fm.category || category).trim().toLowerCase();
+  if (!categories.includes(configuredCategory)) throw new Error(`文章分类必须是 blog、world 或 zero：${relativePath}`);
   if (fm.draft === true || fm.published === false || fm.private === true || fm.password || fm.encrypted === true) return [];
-  const title = textValue(fm.title || path.basename(relativePath).replace(/\.mdx?$/i, ''), 120);
+  const sourceTitle = textValue(fm.title || path.basename(relativePath).replace(/\.mdx?$/i, ''), 120);
   const source = relativePath.replaceAll('\\', '/');
-  const articleId = digest(`${effectiveCategory}:${source}`).slice(0, 24);
+  const articleDefaults = normalizeContentMetadata({ category: configuredCategory, categoryName: CATEGORY_NAMES[configuredCategory], source, title: sourceTitle, ...sourceUrl(fm) });
   const cleaned = content.replace(/<!--[\s\S]*?-->/g, '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/{%[\s\S]*?%}/g, '').replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\r/g, '');
   const sections = [];
@@ -64,6 +65,12 @@ export function articleRecords(raw, category, relativePath) {
   const records = [];
   for (const [sectionIndex, item] of sections.entries()) {
     const section = textValue(item.section, 220);
+    const headingPath = section.split(' / ').filter(Boolean);
+    const entry = textValue(item.section.split(' / ').at(-1) || articleDefaults.title, 160);
+    const identity = normalizeContentMetadata({ ...articleDefaults, headingPath, entry, section });
+    const effectiveCategory = identity.category;
+    const title = textValue(identity.title, 120);
+    const articleId = digest(`${effectiveCategory}:${source}:${title}`).slice(0, 24);
     const labels = [...listValue(fm.categories), ...listValue(fm.tags), ...listValue(fm.aliases || fm.alias)].join(' / ').slice(0, 160);
     const prefix = `${effectiveCategory.toUpperCase()} | ${title}\n${section}\n${labels ? `主题：${labels}\n` : ''}`;
     // Paragraph packing inside a heading; long paragraphs split at sentence boundaries.
@@ -75,16 +82,16 @@ export function articleRecords(raw, category, relativePath) {
     let buffer = '';
     const emit = () => {
       if (!buffer.trim()) return;
-      const metadata = { schema: 3, pipelineVersion: '2026-09-11.3', category: effectiveCategory, categoryName: CATEGORY_NAMES[effectiveCategory],
+      const metadata = { schema: 3, pipelineVersion: '2026-09-12.1', category: effectiveCategory, categoryName: identity.categoryName,
         articleId, articleHash: digest(raw), source, title, slug: textValue(fm.slug || path.basename(relativePath).replace(/\.mdx?$/i, ''), 160),
-        abbrlink: textValue(fm.abbrlink, 100), section, headingPath: section.split(' / ').filter(Boolean),
-        entry: textValue(item.section.split(' / ').at(-1) || title, 160), sectionIndex, sectionCount: sections.length,
+        abbrlink: textValue(fm.abbrlink, 100), section, headingPath,
+        entry, sectionIndex, sectionCount: sections.length,
         author: textValue(fm.author, 100), publishedAt: dateValue(fm.date), updatedAt: dateValue(fm.updated),
         aliases: listValue(fm.aliases || fm.alias), language: 'zh', format: /\.mdx$/i.test(relativePath) ? 'mdx' : 'markdown',
         summary: textValue(fm.description || item.text.replace(/[`#*_]/g, '').replace(/\s+/g, ' '), 240),
         summaryMethod: fm.description ? 'frontmatter-description' : 'source-excerpt',
         articleCharacters: cleaned.length, sectionCharacters: item.text.length,
-        ...sourceUrl(fm),
+        url: identity.url, urlKind: identity.urlKind,
         categories: listValue(fm.categories), tags: listValue(fm.tags), description: textValue(fm.description, 300),
         chunkIndex: records.length, text: buffer.trim() };
       const data = prefix + metadata.text;
@@ -148,7 +155,12 @@ export function capacityPlan(info, additions, newCount, requestEstimate = 0) {
 
 export function recommendations(records) {
   const seen = new Set();
-  const articles = records.filter(r => { if (seen.has(r.metadata.articleId)) return false; seen.add(r.metadata.articleId); return true; });
+  const articles = records.filter(r => {
+    const key = `${r.metadata.category}:${r.metadata.title}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   return categories.flatMap(category => articles.filter(r => r.metadata.category === category).slice(0, 6).map((r, i) => ({ category,
     question: i % 2 ? `请用初学者能理解的方式解读《${r.metadata.title}》。` : `《${r.metadata.title}》的核心设定是什么？它们如何联系起来？` })));
 }
