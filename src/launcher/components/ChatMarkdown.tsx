@@ -58,10 +58,28 @@ export default function ChatMarkdown({ content }: { content: string }) {
   const flushCode = () => { if (code.length) { blocks.push(<pre key={`code-${blockIndex++}`}><code>{code.join('\n')}</code></pre>); code = []; } };
   const flushNote = () => { if (note) { blocks.push(<aside className={`chat-markdown__note chat-markdown__note--${note.tone}`} key={`note-${blockIndex++}`}><span>{note.tone}</span><div>{<ChatMarkdown content={note.lines.join('\n')} />}</div></aside>); note = null; } };
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (note) { if (/^%endnote%\s*$/i.test(line.trim())) flushNote(); else note.lines.push(line); continue; }
+    let line = lines[i];
+    if (note) {
+      const end = line.search(/%endnote%/i);
+      if (end === -1) { note.lines.push(line); continue; }
+      const before = line.slice(0, end).trimEnd();
+      if (before) note.lines.push(before);
+      flushNote();
+      line = line.slice(end + '%endnote%'.length);
+      if (!line.trim()) continue;
+    }
     const noteStart = line.trim().match(/^%note\s+([a-z0-9_-]+)%\s*(.*)$/i);
-    if (noteStart) { flushParagraph(); flushList(); note = { tone: noteStart[1].toLowerCase(), lines: noteStart[2] ? [noteStart[2]] : [] }; continue; }
+    if (noteStart) {
+      flushParagraph(); flushList();
+      const tone = noteStart[1].toLowerCase(), rest = noteStart[2] || '';
+      const end = rest.search(/%endnote%/i);
+      if (end === -1) { note = { tone, lines: rest ? [rest] : [] }; continue; }
+      const before = rest.slice(0, end).trimEnd();
+      if (before) note = { tone, lines: [before] };
+      flushNote();
+      line = rest.slice(end + '%endnote%'.length);
+      if (!line.trim()) continue;
+    }
     if (fence) { if (line.trim().startsWith(fence)) { flushCode(); fence = ''; } else code.push(line); continue; }
     const fenceStart = line.trim().match(/^(`{3,}|~{3,})\s*\w*$/);
     if (fenceStart) { flushParagraph(); flushList(); fence = fenceStart[1]; continue; }

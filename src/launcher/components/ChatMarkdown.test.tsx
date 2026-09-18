@@ -15,6 +15,20 @@ it('支持单行 note 语法', () => {
   expect(screen.getByText('warning')).toBeInTheDocument();
   expect(screen.getByText('这是一条提示')).toBeInTheDocument();
 });
+it('处理行内 %endnote%，不把控制符渲染为正文', () => {
+  render(<ChatMarkdown content="%note tip% 这是一条提示 %endnote%" />);
+  expect(screen.getByText('tip')).toBeInTheDocument();
+  expect(screen.getByText('这是一条提示')).toBeInTheDocument();
+  expect(screen.queryByText(/endnote/)).not.toBeInTheDocument();
+});
+it('多行 note 末尾的行内 %endnote% 同样正确闭合', () => {
+  render(<ChatMarkdown content={'%note info%\n第一行\n第二行 %endnote%\n\n后续正文。'} />);
+  expect(screen.getByText('info')).toBeInTheDocument();
+  expect(document.querySelector('.chat-markdown__note--info')?.textContent).toContain('第一行');
+  expect(document.querySelector('.chat-markdown__note--info')?.textContent).toContain('第二行');
+  expect(screen.getByText('后续正文。')).toBeInTheDocument();
+  expect(screen.queryByText(/endnote/)).not.toBeInTheDocument();
+});
 it('把半角和全角引用渲染为彩色上标角标', () => {
   render(<ChatMarkdown content="三篇风格差别挺大:想读思辨选**［3］**,想读抒情选［1］,想读叙事张力选 [2]。" />);
   expect(screen.getByLabelText('参考资料 1').tagName).toBe('SUP');

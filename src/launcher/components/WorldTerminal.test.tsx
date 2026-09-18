@@ -126,6 +126,37 @@ it('仅提及来源但未标注角标时不显示推荐卡片', async () => {
   await waitFor(() => expect(screen.getByText('终末阵列是一套设定。')).toBeInTheDocument());
   expect(screen.queryByRole('link', { name: /阅读《/ })).not.toBeInTheDocument();
 });
+it('按 %recommend 关键词匹配正文相关文章，忽略无关来源', async () => {
+  const body = new Response([
+    'event: sources\ndata: [{"number":1,"title":"终末阵列","section":"规则","category":"world","url":"https://world.sch-nie.com/articles/end","urlKind":"article"},{"number":2,"title":"木缘桑庭","section":"导读","category":"world","url":"https://world.sch-nie.com/articles/sang","urlKind":"article"}]\n\n',
+    'data: {"choices":[{"delta":{"content":"终末阵列是一套设定。没有角标。\\n%recommend [\\"终末阵列\\"]%\\n%status trust=80 affinity=70 mood=calm label=已核对 sources=show%"}}]}\n\n',
+    'data: [DONE]\n\n',
+  ].join('')).body;
+  const fetcher = vi.fn().mockResolvedValue({ ok: true, body });
+  vi.stubGlobal('fetch', fetcher);
+  render(<WorldTerminal />);
+  fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
+  fireEvent.change(screen.getByRole('textbox', { name: '输入你的问题' }), { target: { value: '终末阵列是什么？' } });
+  fireEvent.click(screen.getByRole('button', { name: '发送问题' }));
+  await waitFor(() => expect(screen.getByText('终末阵列是一套设定。没有角标。')).toBeInTheDocument());
+  expect(screen.getByRole('link', { name: '阅读《终末阵列》 ↗' })).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: '阅读《木缘桑庭》 ↗' })).not.toBeInTheDocument();
+});
+it('%recommend 空数组明确关闭推荐卡片，即使正文有角标', async () => {
+  const body = new Response([
+    'event: sources\ndata: [{"number":1,"title":"终末阵列","section":"规则","category":"world","url":"https://world.sch-nie.com/articles/end","urlKind":"article"}]\n\n',
+    'data: {"choices":[{"delta":{"content":"已核对。［1］\\n%recommend []%\\n%status trust=80 affinity=70 mood=calm label=已核对 sources=show%"}}]}\n\n',
+    'data: [DONE]\n\n',
+  ].join('')).body;
+  const fetcher = vi.fn().mockResolvedValue({ ok: true, body });
+  vi.stubGlobal('fetch', fetcher);
+  render(<WorldTerminal />);
+  fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
+  fireEvent.change(screen.getByRole('textbox', { name: '输入你的问题' }), { target: { value: '终末阵列是什么？' } });
+  fireEvent.click(screen.getByRole('button', { name: '发送问题' }));
+  await waitFor(() => expect(screen.getByText('已核对。')).toBeInTheDocument());
+  expect(screen.queryByRole('link', { name: /阅读《/ })).not.toBeInTheDocument();
+});
 it('切换交流模式会同步更新简介、推荐入口和输入提示', () => {
   const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
   render(<WorldTerminal />);

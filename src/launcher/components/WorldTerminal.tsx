@@ -74,6 +74,27 @@ const citedSources = (sources: Source[] = [], content = '') => {
   for (const match of content.matchAll(/[［\[](\d{1,3})[］\]]/g)) cited.add(Number(match[1]));
   return uniqueArticleSources(sources.filter(source => cited.has(source.number)));
 };
+// 模型通过 %recommend 返回正文相关关键词后，据此在来源标题/章节/分类中匹配最相关的文章；未提供关键词时回退到角标引用。
+const keywordScore = (source: Source, keywords: string[]) => {
+  const haystack = [source.title, source.section, source.categoryName, ...(source.categories || [])]
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .join('\n')
+    .toLowerCase();
+  return keywords.reduce((score, keyword) => {
+    const normalized = keyword.trim().toLowerCase();
+    return normalized && haystack.includes(normalized) ? score + 1 : score;
+  }, 0);
+};
+const recommendedSources = (sources: Source[] = [], control: TerminalControl | undefined, content = '') => {
+  const keywords = control?.recommend;
+  if (keywords === undefined) return citedSources(sources, content);
+  if (keywords.length === 0) return [];
+  return uniqueArticleSources(sources
+    .map(source => ({ source, score: keywordScore(source, keywords) }))
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(item => item.source));
+};
 const modeCopy = {
   chat: { tag: 'CHAT WITH AI', title: '从一个问题开始。', description: (scope: string) => scope === '三类资料' ? '查阅 BLOG、WORLD、ZERO，聊聊你感兴趣的内容。' : `我会先查阅${scope}的内容，再自然地和你聊下去。`, placeholder: (scope: string) => `问问${scope}里的内容…` },
   tutor: { tag: 'EXPLAINER', title: '把复杂内容讲得更容易懂。', description: (scope: string) => `我会把${scope}里的概念拆开，按你的节奏一步步解释。`, placeholder: (scope: string) => `请让我解释${scope}里的一个概念…` },
@@ -292,7 +313,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
             try { const u = new URL(source.url); safe = /^https:$/.test(u.protocol) && !u.username && !u.password && !!u.hostname; } catch {}
             return safe && <a href={source.url} target="_blank" rel="noopener noreferrer" key={source.number}><span>[{source.number}] {source.category.toUpperCase()} · {source.categoryName || '资料'}</span> {source.title}<small>{source.section}{source.categories?.length ? ` · ${source.categories.join(' / ')}` : ''}{source.urlKind === 'launcher-home' ? ' · 终端入口（未提供文章直链）' : ' · 阅读原文'} ↗</small></a>;
           })}</details>}
-          {message.role === 'assistant' && !!message.content?.trim() && message.control?.sources !== 'none' && citedSources(message.sources, message.content).length > 0 && <div className="world-terminal__article-links">{citedSources(message.sources, message.content).map(source => <a href={source.url} target="_blank" rel="noopener noreferrer" key={`article-${source.url}`}>阅读《{source.title}》 ↗</a>)}</div>}
+          {message.role === 'assistant' && !!message.content?.trim() && message.control?.sources !== 'none' && recommendedSources(message.sources, message.control, message.content).length > 0 && <div className="world-terminal__article-links">{recommendedSources(message.sources, message.control, message.content).map(source => <a href={source.url} target="_blank" rel="noopener noreferrer" key={`article-${source.url}`}>阅读《{source.title}》 ↗</a>)}</div>}
         </article>)}
       </div>
       <div className="world-terminal__feedback" aria-live="polite">

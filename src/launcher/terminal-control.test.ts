@@ -13,4 +13,16 @@ describe('terminal control protocol', () => {
     expect(parsed.content).toBe('');
     expect(parsed.control).toEqual({ label: '危险' });
   });
+
+  it('parses %recommend keywords and strips the control line', () => {
+    const parsed = parseTerminalOutput('结论。\n%recommend ["终末阵列","世界观"]%\n补充说明。');
+    expect(parsed.content).toBe('结论。\n补充说明。');
+    expect(parsed.control.recommend).toEqual(['终末阵列', '世界观']);
+  });
+
+  it('treats empty %recommend as explicit none, absent as undefined', () => {
+    expect(parseTerminalOutput('%recommend []%').control.recommend).toEqual([]);
+    expect(parseTerminalOutput('正文。').control.recommend).toBeUndefined();
+    expect(parseTerminalOutput('%recommend 不是数组%').control.recommend).toBeUndefined();
+  });
 });
