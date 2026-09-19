@@ -653,12 +653,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
   to { opacity: 0.9; }
 }
 .launcher-desktop-root { min-height: 100svh; }
+.launcher-desktop-root { min-height: 100svh; }
+
 .launcher-loading {
   align-items: center;
   backdrop-filter: blur(20px);
-  background: radial-gradient(circle at 78% 12%, rgba(244, 238, 0, 0.14), transparent 34%),
-    radial-gradient(circle at 15% 100%, rgba(66, 139, 175, 0.1), transparent 42%),
-    #080b11;
+  background:
+          radial-gradient(circle at 78% 12%, rgba(244, 238, 0, 0.14), transparent 34%),
+          radial-gradient(circle at 15% 100%, rgba(66, 139, 175, 0.1), transparent 42%),
+          #080b11;
   display: flex;
   height: 100svh;
   justify-content: center;
@@ -670,12 +673,43 @@ button, a { -webkit-tap-highlight-color: transparent; }
   width: 100vw;
   z-index: 100;
 }
+
+/* 加载页内容 */
 .launcher-loading__inner {
   align-items: center;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   margin: auto;
+}
+
+/* ── Desktop Loading Background ── */
+@media (min-width: 900px) {
+  .launcher-loading {
+    isolation: isolate;
+  }
+
+  .launcher-loading::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background-image: url("/src/launcher/cover.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    /* 背景图片透明度 */
+    opacity: 0.35;
+
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .launcher-loading__inner {
+    position: relative;
+    z-index: 1;
+  }
 }
 .launcher-loading__spinner {
   animation: launcher-loading-spin 1.2s linear infinite;

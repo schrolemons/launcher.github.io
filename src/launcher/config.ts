@@ -7,11 +7,11 @@ const emptyFeeds = () => ({
 });
 
 // 资讯/新闻条目与左侧轮播图统一占位外链。后续按条目替换为各自的实际外部链接即可，顺序即下方数组顺序。
-const PLACEHOLDER_HREF = "https://ark.sch-nie.com/";
+const PLACEHOLDER_HREF = "https://www.bilibili.com/video/BV1QWYi6MEh3?vd_source=c31b2b4f63346d86b55d9987ff6fbd55";
 
 const arkFeeds = {
   announcement: [
-    { title: "最新公告", date: "2026-03-23", href: PLACEHOLDER_HREF, tag: "公告" },
+    { title: "第九边缘：即刻启程", date: "2026-09-13", href: PLACEHOLDER_HREF, tag: "宣传" },
   ],
   news: [
     
