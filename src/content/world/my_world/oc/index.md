@@ -10,10 +10,10 @@ comments: false
 	<div class="photos-list">
 		<div class="photos-column">
 			<div class="photos-item">
-				<a href="moxue"><img src="https://picbed.sch-nie.com/moxue/头像.png">
+				<a href="Mosae"><img src="https://picbed.sch-nie.com/Mosae/头像.png">
 				</a>
 				<br>
-				<p>-墨薛MOXUE-</p>
+				<p>-墨薛Mosae-</p>
 			</div>
 		</div>
 	</div>

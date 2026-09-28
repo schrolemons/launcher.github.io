@@ -10,9 +10,9 @@ date: 2025-02-21 17:47:27
 <div class="photos-page">
 	<div class="img-list">
 		<div class="img-column">
-			<img src="https://picbed.sch-nie.com/moxue/表情.png"></a>
-			<img src="https://picbed.sch-nie.com/moxue/色块.png"></a>
-			<img src="https://picbed.sch-nie.com/moxue/Q版.png"></a>
+			<img src="https://picbed.sch-nie.com/Mosae/表情.png"></a>
+			<img src="https://picbed.sch-nie.com/Mosae/色块.png"></a>
+			<img src="https://picbed.sch-nie.com/Mosae/Q版.png"></a>
 		</div>
 	</div>
 </div>
@@ -23,7 +23,7 @@ date: 2025-02-21 17:47:27
 {%note info%}
 ### 人物信息 CHARACTER INFORMATION
 {% endnote %}
->名称：墨薛 MOXUE
+>名称：墨薛 Mosae
 引入者：SCHNIE2025 & schrolemons
 所属宇宙：逝痕宇宙 至 九虹宇宙
 回归日：无纪年-2097年11月17日
@@ -51,7 +51,7 @@ date: 2025-02-21 17:47:27
 {% endnote %}
 `私稿勿用！`
 `请勿保存！`
-<img src="https://picbed.sch-nie.com/moxue/墨薛.png" width = "50%" height = "50%" alt="墨薛" align=center />
+<img src="https://picbed.sch-nie.com/Mosae/墨薛.png" width = "50%" height = "50%" alt="墨薛" align=center />
 >色调：白、黄、灰、黑
 本体特征：异瞳、耳色不一、黑色挑染、红色眼线、左耳双白斑、大尾巴
 服设特征：短袖外套、短裤、脚袜、身份牌、标有“SCHNIE”的工作服、多处绷带元素

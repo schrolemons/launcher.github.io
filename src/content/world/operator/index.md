@@ -8,7 +8,7 @@ date: 2025-02-22 19:28:51
 
 {%note info no-icon 协作者档案：schrolemons %}
 本网站的**起源建设者**。
-性格特征为INTJ-A，[欢迎扩列~](https://world.sch-nie.com/friend_lists/moxue)
+性格特征为INTJ-A，[欢迎扩列~](https://world.sch-nie.com/friend_lists/Mosae)
 入职日：2024-9-1
 {% endnote %}
 
@@ -31,7 +31,7 @@ date: 2025-02-22 19:28:51
 {% endnote %}
 
 {%note info no-icon 扩列条：schrolemons %}
-{% rawhtml src="/friend_lists/moxue/" title="墨薛的个人扩列条" width="100%" height="calc(100vh - 160px)" minHeight="400px" %}
+{% rawhtml src="/friend_lists/Mosae/" title="墨薛的个人扩列条" width="100%" height="calc(100vh - 160px)" minHeight="400px" %}
 {% endrawhtml %}
 {% endnote %}
 
