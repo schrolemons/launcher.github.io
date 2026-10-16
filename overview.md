@@ -1,10 +1,10 @@
 ---
 overview_schema: 1
-generated_at: '2026-10-16T17:21:13.918Z'
-revision: 78536d0bf09c87888725b23000874047bf16be3a7ec8656bd6ee01ebf8c4502e
+generated_at: '2026-10-16T17:44:07.747Z'
+revision: 49da3eff15675f8d7525916b812df8bffe6e3eb41ed28ae34c42cdc0ad3a89c8
 article_count: 152
-word_count: 411425
-character_count: 496737
+word_count: 411411
+character_count: 496722
 ---
 
 # 内容总览
@@ -16,7 +16,7 @@ character_count: 496737
 | 网站 | 文章数 | 字数（中按字、非中按词） | 非空白字符数（含标点） |
 | --- | ---: | ---: | ---: |
 | BLOG | 88 | 219500 | 273174 |
-| WORLD | 48 | 181758 | 209889 |
+| WORLD | 48 | 181744 | 209874 |
 | ZERO | 16 | 10167 | 13674 |
 
 ## 按内容分类
@@ -24,9 +24,9 @@ character_count: 496737
 | 分类 | 文章数 | 字数（中按字、非中按词） | 非空白字符数（含标点） |
 | --- | ---: | ---: | ---: |
 | BLOG · 经验分享与技术博客 | 86 | 201884 | 253081 |
-| WORLD · 文明体系 | 42 | 181522 | 209638 |
+| WORLD · 文明体系 | 42 | 181508 | 209623 |
 | ZERO · 核心内容与关键信息 | 24 | 28019 | 34018 |
-| 合计 | 152 | 411425 | 496737 |
+| 合计 | 152 | 411411 | 496722 |
 
 ## 统计口径与全部公开文章头字段
 
@@ -35,8 +35,8 @@ character_count: 496737
 ```json
 {
   "schema": 1,
-  "generated_at": "2026-10-16T17:21:13.918Z",
-  "revision": "78536d0bf09c87888725b23000874047bf16be3a7ec8656bd6ee01ebf8c4502e",
+  "generated_at": "2026-10-16T17:44:07.747Z",
+  "revision": "49da3eff15675f8d7525916b812df8bffe6e3eb41ed28ae34c42cdc0ad3a89c8",
   "scope": "launcher/src/content 中的公开 Markdown 副本；从 BLOG/WORLD/ZERO 的 source 分支或本地源码只读采集，保留网站及原路径；不是网页运行时动态内容统计",
   "counting": {
     "word_count": "汉字 Unicode 码点数 + 非汉字文字/数字词组数；英文缩写和连字符词算一个词",
@@ -47,10 +47,10 @@ character_count: 496737
   },
   "totals": {
     "article_count": 152,
-    "word_count": 411425,
-    "han_characters": 399178,
+    "word_count": 411411,
+    "han_characters": 399164,
     "non_han_words": 12247,
-    "character_count": 496737
+    "character_count": 496722
   },
   "sites": {
     "blog": {
@@ -62,10 +62,10 @@ character_count: 496737
     },
     "world": {
       "article_count": 48,
-      "word_count": 181758,
-      "han_characters": 181113,
+      "word_count": 181744,
+      "han_characters": 181099,
       "non_han_words": 645,
-      "character_count": 209889
+      "character_count": 209874
     },
     "zero": {
       "article_count": 16,
@@ -85,10 +85,10 @@ character_count: 496737
     },
     "world": {
       "article_count": 42,
-      "word_count": 181522,
-      "han_characters": 180879,
+      "word_count": 181508,
+      "han_characters": 180865,
       "non_han_words": 643,
-      "character_count": 209638
+      "character_count": 209623
     },
     "zero": {
       "article_count": 24,
@@ -2438,7 +2438,7 @@ character_count: 496737
         "title": "人生观",
         "abbrlink": 97,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "哲学条目"
@@ -2468,7 +2468,7 @@ character_count: 496737
         "title": "宇宙观",
         "abbrlink": 99,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "哲学条目"
@@ -2498,7 +2498,7 @@ character_count: 496737
         "title": "自然观",
         "abbrlink": 98,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "哲学条目"
@@ -2527,7 +2527,7 @@ character_count: 496737
         "title": "灵耀体系：火神契约",
         "abbrlink": 22,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "哲学杂谈"
@@ -2560,7 +2560,7 @@ character_count: 496737
       "frontmatter": {
         "title": "灵耀体系：草引囚徒",
         "abbrlink": 8,
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "author": "schrolemons",
         "top": 50,
         "categories": [
@@ -2596,7 +2596,7 @@ character_count: 496737
         "title": "灵耀体系：雷云之梦",
         "abbrlink": 7,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "额外事件"
@@ -2630,7 +2630,7 @@ character_count: 496737
         "title": "灵耀体系：风落和鸣",
         "abbrlink": 1117,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "九虹文明",
           "额外事件"
@@ -2665,7 +2665,7 @@ character_count: 496737
         "title": "炽晨：初醒之刻",
         "abbrlink": 18,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "top": 98,
         "categories": [
           "终末文明",
@@ -2701,7 +2701,7 @@ character_count: 496737
         "title": "跨世：星源绘逢",
         "abbrlink": 30,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "九虹文明",
           "文明历程"
@@ -2736,7 +2736,7 @@ character_count: 496737
         "title": "离迹：烬择浮影",
         "abbrlink": 4,
         "author": "schrolemons",
-        "updated": "2026-10-02T01:07:46+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "九虹文明",
           "文明历程"
@@ -2771,7 +2771,7 @@ character_count: 496737
         "title": "越度：虹九重构",
         "abbrlink": 15,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-09-08T00:00:00.000Z",
         "top": 99,
         "categories": [
           "九虹文明",
@@ -2807,7 +2807,7 @@ character_count: 496737
         "title": "灵耀体系：土奏琴璃",
         "abbrlink": 11,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "九虹文明",
           "额外事件"
@@ -2841,7 +2841,7 @@ character_count: 496737
         "layout": "pages",
         "title": "灵耀体系：木缘桑庭",
         "abbrlink": 24,
-        "updated": "2026-10-01T22:18:58+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "author": "schrolemons",
         "categories": [
           "九虹文明",
@@ -2878,7 +2878,7 @@ character_count: 496737
         "title": "灵耀体系：水渊蚀源",
         "abbrlink": 10,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "top": 101,
         "categories": [
           "九虹文明",
@@ -2914,7 +2914,7 @@ character_count: 496737
         "title": "灵耀体系：金泽范式",
         "abbrlink": 23,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "top": 96,
         "categories": [
           "逝痕文明",
@@ -2950,7 +2950,7 @@ character_count: 496737
         "title": "滞洄：云末王冕",
         "abbrlink": 21,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "文明历程"
@@ -2985,7 +2985,7 @@ character_count: 496737
         "title": "御临：借以神名",
         "abbrlink": 29,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "神系"
@@ -3020,7 +3020,7 @@ character_count: 496737
         "title": "祈云：旧神荒圃",
         "abbrlink": 17,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "终末文明",
           "文明历程"
@@ -3055,7 +3055,7 @@ character_count: 496737
         "title": "承日：神子之树",
         "abbrlink": 20,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "终末文明",
           "文明历程"
@@ -3089,7 +3089,7 @@ character_count: 496737
         "layout": "pages",
         "title": "灵耀体系：光与流辰",
         "abbrlink": 28,
-        "updated": "2026-10-04T22:06:30+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "author": "schrolemons",
         "categories": [
           "九虹文明",
@@ -3128,7 +3128,7 @@ character_count: 496737
         "layout": "pages",
         "title": "灵耀体系：冰结明域",
         "abbrlink": 25,
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "author": "schrolemons",
         "categories": [
           "逝痕文明",
@@ -3164,7 +3164,7 @@ character_count: 496737
         "layout": "pages",
         "title": "灵耀体系：阳汇彼日",
         "abbrlink": 26,
-        "updated": "2026-10-04T22:14:18+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "author": "schrolemons",
         "categories": [
           "九虹文明",
@@ -3203,7 +3203,7 @@ character_count: 496737
         "layout": "pages",
         "title": "灵耀体系：阴行世界",
         "abbrlink": 27,
-        "updated": "2026-10-09T17:24:00+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "author": "schrolemons",
         "categories": [
           "逝痕文明",
@@ -3240,7 +3240,7 @@ character_count: 496737
         "title": "四象：昏昼合棋",
         "abbrlink": 14,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "终末文明",
           "文明历程"
@@ -3274,7 +3274,7 @@ character_count: 496737
         "title": "折棱：终态行旅",
         "abbrlink": 3,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "top": 100,
         "categories": [
           "终末文明",
@@ -3310,7 +3310,7 @@ character_count: 496737
         "title": "构筑：逝时宏鳞",
         "abbrlink": 5,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "top": 50,
         "categories": [
           "终末文明",
@@ -3346,7 +3346,7 @@ character_count: 496737
         "title": "坠源：重返故都",
         "abbrlink": 19,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "九虹文明",
           "文明历程"
@@ -3380,7 +3380,7 @@ character_count: 496737
         "title": "启辉计划-附属“自然工程”基本方案",
         "abbrlink": 16,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "策略"
@@ -3412,7 +3412,7 @@ character_count: 496737
         "title": "宏鳞企划-附属“文化构造”基本方案",
         "abbrlink": 9,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "策略"
@@ -3444,7 +3444,7 @@ character_count: 496737
         "title": "方舟规划-附属“宇宙入侵”基本方案",
         "abbrlink": 12,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-08-25T00:00:00.000Z",
         "categories": [
           "逝痕文明",
           "策略"
@@ -3480,7 +3480,6 @@ character_count: 496737
         "description": "直到意识回到那无声之海，祂也没再回来。",
         "reading_style": "info",
         "reading_tone": "cyan",
-        "date": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 0,
@@ -3508,7 +3507,6 @@ character_count: 496737
         "comments": false,
         "reading_style": "info",
         "reading_tone": "cyan",
-        "updated": "2026-10-03T13:33:30+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 87,
@@ -3531,7 +3529,6 @@ character_count: 496737
         "title": "archives",
         "date": "2025-05-25T23:28:12.000Z",
         "reading_style": "directory",
-        "updated": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 0,
@@ -3557,7 +3554,6 @@ character_count: 496737
         "directory_key": "",
         "comments": false,
         "reading_style": "directory",
-        "date": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 0,
@@ -3582,7 +3578,6 @@ character_count: 496737
         "type": "categories",
         "comments": false,
         "reading_style": "directory",
-        "updated": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 0,
@@ -3606,7 +3601,6 @@ character_count: 496737
         "title": "第九边缘：WORLD",
         "comments": false,
         "reading_style": "home",
-        "date": "2026-10-08T11:09:11+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 393,
@@ -3631,7 +3625,6 @@ character_count: 496737
         "comments": false,
         "reading_style": "info",
         "reading_tone": "cyan",
-        "date": "2026-10-04T01:25:56+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 437,
@@ -3655,14 +3648,13 @@ character_count: 496737
         "date": "2025-02-22T19:28:51.000Z",
         "reading_style": "profile",
         "reading_tone": "amber",
-        "updated": "2026-10-17T00:39:27+08:00",
         "content_stats": {
           "schema": 1,
-          "word_count": 382,
-          "han_characters": 375,
+          "word_count": 368,
+          "han_characters": 361,
           "non_han_words": 7,
-          "character_count": 460,
-          "content_hash": "60f47180b06d32440f78f7ffea8b52bd6bcb041353c555c7703b56d27b1f853e"
+          "character_count": 445,
+          "content_hash": "549d5f9661bd6c59cd40464a0bfba56270e6e61f6afd23c148508a0df1df6c1a"
         }
       }
     },
@@ -3680,7 +3672,6 @@ character_count: 496737
         "type": "tags",
         "comments": false,
         "reading_style": "directory",
-        "updated": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 0,
@@ -3706,7 +3697,6 @@ character_count: 496737
         "directory_key": "",
         "comments": false,
         "reading_style": "directory",
-        "date": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 0,
@@ -3730,7 +3720,6 @@ character_count: 496737
         "date": "2025-02-21T17:47:27.000Z",
         "reading_style": "profile",
         "reading_tone": "amber",
-        "updated": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 946,
@@ -3758,7 +3747,6 @@ character_count: 496737
         "categories": "异世之篇",
         "reading_style": "story",
         "reading_tone": "blue",
-        "updated": "2026-10-04T13:04:16+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 1143,
@@ -3786,7 +3774,6 @@ character_count: 496737
         "categories": "异世之篇",
         "reading_style": "story",
         "reading_tone": "blue",
-        "updated": "2026-10-04T13:03:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 944,
@@ -3813,7 +3800,6 @@ character_count: 496737
         "categories": "现世之篇",
         "reading_style": "essay",
         "reading_tone": "green",
-        "updated": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 1184,
@@ -3840,7 +3826,6 @@ character_count: 496737
         "categories": "现世之篇",
         "reading_style": "essay",
         "reading_tone": "green",
-        "updated": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 1280,
@@ -3867,7 +3852,6 @@ character_count: 496737
         "categories": "现世之篇",
         "reading_style": "essay",
         "reading_tone": "green",
-        "updated": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 1118,
@@ -3920,7 +3904,6 @@ character_count: 496737
         "categories": "世界区域",
         "reading_style": "lore",
         "reading_tone": "violet",
-        "updated": "2026-10-01T22:05:29+08:00",
         "content_stats": {
           "schema": 1,
           "word_count": 1425,

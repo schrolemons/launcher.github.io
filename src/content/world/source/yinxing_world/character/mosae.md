@@ -3,7 +3,6 @@ title: 众生回廊：墨薛
 date: 2025-02-21 17:47:27
 reading_style: profile
 reading_tone: amber
-updated: '2026-10-01T22:05:29+08:00'
 content_stats:
   schema: 1
   word_count: 946

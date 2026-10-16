@@ -3,14 +3,13 @@ title: 协作者档案
 date: 2025-02-22 19:28:51
 reading_style: profile
 reading_tone: amber
-updated: '2026-10-17T00:39:27+08:00'
 content_stats:
   schema: 1
-  word_count: 382
-  han_characters: 375
+  word_count: 368
+  han_characters: 361
   non_han_words: 7
-  character_count: 460
-  content_hash: 60f47180b06d32440f78f7ffea8b52bd6bcb041353c555c7703b56d27b1f853e
+  character_count: 445
+  content_hash: 549d5f9661bd6c59cd40464a0bfba56270e6e61f6afd23c148508a0df1df6c1a
 ---
 {% note primary %}
 ### 协作者介绍
@@ -20,11 +19,6 @@ content_stats:
 本网站的**起源建设者**。
 性格特征为INTJ-A，[欢迎扩列~](https://world.sch-nie.com/light_withme/friend_lists/mosae)
 入职日：2024-9-1
-{% endnote %}
-
-{%note info no-icon 协作者档案：璃风 %}
-本网站的**协作建设者**。
-负责唱反调
 {% endnote %}
 
 {%note  info no-icon 协作者档案：瑞Ruifox %}

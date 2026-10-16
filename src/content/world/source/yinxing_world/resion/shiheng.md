@@ -6,7 +6,6 @@ date: 2026-8-12 20:43:51
 categories: 世界区域
 reading_style: lore
 reading_tone: violet
-updated: '2026-10-01T22:05:29+08:00'
 content_stats:
   schema: 1
   word_count: 1425
