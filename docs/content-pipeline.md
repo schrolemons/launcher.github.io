@@ -103,4 +103,12 @@ Webhook 只触发任务，不直接处理 Markdown，也不把正文搬进 Verce
    脚本只改 GitHub 仓库的 Webhook 设置，回调为 `https://launcher.sch-nie.com/api/content-update`，订阅 push，启用 SSL 校验；不提交源仓库文件。密钥不进入仓库或日志。
 4. 在 launcher Actions 手动运行一次本工作流，核对三站来源、向量报告和新缓存提交，再从任一源仓库推送文章验证即时通知。
 
-启用进度：Vercel Production 已配置 CONTENT_SYNC_GITHUB_TOKEN 与 CONTENT_SYNC_WEBHOOK_SECRET；共享密钥另存于 Git 忽略的本地 .env.local。发布完成后注册三个 GitHub Webhook，并运行首次正式同步，验收记录随后补充。
+2026-10-17 已启用：
+
+- launcher/main 的采集、总览与 Webhook 接口已发布到正式域名；Vercel Production 的两项 CONTENT_SYNC_* 密钥已生效。本地共享密钥保存在 Git 忽略的 .env.local。
+- BLOG、WORLD、ZERO 三个 GitHub Webhook 均 active，只订阅 push，启用 SSL 校验。GitHub 实际发送的三个签名 ping 均返回 HTTP 200。
+- [首次正式同步](https://github.com/schrolemons/launcher.github.io/actions/runs/38941888159)成功：读取远程 source 分支，生成 152 个公开 Markdown 的缓存和总览，总字数 411411，非空白字符数 496722；137 个文件产生 1864 个向量分片，pending=false。新嵌入完成后清理旧分片，自动缓存提交 f2ede353c8add9830a03d5f4f65ee38a6b1bb9c9 仅写入 launcher。
+- 使用当前 WORLD/source 提交号构造签名 push 验证请求，正式接口返回 HTTP 202 accepted，成功触发 [repository_dispatch 同步](https://github.com/schrolemons/launcher.github.io/actions/runs/38942074713)；同一正文第二次投递返回 duplicate，未重复创建任务。此测试没有推送或修改源仓库。
+- 无签名请求返回 HTTP 401。文章与密钥没有通过测试输出到日志。
+
+后续只需向各源仓库的 source 分支推送文章，自动链路即可刷新 launcher。仅存在于本地、尚未推送的源文章不进入线上总览。
