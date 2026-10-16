@@ -35,7 +35,7 @@ export function sourceUrl(frontmatter) {
   return { url: base, urlKind: 'launcher-home' };
 }
 
-export function articleRecords(raw, category, relativePath) {
+export function articleRecords(raw, category, relativePath, origin = {}) {
   raw = raw.replace(/\r\n/g, '\n');
   if (!categories.includes(category)) throw new Error(`未知分类：${category}`);
   const { data: fm, content } = matter(raw);
@@ -44,7 +44,7 @@ export function articleRecords(raw, category, relativePath) {
   if (fm.draft === true || fm.published === false || fm.private === true || fm.password || fm.encrypted === true) return [];
   const sourceTitle = textValue(fm.title || path.basename(relativePath).replace(/\.mdx?$/i, ''), 120);
   const source = relativePath.replaceAll('\\', '/');
-  const articleDefaults = normalizeContentMetadata({ category: configuredCategory, categoryName: CATEGORY_NAMES[configuredCategory], source, title: sourceTitle, ...sourceUrl(fm) });
+  const articleDefaults = normalizeContentMetadata({ category: configuredCategory, categoryName: CATEGORY_NAMES[configuredCategory], source, title: sourceTitle, ...sourceUrl(fm), ...origin });
   const cleaned = content.replace(/<!--[\s\S]*?-->/g, '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/{%[\s\S]*?%}/g, '').replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\r/g, '');
   const sections = [];
@@ -72,7 +72,7 @@ export function articleRecords(raw, category, relativePath) {
     const title = textValue(identity.title, 120);
     const articleId = digest(`${effectiveCategory}:${source}:${title}`).slice(0, 24);
     const labels = [...listValue(fm.categories), ...listValue(fm.tags), ...listValue(fm.aliases || fm.alias)].join(' / ').slice(0, 160);
-    const prefix = `${effectiveCategory.toUpperCase()} | ${title}\n${section}\n${labels ? `主题：${labels}\n` : ''}`;
+    const prefix = `${effectiveCategory.toUpperCase()} | ${title}\n站点：${origin.siteName || category.toUpperCase()}\n路径：${String(origin.sourcePath || source).slice(0, 240)}\n${section}\n${labels ? `主题：${labels}\n` : ''}`;
     // Paragraph packing inside a heading; long paragraphs split at sentence boundaries.
     const limit = 1500 - prefix.length;
     const units = item.text.split(/\n\s*\n/).flatMap(paragraph => {
@@ -82,7 +82,7 @@ export function articleRecords(raw, category, relativePath) {
     let buffer = '';
     const emit = () => {
       if (!buffer.trim()) return;
-      const metadata = { schema: 3, pipelineVersion: '2026-09-12.1', category: effectiveCategory, categoryName: identity.categoryName,
+      const metadata = { schema: 3, pipelineVersion: '2026-10-17.1', category: effectiveCategory, categoryName: identity.categoryName,
         articleId, articleHash: digest(raw), source, title, slug: textValue(fm.slug || path.basename(relativePath).replace(/\.mdx?$/i, ''), 160),
         abbrlink: textValue(fm.abbrlink, 100), section, headingPath,
         entry, sectionIndex, sectionCount: sections.length,
@@ -91,6 +91,10 @@ export function articleRecords(raw, category, relativePath) {
         summary: textValue(fm.description || item.text.replace(/[`#*_]/g, '').replace(/\s+/g, ' '), 240),
         summaryMethod: fm.description ? 'frontmatter-description' : 'source-excerpt',
         articleCharacters: cleaned.length, sectionCharacters: item.text.length,
+        site: origin.site || category, siteName: origin.siteName || category.toUpperCase(),
+        sourcePath: origin.sourcePath || source, sourceRepository: origin.sourceRepository || '',
+        sourceUrl: origin.url || articleDefaults.url,
+        ...(fm.content_stats ? { contentStats: fm.content_stats } : {}),
         url: identity.url, urlKind: identity.urlKind,
         categories: listValue(fm.categories), tags: listValue(fm.tags), description: textValue(fm.description, 300),
         chunkIndex: records.length, text: buffer.trim() };
@@ -133,8 +137,14 @@ export function markdownFilesUnder(root) {
   return files.sort((a, b) => path.relative(root, a).localeCompare(path.relative(root, b), 'en'));
 }
 
+export function readSourceOrigins(root) {
+  const file = path.resolve(root, '../../generated/source-manifest.json');
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).articles || {} : {};
+}
+
 export function collectRecords(root) {
   const records = [];
+  const origins = readSourceOrigins(root);
   let articles = 0;
   for (const folder of ['posts', ...categories]) {
     const dir = path.join(root, folder);
@@ -142,7 +152,7 @@ export function collectRecords(root) {
       // Nested folders organize source files only. The first directory under
       // src/content owns the BLOG/WORLD/ZERO classification.
       const relative = `${folder}/${path.relative(dir, full).replaceAll('\\', '/')}`;
-      const result = articleRecords(fs.readFileSync(full, 'utf8'), folder === 'posts' ? 'world' : folder, relative);
+      const result = articleRecords(fs.readFileSync(full, 'utf8'), folder === 'posts' ? 'world' : folder, relative, origins[relative]);
       if (result.length) articles++;
       records.push(...result);
     }

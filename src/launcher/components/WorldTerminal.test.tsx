@@ -8,6 +8,18 @@ beforeEach(() => {
   HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new Event('close')); };
 });
 afterEach(() => { vi.unstubAllGlobals(); localStorage.clear(); });
+it('网站来源选择与内容分类独立，发送到服务端', async () => {
+  const fetcher = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: '测试结束' }) });
+  vi.stubGlobal('fetch', fetcher);
+  render(<WorldTerminal />);
+  fireEvent.click(screen.getByRole('button', { name: /打开世界终端/ }));
+  fireEvent.click(screen.getByRole('combobox', { name: '网站来源' }));
+  fireEvent.click(screen.getByRole('option', { name: /WORLD/ }));
+  fireEvent.change(screen.getByRole('textbox', { name: '输入你的问题' }), { target: { value: '有哪些文章？' } });
+  fireEvent.click(screen.getByRole('button', { name: '发送问题' }));
+  await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+  expect(JSON.parse(fetcher.mock.calls[0][1].body)).toMatchObject({ site: 'world', category: 'all' });
+});
 it('手机打开时不主动聚焦输入框，Enter 保留换行', () => {
   const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
   render(<WorldTerminal mobile />);

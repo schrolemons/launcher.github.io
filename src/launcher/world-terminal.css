@@ -167,7 +167,7 @@
   .world-terminal__brand-mark { width:36px; height:36px; font-size:18px; }
   .world-terminal h2 { font-size:16px; }
   .world-terminal h2 span { font-size:9px; margin-left:6px; }
-  .world-terminal__settings { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) auto; gap:8px; padding:10px max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left)); }
+  .world-terminal__settings { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:10px max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left)); }
   .terminal-select { gap:3px; }
   .terminal-select__label { font-size:9px; }
   .world-terminal__settings .world-terminal__new { align-self:end; min-height:44px; font-size:11px; }

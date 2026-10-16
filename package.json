@@ -3,8 +3,12 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "predev": "node scripts/generate-chat-suggestions.js",
-    "prebuild": "node scripts/generate-chat-suggestions.js",
+    "predev": "node scripts/refresh-content.js && node scripts/generate-chat-suggestions.js",
+    "prebuild": "node scripts/refresh-content.js && node scripts/generate-chat-suggestions.js",
+    "content:import": "node scripts/import-sites.js",
+    "content:overview": "node scripts/content-overview.js",
+    "content:refresh": "node scripts/refresh-content.js",
+    "content:webhooks": "node scripts/configure-source-webhooks.js",
     "sync:vector": "node scripts/sync-vector.js",
     "sync:vector:check": "node scripts/sync-vector.js --dry-run",
     "dev": "astro dev",
@@ -27,8 +31,11 @@
     "gray-matter": "^4.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
     "swiper": "^11.1.14",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "unified": "11.0.5"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",

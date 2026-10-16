@@ -5,6 +5,7 @@ import { collectRecords, prepareRecords, capacityPlan, NAMESPACE } from './vecto
 import { retrievalMode } from '../lib/retrieval-text.js';
 import { syncRecords } from './vector-sync.js';
 import { embedTexts, embeddingConfig, embeddingMode } from '../server/embedding.js';
+import { refreshContent } from './refresh-content.js';
 
 const root = fileURLToPath(new URL('../src/content/', import.meta.url));
 const dryRun = process.argv.includes('--dry-run');
@@ -14,6 +15,7 @@ const writeReport = report => {
   console.log(JSON.stringify(report, null, 2));
 };
 async function main() {
+  await refreshContent();
   const collected = collectRecords(root);
   const mode = retrievalMode();
   const configuredMode = embeddingMode();
@@ -38,21 +40,20 @@ async function main() {
   if (!Number.isFinite(info.dimension) || info.dimension <= 0) throw new Error('无法读取现有 Dense 索引维度，停止同步。');
   if (config.dimension && info.dimension !== config.dimension) throw new Error(`嵌入服务维度 ${config.dimension} 与现有 Dense 索引维度 ${info.dimension} 不一致，停止同步。`);
   // Check the 70% guard before any external embedding request is made.
-  capacityPlan(info, records, records.length, records.length + 1);
-  const prepared = configuredMode === 'external' ? await (async () => {
+  capacityPlan(info, records, records.length, records.length + 61);
+  const prepareAdditions = configuredMode === 'external' ? async additions => {
     const out = [];
-    for (let i = 0; i < records.length; i += 64) {
-      const batch = records.slice(i, i + 64), vectors = await embedTexts(batch.map(r => r.data));
+    for (let i = 0; i < additions.length; i += 64) {
+      const batch = additions.slice(i, i + 64), vectors = await embedTexts(batch.map(r => r.data));
       if (vectors.some(vector => vector.length !== info.dimension)) throw new Error('嵌入服务返回的向量维度与现有 Dense 索引不一致，停止同步。');
       out.push(...batch.map((r, j) => ({ id: r.id, vector: vectors[j], metadata: r.metadata })));
     }
     return out;
-  })() : records;
-  const result = await syncRecords(index, prepared, namespace, plan => writeReport({ ...summary, embeddingMode: configuredMode, embeddingIdentity: identity, ...plan }), info);
+  } : undefined;
+  const result = await syncRecords(index, records, namespace, plan => writeReport({ ...summary, embeddingMode: configuredMode, embeddingIdentity: identity, ...plan }), info, { readinessChecks: 61, pollIntervalMs: 2000, prepareAdditions });
   writeReport({ ...summary, ...result });
   if (result.pending) {
-    console.log('新嵌入仍在处理，保留旧记录；下一次同步会完成清理。');
-    return;
+    throw new Error('自动等待 120 秒后嵌入仍未完成；旧记录保留，未发布新的缓存，请重试同步。');
   }
   console.log('同步完成；其他 namespace（包括旧默认库）保持原样。');
 }

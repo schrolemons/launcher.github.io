@@ -37,6 +37,8 @@ pnpm build
 
 ## 公开对话安全配置
 
+三站文章现在通过只读采集维护，不再需要手动搬运到 launcher。构建前生成来源清单和根目录 `overview.md`，聊天每轮携带总览，并支持独立的网站来源筛选。源仓库推送后的 Webhook、字数统计和首次启用步骤见 [内容流水线](docs/content-pipeline.md)。
+
 `/api/chat` 使用服务端 `DEEPSEEK_API_KEY`，并通过 Upstash Redis 执行 IP 与匿名会话限流、单 IP 生成并发锁、请求防重放和全站每日预算控制。访客自带的 API Key 只保留在当前页面内存，刷新页面即清除；其余非敏感模型偏好仍保存在浏览器。
 
 复制 `.env.example` 中的变量到本地 `.env` 或 Vercel Project Settings → Environment Variables。以下变量与公开对话安全直接相关：

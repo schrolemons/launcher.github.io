@@ -5,12 +5,16 @@ import path from 'node:path';
 import { articleRecords, capacityPlan, collectRecords, markdownFilesUnder, prepareRecords, recommendations } from './vector-content.js';
 
 describe('语义分片', () => {
+  it('把文章头部统计保留在向量元数据中', () => {
+    const [record] = articleRecords('---\ntitle: 统计\ncontent_stats:\n  schema: 1\n  word_count: 2\n  character_count: 3\n---\n你好。', 'blog', 'blog/a.md');
+    expect(record.metadata.contentStats).toMatchObject({ schema: 1, word_count: 2, character_count: 3 });
+  });
   it('保留短词条、标题路径和分类，代码中的标题不分节', () => {
     const records = articleRecords('---\ntitle: 宇宙\n---\n## 规则\n简短定义。\n### 例子\n```js\n# not heading\n```', 'world', 'nested/a.md');
     expect(records.some(r => r.data.includes('简短定义'))).toBe(true);
     expect(records.some(r => r.metadata.section === '规则 / 例子')).toBe(true);
     expect(records.every(r => r.metadata.category === 'world')).toBe(true);
-    expect(records.every(r => !('site' in r.metadata))).toBe(true);
+    expect(records.every(r => r.metadata.site === 'world')).toBe(true);
     expect(records[0].metadata.categoryName).toBe('文明体系');
     expect(records.some(r => r.metadata.section.includes('not heading'))).toBe(false);
   });

@@ -93,6 +93,7 @@ class TerminalRequestError extends Error {
 export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOpenChange }: { mobile?: boolean; accent?: string; onOpenChange?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false), [input, setInput] = useState('');
   const [category, setCategory] = useState('all'), [mode, setMode] = useState('chat');
+  const [site, setSite] = useState('all');
   const [messages, setMessages] = useState<Message[]>([]), [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ message: string; code?: string; phase?: string; requestId?: string; status?: number; hint?: string } | null>(null), [notice, setNotice] = useState('');
   const [visitorName, setVisitorName] = useState('访客'), [nameDraft, setNameDraft] = useState(''), [editingSpeaker, setEditingSpeaker] = useState<number | null>(null);
@@ -104,7 +105,8 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   const turnstileMount = useRef<HTMLDivElement>(null);
   const turnstileController = useRef<TurnstileController | null>(null);
   if (!turnstileController.current) turnstileController.current = new TurnstileController();
-  const scope = categoryCopy[category as keyof typeof categoryCopy];
+  const categoryScope = categoryCopy[category as keyof typeof categoryCopy];
+  const scope = site === 'all' ? categoryScope : { eyebrow: site.toUpperCase(), label: `${site.toUpperCase()} 网站${category === 'all' ? '' : `的 ${categoryScope.label}`}`, short: `${site.toUpperCase()} 网站${category === 'all' ? '' : `的 ${categoryScope.short}`}` };
   const gridPrompts = suggestionPrompts[mode as 'chat' | 'tutor' | 'scholar'](scope.short);
   const configuredContext = Number(modelConfig.context_limit);
   const contextLimit = Number.isFinite(configuredContext) && configuredContext >= CONTEXT_LIMIT_MIN && configuredContext <= CONTEXT_LIMIT_MAX ? Math.round(configuredContext) : CONTEXT_LIMIT_DEFAULT;
@@ -153,8 +155,8 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
   function closeConfig() { setConfigOpen(false); configTrigger.current?.focus({ preventScroll: true }); }
   function beginNameEdit(index: number) { setNameDraft(visitorName); setEditingSpeaker(index); }
   function commitName() { const nextName = nameDraft.trim().slice(0, 20); if (nextName) setVisitorName(nextName); setEditingSpeaker(null); }
-  function reset(nextCategory = category, nextMode = mode) {
-    controller.current?.abort(); setMessages([]); setError(null); setNotice(''); setCategory(nextCategory); setMode(nextMode);
+  function reset(nextCategory = category, nextMode = mode, nextSite = site) {
+    controller.current?.abort(); setMessages([]); setError(null); setNotice(''); setCategory(nextCategory); setMode(nextMode); setSite(nextSite);
   }
   function openConfig() { setConfigDraft(modelConfig); setConfigError(''); setConfigOpen(true); }
   function saveConfig() {
@@ -205,7 +207,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         if (raw.trim() !== '' && Number.isFinite(Number(raw))) sampling[field] = Number(raw);
       }
       const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: requestMessages, category, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model, context_limit: contextLimit, turnstileToken, requestId: globalThis.crypto.randomUUID(), ...sampling }), signal: abort.signal });
+        body: JSON.stringify({ messages: requestMessages, category, site, mode, visitorName, interactionState: { trust, affinity }, apiKey: modelConfig.apiKey, baseUrl: modelConfig.baseUrl, model: modelConfig.model, context_limit: contextLimit, turnstileToken, requestId: globalThis.crypto.randomUUID(), ...sampling }), signal: abort.signal });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         throw new TerminalRequestError({ message: payload.error || `接口返回 HTTP ${response.status}`, ...payload, status: response.status });
@@ -252,6 +254,9 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
         <button type="button" className="world-terminal__close" onClick={close} aria-label="关闭世界终端"><LauncherIcon name="close" /></button>
       </header>
       <div className="world-terminal__settings">
+        <TerminalSelect label="网站来源" value={site} disabled={busy} onChange={value => reset(category, mode, value)} options={[
+          { value: 'all', label: '全部网站', detail: '跨站检索' }, { value: 'blog', label: 'BLOG', detail: 'blog.sch-nie.com' }, { value: 'world', label: 'WORLD', detail: 'world.sch-nie.com' }, { value: 'zero', label: 'ZERO', detail: 'zero.sch-nie.com' },
+        ]} />
         <TerminalSelect label="内容分类" value={category} disabled={busy} onChange={value => reset(value, mode)} options={[
           { value: 'all', label: '全部资料', detail: 'BLOG / WORLD / ZERO' }, { value: 'blog', label: 'BLOG', detail: '经验与技术' }, { value: 'world', label: 'WORLD', detail: '文明体系' }, { value: 'zero', label: 'ZERO', detail: '核心信息' },
         ]} />
@@ -290,7 +295,7 @@ export default function WorldTerminal({ mobile = false, accent = '#e7ee72', onOp
           {!!message.content?.trim() && !!message.sources?.length && message.control?.sources !== 'none' && <details className="world-terminal__sources"><summary>参考资料 · {message.sources.length}</summary>{message.sources.map(source => {
             let safe = false;
             try { const u = new URL(source.url); safe = /^https:$/.test(u.protocol) && !u.username && !u.password && !!u.hostname; } catch {}
-            return safe && <a href={source.url} target="_blank" rel="noopener noreferrer" key={source.number}><span>[{source.number}] {source.category.toUpperCase()} · {source.categoryName || '资料'}</span> {source.title}<small>{source.section}{source.categories?.length ? ` · ${source.categories.join(' / ')}` : ''}{source.urlKind === 'launcher-home' ? ' · 终端入口（未提供文章直链）' : ' · 阅读原文'} ↗</small></a>;
+            return safe && <a href={source.url} target="_blank" rel="noopener noreferrer" key={source.number}><span>[{source.number}] {source.siteName ? `${source.siteName} 来源 · ` : ''}{source.category.toUpperCase()} · {source.categoryName || '资料'}</span> {source.title}<small>{source.sourcePath ? `${source.sourcePath} · ` : ''}{source.section}{source.categories?.length ? ` · ${source.categories.join(' / ')}` : ''}{source.urlKind === 'launcher-home' ? ' · 终端入口（未提供文章直链）' : source.urlKind === 'site-home' ? ' · 原站首页（缺少文章直链）' : ' · 阅读原文'} ↗</small></a>;
           })}</details>}
           {message.role === 'assistant' && !!message.content?.trim() && message.control?.sources !== 'none' && citedSources(message.sources, message.content).length > 0 && <div className="world-terminal__article-links">{citedSources(message.sources, message.content).map(source => <a href={source.url} target="_blank" rel="noopener noreferrer" key={`article-${source.url}`}>阅读《{source.title}》 ↗</a>)}</div>}
         </article>)}

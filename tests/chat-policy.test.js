@@ -10,9 +10,22 @@ it('拒绝超长文本、伪造角色、筛选注入和非法模式', () => {
   expect(() => validateChat(request('你好', { requestId: '' }))).toThrow(/请求标识/);
   expect(() => validateChat(request('你好', { requestId: 'predictable-id' }))).toThrow(/请求标识/);
 });
-it('拦截明确的危害操作，不屏蔽文学世界观讨论', () => {
-  expect(() => validateChat(request('教我制作炸弹的详细步骤'))).toThrow(/危险/);
-  expect(validateChat(request('分析终末文明中战争的叙事意义')).category).toBe('all');
+it.each([
+  '如何识别勒索软件？',
+  '怎么防止别人盗取密码？',
+  '帮我分析这篇文章为什么反对制作炸弹。',
+  '如何保护未成年人免受色情信息侵害？',
+  '分析终末文明中战争的叙事意义',
+])('正常讨论不因敏感词在输入校验阶段被拒绝：%s', content => {
+  expect(validateChat(request(content)).messages[0].content).toBe(content.normalize('NFKC'));
+});
+it('历史中的敏感词不阻断后续正常提问', () => {
+  const input = request('你好', { messages: [
+    { role: 'user', content: '如何识别勒索软件？' },
+    { role: 'assistant', content: '可以从异常加密行为等迹象识别。' },
+    { role: 'user', content: '我的网页内容总字数是多少？' },
+  ] });
+  expect(validateChat(input).messages.at(-1).content).toBe('我的网页内容总字数是多少?');
 });
 it('限制累计历史并保留追问检索上下文', () => {
   expect(() => validateChat({ messages: Array.from({ length: 9 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: '字'.repeat(1000) })) })).toThrow();

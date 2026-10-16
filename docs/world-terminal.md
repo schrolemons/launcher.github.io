@@ -12,6 +12,8 @@
 
 ## 放置文章与元数据
 
+当前以三站源码只读采集为准，不需要手动搬文章。使用 `npm run content:refresh` 从 BLOG/WORLD/ZERO 生成 launcher 自己的副本，并在构建/向量同步前自动刷新。网站与原始路径记录在 `generated/source-manifest.json`；只有 launcher 副本增加统计头字段，源仓库文件不变。推送通知、字数口径、overview 和首次启用步骤见 [三站内容流水线](content-pipeline.md)。下表表示采集缓存中的内容分类默认值，而非要求手工维护副本。
+
 | 文件夹 | 内容分类 |
 | --- | --- |
 | `src/content/posts/**` | WORLD：文明体系（兼容现有文章） |
@@ -53,7 +55,7 @@ Metadata 保存以下实际信息，并有长度上限：
 | 可恢复上下文 | `text`, `summary`, `summaryMethod`, `chunkIndex`, `chunkCount`, `previousId`, `nextId` |
 | 校验与规模 | `articleHash`, `contentHash`, `hash`, `articleCharacters`, `sectionCharacters`, `characterCount` |
 
-`summary` 是原简介或原文开头摘录，不是模型生成摘要。检索使用 category/schema/mode 过滤；标题、词条、别名的字面命中可微调排序；同一词条被拆开时用 previousId/nextId 补取相邻片段；最多返回 6 个来源、同篇最多 3 片、正文合计不超过 6000 字符。作者、更新日期、内容分类、摘要和正文提供给模型，来源在前端可展开。相关度阈值 0.45 是待真实问题评估的起点，不是“准确率 45%”。
+`summary` 是原简介或原文开头摘录，不是模型生成摘要。检索使用 category/site/schema/mode 过滤；标题、词条、别名的字面命中可微调排序；同一词条被拆开时用 previousId/nextId 补取相邻片段；畅聊/讲解/考据模式分别最多返回 4/6/10 个来源、同篇最多 3 片、正文合计不超过 6000 字符。作者、更新日期、网站与完整原路径、内容分类、摘要和正文提供给模型，来源在前端可展开。相关度代码默认值为 0.35，`.env.example` 示例为 0.45，可通过 CHAT_MIN_SCORE 配置；这些是检索阈值，不是准确率。
 
 ## 设置环境变量
 
@@ -79,10 +81,37 @@ Metadata 保存以下实际信息，并有长度上限：
 
 对话默认保护：每次提问 1200 字符、历史最多 9 条且总计 6000 字符、输出最多 1200 tokens；每 IP 6 次/分钟、60 次/日；全站每日最多 300 次，另受 300 万保守预留 tokens 上限约束（通常更早触发）。预留按 UTF-8 字节上界估计，失败和取消不返还；不是实际账单或精确 token 统计。通过 `CHAT_DAILY_REQUESTS`、`CHAT_DAILY_TOKEN_BUDGET` 可降低预算。限流超时、Redis/Vector 故障、配置缺失时停止转发。请求总时限 25 秒，关闭或停止对话会取消生成。
 
-输入角色和模式为白名单，禁止客户端自定义 system。明确危害操作先用轻量规则拦截，再由系统提示词约束模型。此组合**不等于全面语义审核**，不能保证识别所有绕写、隐语或模型输出；开放访问若遭到持续滥用，应再启用平台的机器人防护/人工验证。Origin 校验不是身份认证；普通爬虫不会因浏览消耗模型额度，恶意主动 POST 则由服务端预算兜底。
+输入角色和模式为白名单，禁止客户端自定义 system。输入校验不再用敏感词正则拒绝内容；原规则会把“如何识别勒索软件”“怎么防止别人盗取密码”等防御性问题，以及历史中的类似提问一并拦截。内容判断改由模型结合上下文完成，系统提示词明确允许文学、学术、历史、新闻和防御性讨论，仍限制实质帮助实施现实伤害等内容。模型判断**不等于全面语义审核**，也不能保证上游服务完全不误拒；开放访问若遭到持续滥用，应再启用平台的机器人防护/人工验证。Origin 校验不是身份认证；普通爬虫不会因浏览消耗模型额度，恶意主动 POST 则由服务端预算兜底。
+
+### 区分内容拒答和访问拦截
+
+| 层级 | 当前策略 | 如何辨认 |
+| --- | --- | --- |
+| 内容判断 | 无本站关键词硬拦截；模型按上下文判断，可回答安全部分 | 正常生成的回答中出现拒绝语句；可能来自提示词或上游模型 |
+| 输入校验 | JSON、角色顺序、分类/模式、长度、请求 UUID 和模型设置校验 | HTTP 400，`INPUT_INVALID`，提示具体字段问题 |
+| 来源与代理 | 限制请求 Origin，自定义模型端点只接受默认或明确配置的 HTTPS 主机 | `ORIGIN_REJECTED`，或输入校验提示模型主机不被允许 |
+| 真人验证 | 配置 `TURNSTILE_SECRET_KEY` 后验证令牌、`chat` 动作与主机名 | `TURNSTILE_REQUIRED` / `TURNSTILE_REJECTED`，或前端“安全验证”阶段报错 |
+| 频率与预算 | IP 及配置后签名会话均限制 6 次/分钟、60 次/日；全站预算见上文 | HTTP 429，说明次数上限或今日预算耗尽 |
+| 去重与并发 | 同一请求 ID 在 120 秒内不能重放；同一 IP 同时只允许一个回答流，锁最长 40 秒 | `REQUEST_REPLAYED` / `CHAT_CONCURRENT` |
+| 依赖与时限 | Redis、向量检索失败时停止转发；服务端请求总时限 25 秒 | HTTP 503 / 流错误，按 `phase` 和 `requestId` 排查 |
+
+上述数值是代码默认值，生产部署的环境变量、平台防护和上游模型规则需另行核对。本站没有独立的输出审核服务；不能把模型中的拒答语句直接认定为本站 HTTP 拦截。全站字数等问题缺少统计数据时，应说明能力缺口，不应以“安全策略”拒绝。
+
+### 2026-10-17 线上配置核查
+
+通过已登录的 Vercel CLI 核实项目 `launcher` 对应 `launcher.sch-nie.com`。以下为检查时的配置快照，之后应重新读取，不能当作永久配置：
+
+- Vercel Firewall 已开启；Attack Challenge Mode 关闭；没有自定义 IP 封禁。
+- Bot Protection 开启但动作为 `log`，只记录；AI Bots 和 OWASP 管理规则集未启用。
+- 唯一自定义规则 `Protect Chat API`：精确匹配路径 `/api/chat`，按 IP 固定窗口限流，60 秒最多 10 次；没有限制 HTTP 方法，因此不能等同于 10 次成功对话。未发现待发布草稿。
+- 生产环境存在 `PUBLIC_TURNSTILE_SITE_KEY`、`TURNSTILE_SECRET_KEY` 和 `CHAT_SESSION_SECRET`；在线前端包含 Turnstile 运行代码与公开站点密钥。一次不携带令牌的普通 POST 返回 `403 TURNSTILE_REQUIRED`，证明应用真人验证正在生效；该测试没有调用模型，不能证明真实浏览器验证成功或失败。
+- 当前 DNS 的 CNAME 指向 Vercel，抽查页面与接口响应均为 Vercel；这不能代替读取 Cloudflare 账户里的 WAF/Turnstile 配置。
+- 当前套餐无法通过 Firewall overview 读取流量与告警明细；Cloudflare 控制台浏览器连接不可用，因此尚未核实其允许域名、控件模式或某次用户请求的拦截原因。此次核查没有修改线上防火墙、环境变量或部署。
+
+放宽时先定位返回层：Vercel 平台限流与应用每 IP 6 次/分钟是两套限制，只提高平台 10 次/分钟的阈值不能解除应用限制；`TURNSTILE_REQUIRED` / `TURNSTILE_REJECTED` 则需要检查验证流程和域名配置。Cloudflare 官方说明见 [域名管理](https://developers.cloudflare.com/turnstile/additional-configuration/hostname-management/) 和 [客户端错误码](https://developers.cloudflare.com/turnstile/troubleshooting/client-side-errors/error-codes/)。
 
 ## 推荐问题和界面
 
-`predev/prebuild` 从文章标题离线生成 `src/launcher/generated/chat-suggestions.json`，不请求任何模型；前端每 8.5 秒轮播，减少动态效果偏好下不轮播。点击推荐仅填入输入框，主动发送才请求接口。打开页面/聊天层不调用 API。
+`predev/prebuild` 先刷新内容缓存和根目录 overview，再从文章标题离线生成 `src/launcher/generated/chat-suggestions.json`，不请求任何模型。点击推荐仅填入输入框，主动发送才请求接口。打开页面/聊天层不调用 API。
 
 桌面入口位于顶部；手机入口位于项目卡片前。对话使用原生模态框、背景模糊、键盘焦点约束、Escape 关闭、来源展开、失败重试和停止生成。顶部状态栏显示当前对话占最大上下文窗口的百分比，具体来源数量保留在回答下方的折叠区。聊天打开期间暂停桌面媒体，关闭后恢复此前状态。切换内容分类或模式会开启新对话。聊天仅保存在组件内存，刷新清除，不写浏览器永久存储。

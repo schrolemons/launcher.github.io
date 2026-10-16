@@ -1,17 +1,19 @@
-name: Sync Three Sites to Vector DB
+name: Import Sites, Build Overview and Sync Vector DB
 on:
   push:
     branches: [main]
     paths:
       - 'src/content/**'
-      - 'scripts/*vector*'
-      - 'lib/content-classification.js'
-      - 'lib/retrieval-text.js'
+      - 'scripts/**'
+      - 'lib/**'
+      - 'overview.md'
       - '.github/workflows/sync-vector.yml'
       - 'pnpm-lock.yaml'
   workflow_dispatch:
+  repository_dispatch:
+    types: [source-content-updated]
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: launcher-vector-sync
   cancel-in-progress: false
@@ -19,8 +21,45 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      CONTENT_SOURCES_DIR: ${{ github.workspace }}/.sources
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/checkout@v4
+        with:
+          repository: schrolemons/schrolemons.github.io
+          ref: source
+          path: .sources/blog
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /_config.yml
+            /source/**/*.md
+            /source/**/*.mdx
+      - uses: actions/checkout@v4
+        with:
+          repository: schrolemons/openwd.github.io
+          ref: source
+          path: .sources/world
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /_config.yml
+            /source/**/*.md
+            /source/**/*.mdx
+      - uses: actions/checkout@v4
+        with:
+          repository: schrolemons/zero.github.io
+          ref: source
+          path: .sources/zero
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /_config.yml
+            /source/**/*.md
+            /source/**/*.mdx
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -29,7 +68,9 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test -- scripts/vector-content.test.js scripts/vector-sync.test.js tests/chat-policy.test.js tests/chat-handler.test.js
+      - run: pnpm content:refresh
+      - run: node scripts/generate-chat-suggestions.js
+      - run: pnpm test
       - run: pnpm sync:vector:check
       - name: Sync changed records
         env:
@@ -43,6 +84,22 @@ jobs:
           VECTOR_EMBEDDING_API_KEY: ${{ secrets.VECTOR_EMBEDDING_API_KEY }}
           VECTOR_RETRIEVAL_MODE: dense
         run: pnpm sync:vector
+      - name: Keep generated article cache and overview in launcher
+        run: |
+          node -e "const r=require('./.reports/vector-sync.json');if(r.pending)throw new Error('Embedding still pending; rerun this workflow before publishing the cache')"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- src/content generated/source-manifest.json overview.md src/launcher/generated/chat-suggestions.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore: refresh site corpus and overview'
+            published=false
+            for attempt in 1 2 3; do
+              if git push origin HEAD:main; then published=true; break; fi
+              git fetch origin main
+              git rebase origin/main
+            done
+            if [ "$published" != true ]; then echo 'Generated cache push failed after retries'; exit 1; fi
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
