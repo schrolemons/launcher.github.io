@@ -65,6 +65,20 @@ overview 包含全部公开 Markdown 的完整头字段，以及全局、网站�
 
 ## 模型上下文
 
+### 名称入口与实际正文（2026-10-18 作者确认）
+
+`lib/content-locations.js` 统一维护作者确认的位置规则，同时进入所有模式的主提示词和构建生成的 overview，防止检索片段或旧入口名称误导归属。
+
+| 名称 | WORLD 的入口或配套资料 | 实际主体与统计边界 |
+| --- | --- | --- |
+| 阴行世界 | 同名页，以及 `source/yinxing_world/`（实际拼写） | WORLD 下多篇分散内容，不能只统计同名页 |
+| 光与流辰／光引流辰 | 同名页与 `source/light_withme/` 内介绍、协作者档案和发行计划 | 主体测试在 ZERO；`SCHNIE_test` 是索引，`cogn`、`NINE`、`oc_world` 含 HTML 测试，未计入当前 Markdown 统计 |
+| 阳汇彼日 | 同名概述与 `source/yanghui_days/` | 包含 ZERO 的 2025 设定集，PDF 正文未计入 |
+| 冰结明域 | 同名介绍与 `source/bingjie_domain/` | 指网站、微信公众号等平台，不等于一篇故事，也不等于所有平台文章字数之和 |
+| 三大观点、金泽范式、火神契约 | 同名入口或跳转页 | 主体在 ZERO 的 core 及链接的 PDF；索引文字不等于 PDF 正文 |
+
+overview 的 `content_locations` 会标注每个已匹配 Markdown 的角色（entry/body/support/primary-index）、物理来源与字数，并列出未解析资源。`known_markdown_totals` 只代表已入库的匹配文件；跨文件重复发布仍按不同物理文件计数，没有进行作品级去重，不能宣称是完整作品字数。阳汇彼日的 `shared_indexes` 另列 core/struct 等多主题索引，仅供定位，不整页计入设定集字数。主题间也可能共享来源，不得将主题数字相加充当全站合计。全站仍按每个源文件一次统计，不能因为同名入口指向 ZERO 就把 WORLD 文件从物理来源统计中搬走或算两遍。
+
 每次模型调用依次发送：主 system 提示词、`DEVELOPER INFORMATION` 总览、RAG 片段、访客历史。按用户确认，每轮都携带 overview，保证追问可继续使用完整统计。总览只从服务端文件读取，客户端不能上传或覆盖；文章头字段值仅作为数据，不作为指令。
 
 DeepSeek Chat Completions 的角色列表没有 developer，因此总览使用第二条 system 消息兼容发送；这是逻辑上的开发者信息层，不是虚构一个 API 角色。参考 [DeepSeek 消息格式](https://api-docs.deepseek.com/api/create-chat-completion/)。

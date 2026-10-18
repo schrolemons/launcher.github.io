@@ -64,6 +64,19 @@ it('提示词不再依赖机械正则，由 AI 自行判断内容关联性', () 
   expect(prompt).not.toContain('当前消息属于日常交流');
   expect(prompt).toContain('来源展示控制');
 });
+
+it.each(['chat', 'tutor', 'scholar'])('各模式明确名称入口、跨站主体和未统计资源的边界：%s', mode => {
+  const prompt = buildPrompt(mode, 'all');
+  expect(prompt).toContain('入口不等于正文');
+  expect(prompt).toContain('source/yinxing_world/');
+  expect(prompt).toContain('source/light_withme/');
+  expect(prompt).toContain('source/cogn/index.html');
+  expect(prompt).toContain('阳汇彼日');
+  expect(prompt).not.toContain('阳创彼日');
+  expect(prompt).toContain('2025');
+  expect(prompt).toContain('不能作为完整内容总字数');
+  expect(prompt).toContain('三大观点');
+});
 it('自定义模型接口只允许默认或明确配置的精确主机名', () => {
   expect(() => validateChat(request('你好', { apiKey: 'visitor-key', baseUrl: 'https://proxy.example/v1/chat/completions' }))).toThrow(/允许的模型服务/);
   vi.stubEnv('CHAT_ALLOWED_MODEL_HOSTS', 'api.openai.com, gateway.example');

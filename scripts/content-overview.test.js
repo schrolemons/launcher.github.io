@@ -99,3 +99,40 @@ it('分类目录链接到源站时拒绝写回，不能只检查 src/content 本
   await expect(updateContentOverview({ projectRoot: root })).rejects.toThrow(/launcher|链接/);
   expect(fs.readFileSync(original, 'utf8')).toBe(raw);
 });
+
+it('概念位置区分入口、分散正文与 ZERO 主体，不把单页或 Markdown 范围宣称为完整作品字数', async () => {
+  const root = project();
+  article(root, 'world/source/_posts/record/light/阴行世界.md', '---\ntitle: 灵耀体系：阴行世界\n---\n入口');
+  article(root, 'world/source/yinxing_world/character/person.md', '---\ntitle: 人物\n---\n角色正文');
+  article(root, 'world/source/light_withme/operator/index.md', '---\ntitle: 协作者档案\n---\n协作资料');
+  article(root, 'zero/source/SCHNIE_test/index.md', '---\ntitle: 测试入口\n---\n测试索引');
+  article(root, 'zero/source/_posts/unrelated.md', '---\ntitle: 无关内容\n---\n无关');
+  const { overview, overviewPath } = await updateContentOverview({ projectRoot: root });
+  const yin = overview.content_locations.find(item => item.id === 'yinxing-world');
+  expect(yin.known_markdown_totals).toMatchObject({ article_count: 2, word_count: 6 });
+  expect(yin.matched_markdown.map(item => item.role)).toEqual(['entry', 'body']);
+  const light = overview.content_locations.find(item => item.id === 'light-withme');
+  expect(light.known_markdown_totals).toMatchObject({ article_count: 2, word_count: 8 });
+  expect(light.matched_markdown.map(item => item.site).sort()).toEqual(['world', 'zero']);
+  expect(light.matched_markdown.some(item => item.source.includes('unrelated'))).toBe(false);
+  expect(light.unindexed_resources).toEqual(expect.arrayContaining([expect.objectContaining({ site: 'zero', path: 'source/cogn/index.html', counted: false })]));
+  expect(light.coverage).toContain('不能作为完整内容总字数');
+  expect(overview.totals).toMatchObject({ article_count: 5, word_count: 16 });
+  const rendered = fs.readFileSync(overviewPath, 'utf8');
+  expect(rendered).toContain('入口不等于正文');
+  expect(rendered).toContain('source/light_withme/');
+  expect(rendered).toContain('2025');
+  expect((await updateContentOverview({ projectRoot: root })).overviewChanged).toBe(false);
+});
+
+it('设定集的共享索引列出 ZERO 独立页和文章入口，但不把多主题索引整页重复归入设定集字数', async () => {
+  const root = project();
+  article(root, 'world/source/_posts/record/light/阳汇彼日.md', '---\ntitle: 阳汇彼日\n---\n概述');
+  article(root, 'zero/source/_posts/struct.md', '---\ntitle: 构建介绍\n---\n多主题内容和设定集链接');
+  const { overview } = await updateContentOverview({ projectRoot: root });
+  const topic = overview.content_locations.find(item => item.id === 'yanghui-days');
+  expect(topic.shared_indexes).toContain('zero:source/_posts/struct.md');
+  expect(topic.shared_index_counting).toContain('不整页计入');
+  expect(topic.known_markdown_totals).toMatchObject({ article_count: 1, word_count: 2 });
+  expect(overview.totals.article_count).toBe(2);
+});

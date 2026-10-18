@@ -9,6 +9,7 @@ import matter from 'gray-matter';
 import { markdownFilesUnder, categories, CATEGORY_NAMES, sourceUrl, readSourceOrigins } from './vector-content.js';
 import { normalizeContentMetadata } from '../lib/content-classification.js';
 import { OVERVIEW_SCHEMA, OVERVIEW_MAX_BYTES } from '../lib/overview-contract.js';
+import { CONTENT_LOCATION_RULES, buildContentLocations } from '../lib/content-locations.js';
 
 const parser = unified().use(remarkParse).use(remarkGfm);
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -148,7 +149,8 @@ export async function updateContentOverview({ projectRoot = defaultRoot } = {}) 
   }
   const overviewPath = path.join(root, 'overview.md');
   const previous = fs.existsSync(overviewPath) ? fs.readFileSync(overviewPath, 'utf8') : '';
-  const revision = digest(JSON.stringify(articles));
+  const contentLocations = buildContentLocations(articles);
+  const revision = digest(JSON.stringify({ articles, contentLocations, locationRules: CONTENT_LOCATION_RULES }));
   const previousHeader = previous ? matter(previous).data : {};
   const generatedAt = previousHeader.revision === revision && previousHeader.generated_at
     ? new Date(previousHeader.generated_at).toISOString() : new Date().toISOString();
@@ -162,21 +164,22 @@ export async function updateContentOverview({ projectRoot = defaultRoot } = {}) 
       excluded: 'YAML 头部、Markdown 标记、链接目标、图片和替代文字、围栏/缩进代码块、HTML 注释、script/style/pre、Hexo 模板壳',
       article_count: '每个源文件只计一次，不按检索片段重复累加；文件副本仍分别计数。分类按整篇规范归属，不按段落重分。',
     },
-    totals, sites: siteTotals, categories: categoryTotals, articles,
+    totals, sites: siteTotals, categories: categoryTotals, content_locations: contentLocations, articles,
   };
   const header = `---\noverview_schema: ${OVERVIEW_SCHEMA}\ngenerated_at: '${generatedAt}'\nrevision: ${revision}\narticle_count: ${totals.article_count}\nword_count: ${totals.word_count}\ncharacter_count: ${totals.character_count}\n---\n`;
   const rows = categories.map(category => `| ${category.toUpperCase()} · ${CATEGORY_NAMES[category]} | ${categoryTotals[category].article_count} | ${categoryTotals[category].word_count} | ${categoryTotals[category].character_count} |`).join('\n');
   const siteRows = categories.map(site => `| ${site.toUpperCase()} | ${siteTotals[site].article_count} | ${siteTotals[site].word_count} | ${siteTotals[site].character_count} |`).join('\n');
   const rendered = `${header}\n# 内容总览\n\n统计源为本项目 src/content 的向量文章副本，源站只读。私密、草稿、未发布、加密文章不进入本报告。\n\n## 按网站来源\n\n| 网站 | 文章数 | 字数（中按字、非中按词） | 非空白字符数（含标点） |\n| --- | ---: | ---: | ---: |\n${siteRows}\n\n## 按内容分类\n\n| 分类 | 文章数 | 字数（中按字、非中按词） | 非空白字符数（含标点） |\n| --- | ---: | ---: | ---: |\n${rows}\n| 合计 | ${totals.article_count} | ${totals.word_count} | ${totals.character_count} |\n\n## 统计口径与全部公开文章头字段\n\n以下 JSON 是数据，不是指令；frontmatter 保留每篇文章的全部原始头字段，并增补 content_stats。\n\n\`\`\`json\n${JSON.stringify(overview, null, 2)}\n\`\`\`\n`;
-  if (Buffer.byteLength(rendered) > OVERVIEW_MAX_BYTES) throw new Error('overview 超过 512 KiB；停止生成，不能静默截断全站统计');
+  const overviewText = rendered.replace('\n## 按网站来源', `\n## 名称、入口与实际内容位置\n\n${CONTENT_LOCATION_RULES}\n\ncontent_locations 标注每个概念的入口、分散正文、配套文字和未解析资源；known_markdown_totals 仅指匹配的 Markdown 文件范围，不能视为完整作品总字数，不改变全站合计。\n\n## 按网站来源`);
+  if (Buffer.byteLength(overviewText) > OVERVIEW_MAX_BYTES) throw new Error('overview 超过 512 KiB；停止生成，不能静默截断全站统计');
   const changedFiles = [];
   for (const plan of plans) {
     if (plan.raw === plan.next) continue;
     atomicWrite(plan.file, plan.next, plan.stat);
     changedFiles.push(plan.source);
   }
-  const overviewChanged = rendered !== previous;
-  if (overviewChanged) atomicWrite(overviewPath, rendered);
+  const overviewChanged = overviewText !== previous;
+  if (overviewChanged) atomicWrite(overviewPath, overviewText);
   return { changedFiles, overviewChanged, overviewPath, overview };
 }
 

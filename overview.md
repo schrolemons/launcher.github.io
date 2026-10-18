@@ -1,7 +1,7 @@
 ---
 overview_schema: 1
-generated_at: '2026-10-16T17:44:07.747Z'
-revision: 49da3eff15675f8d7525916b812df8bffe6e3eb41ed28ae34c42cdc0ad3a89c8
+generated_at: '2026-10-18T14:17:36.207Z'
+revision: 12592b977a9742b1a040553f86af2b6f2698516b9beef2c26521115227f72e2e
 article_count: 152
 word_count: 411411
 character_count: 496722
@@ -10,6 +10,19 @@ character_count: 496722
 # 内容总览
 
 统计源为本项目 src/content 的向量文章副本，源站只读。私密、草稿、未发布、加密文章不进入本报告。
+
+## 名称、入口与实际内容位置
+
+名称、入口与实际内容所在地（作者明确说明，优先按此消歧）：
+入口不等于正文；同名 Markdown 可能只是概述、目录或跳转页，不能把该页字数当作整个条目的字数。
+1. 阴行世界：WORLD 的 source/_posts/record/light/阴行世界.md 是入口与说明，具体内容分散在 WORLD 的 source/yinxing_world/ 下。作者所说的 yingxing_world 指此目录，实际拼写为 yinxing_world。讨论内容或统计范围时，要核对入口与目录内已入库的分散文件，不能只看同名文件，也不能把整个 WORLD 都算成阴行世界。
+2. 光与流辰（也以光引流辰指称）：WORLD 的 source/_posts/record/light/光与流辰.md 与 source/light_withme/ 保存介绍、协作者档案和发行等配套内容；主体即几个测试题放在 ZERO。ZERO 的 source/SCHNIE_test/index.md 是测试索引，对应 source/cogn/index.html、source/NINE/index.html、source/oc_world/index.html 等测试页面。不能因为 WORLD 有名称入口就说测试主体在 WORLD，也不能把整个 ZERO 或所有含“测试”的文章都归入此项。
+3. 阳汇彼日：主要是概述性介绍与 ZERO 中的 2025 设定集。WORLD 的同名文件与 source/yanghui_days/ 是介绍入口；ZERO 的 source/core/、作品集相关介绍指向设定集 PDF（source/download/seablue.pdf）。介绍与下载链接不等于已经读取设定集正文。
+4. 冰结明域：主要指这些网站、微信公众号等平台。WORLD 的同名页面和 source/bingjie_domain/ 是平台介绍/入口，不能虚构成一篇完整故事，也不能把所有网站文章总字数直接称为冰结明域正文总字数。
+5. 三大观点（人生观、世界观、自然观）、金泽范式、火神契约：WORLD 中保留的对应名称页是入口或跳转，主要内容依旧在 ZERO 的 source/core/ 及其链接的 PDF。BLOG 或 WORLD 对它们的引用与解读不改变主体所在地，也不能把介绍、跳转页与被链接正文当成同一份完整资料。
+统计边界：物理来源、内容分类、概念归属是不同维度。每个文件在全站统计中只算一次；概念可跨网站、共享入口，不能把各概念统计相加充当全站统计。HTML 测试、PDF/设定集、图片文字与站外内容若尚未解析，就不在 Markdown 字数里；已知 Markdown 范围的字数不能作为完整内容总字数。问“这篇 md”时答单文件；问“这个条目/体系”时先说明跨文件范围及未入库部分。统计不全时说明资料缺口，不能补猜数值。
+
+content_locations 标注每个概念的入口、分散正文、配套文字和未解析资源；known_markdown_totals 仅指匹配的 Markdown 文件范围，不能视为完整作品总字数，不改变全站合计。
 
 ## 按网站来源
 
@@ -35,8 +48,8 @@ character_count: 496722
 ```json
 {
   "schema": 1,
-  "generated_at": "2026-10-16T17:44:07.747Z",
-  "revision": "49da3eff15675f8d7525916b812df8bffe6e3eb41ed28ae34c42cdc0ad3a89c8",
+  "generated_at": "2026-10-18T14:17:36.207Z",
+  "revision": "12592b977a9742b1a040553f86af2b6f2698516b9beef2c26521115227f72e2e",
   "scope": "launcher/src/content 中的公开 Markdown 副本；从 BLOG/WORLD/ZERO 的 source 分支或本地源码只读采集，保留网站及原路径；不是网页运行时动态内容统计",
   "counting": {
     "word_count": "汉字 Unicode 码点数 + 非汉字文字/数字词组数；英文缩写和连字符词算一个词",
@@ -98,6 +111,507 @@ character_count: 496722
       "character_count": 34018
     }
   },
+  "content_locations": [
+    {
+      "id": "yinxing-world",
+      "name": "阴行世界",
+      "aliases": [
+        "yingxing_world",
+        "yinxing_world"
+      ],
+      "meaning": "角色设计、诞生故事及分散内容；同名页是入口与说明。",
+      "primary_sites": [
+        "world"
+      ],
+      "unindexed_resources": [],
+      "configured_markdown_scopes": [
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/record/light/阴行世界.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "world",
+          "sourcePath": "source/yinxing_world/",
+          "role": "body",
+          "prefix": true
+        }
+      ],
+      "coverage": "仅当前快照匹配到的公开 Markdown 文件，入口、配套文字和索引分别标注；不能作为完整内容总字数。HTML/PDF/站外正文未计入，同义条目或重复发布文件未进行作品级去重。",
+      "known_markdown_totals": {
+        "article_count": 9,
+        "word_count": 11774,
+        "character_count": 13600
+      },
+      "matched_markdown": [
+        {
+          "source": "world/source/_posts/record/light/阴行世界.md",
+          "site": "world",
+          "sourcePath": "source/_posts/record/light/阴行世界.md",
+          "role": "entry",
+          "word_count": 2598,
+          "character_count": 3048
+        },
+        {
+          "source": "world/source/yinxing_world/character/mosae.md",
+          "site": "world",
+          "sourcePath": "source/yinxing_world/character/mosae.md",
+          "role": "body",
+          "word_count": 946,
+          "character_count": 1207
+        },
+        {
+          "source": "world/source/yinxing_world/commission/mosae.md",
+          "site": "world",
+          "sourcePath": "source/yinxing_world/commission/mosae.md",
+          "role": "body",
+          "word_count": 1143,
+          "character_count": 1307
+        },
+        {
+          "source": "world/source/yinxing_world/commission/ruifox.md",
+          "site": "world",
+          "sourcePath": "source/yinxing_world/commission/ruifox.md",
+          "role": "body",
+          "word_count": 944,
+          "character_count": 1097
+        },
+        {
+          "source": "world/source/yinxing_world/nowadays/Connect.md",
+          "site": "world",
+          "sourcePath": "source/yinxing_world/nowadays/Connect.md",
+          "role": "body",
+          "word_count": 1184,
+          "character_count": 1365
+        },
+        {
+          "source": "world/source/yinxing_world/nowadays/Junction.md",
+          "site": "world",
+          "sourcePath": "source/yinxing_world/nowadays/Junction.md",
+          "role": "body",
+          "word_count": 1280,
+          "character_count": 1434
+        },
+        {
+          "source": "world/source/yinxing_world/nowadays/Light.md",
+          "site": "world",
+          "sourcePath": "source/yinxing_world/nowadays/Light.md",
+          "role": "body",
+          "word_count": 1118,
+          "character_count": 1246
+        },
+        {
+          "source": "world/source/yinxing_world/nowadays/Waiting.md",
+          "site": "world",
+          "sourcePath": "source/yinxing_world/nowadays/Waiting.md",
+          "role": "body",
+          "word_count": 1136,
+          "character_count": 1284
+        },
+        {
+          "source": "world/source/yinxing_world/resion/shiheng.md",
+          "site": "world",
+          "sourcePath": "source/yinxing_world/resion/shiheng.md",
+          "role": "body",
+          "word_count": 1425,
+          "character_count": 1612
+        }
+      ]
+    },
+    {
+      "id": "light-withme",
+      "name": "光与流辰",
+      "aliases": [
+        "光引流辰",
+        "light_withme"
+      ],
+      "meaning": "WORLD 保留介绍和协作配套内容，测试主体位于 ZERO，不等于 WORLD 的同名入口页。",
+      "primary_sites": [
+        "zero"
+      ],
+      "supporting_sites": [
+        "world"
+      ],
+      "unindexed_resources": [
+        {
+          "site": "zero",
+          "path": "source/cogn/index.html",
+          "kind": "HTML 测试主体",
+          "counted": false
+        },
+        {
+          "site": "zero",
+          "path": "source/NINE/index.html",
+          "kind": "HTML 测试主体",
+          "counted": false
+        },
+        {
+          "site": "zero",
+          "path": "source/oc_world/index.html",
+          "kind": "HTML 测试主体",
+          "counted": false
+        }
+      ],
+      "configured_markdown_scopes": [
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/record/light/光与流辰.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "world",
+          "sourcePath": "source/light_withme/",
+          "role": "support",
+          "prefix": true
+        },
+        {
+          "site": "zero",
+          "sourcePath": "source/SCHNIE_test/",
+          "role": "primary-index",
+          "prefix": true
+        },
+        {
+          "site": "zero",
+          "sourcePath": "source/_posts/SCHNIE-test.md",
+          "role": "primary-index",
+          "prefix": false
+        }
+      ],
+      "coverage": "仅当前快照匹配到的公开 Markdown 文件，入口、配套文字和索引分别标注；不能作为完整内容总字数。HTML/PDF/站外正文未计入，同义条目或重复发布文件未进行作品级去重。",
+      "known_markdown_totals": {
+        "article_count": 5,
+        "word_count": 3920,
+        "character_count": 4978
+      },
+      "matched_markdown": [
+        {
+          "source": "world/source/_posts/record/light/光与流辰.md",
+          "site": "world",
+          "sourcePath": "source/_posts/record/light/光与流辰.md",
+          "role": "entry",
+          "word_count": 177,
+          "character_count": 191
+        },
+        {
+          "source": "world/source/light_withme/key_part/index.md",
+          "site": "world",
+          "sourcePath": "source/light_withme/key_part/index.md",
+          "role": "support",
+          "word_count": 437,
+          "character_count": 570
+        },
+        {
+          "source": "world/source/light_withme/operator/index.md",
+          "site": "world",
+          "sourcePath": "source/light_withme/operator/index.md",
+          "role": "support",
+          "word_count": 368,
+          "character_count": 445
+        },
+        {
+          "source": "zero/source/_posts/SCHNIE-test.md",
+          "site": "zero",
+          "sourcePath": "source/_posts/SCHNIE-test.md",
+          "role": "primary-index",
+          "word_count": 1469,
+          "character_count": 1886
+        },
+        {
+          "source": "zero/source/SCHNIE_test/index.md",
+          "site": "zero",
+          "sourcePath": "source/SCHNIE_test/index.md",
+          "role": "primary-index",
+          "word_count": 1469,
+          "character_count": 1886
+        }
+      ]
+    },
+    {
+      "id": "yanghui-days",
+      "name": "阳汇彼日",
+      "aliases": [
+        "yanghui_days"
+      ],
+      "meaning": "概述性介绍与 ZERO 的 2025 设定集；PDF 正文未进入 Markdown 统计。",
+      "primary_sites": [
+        "zero"
+      ],
+      "supporting_sites": [
+        "world"
+      ],
+      "shared_indexes": [
+        "zero:source/core/index.md",
+        "zero:source/_posts/core.md",
+        "zero:source/struct/index.md",
+        "zero:source/_posts/struct.md"
+      ],
+      "shared_index_counting": "共享索引含多个主题，仅供定位，不整页计入本概念字数；缺少段落级范围时不补猜设定集正文总量。",
+      "unindexed_resources": [
+        {
+          "site": "zero",
+          "path": "source/download/seablue.pdf",
+          "kind": "2025 设定集 PDF",
+          "counted": false
+        }
+      ],
+      "configured_markdown_scopes": [
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/record/light/阳汇彼日.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "world",
+          "sourcePath": "source/yanghui_days/",
+          "role": "entry",
+          "prefix": true
+        }
+      ],
+      "coverage": "仅当前快照匹配到的公开 Markdown 文件，入口、配套文字和索引分别标注；不能作为完整内容总字数。HTML/PDF/站外正文未计入，同义条目或重复发布文件未进行作品级去重。",
+      "known_markdown_totals": {
+        "article_count": 2,
+        "word_count": 1290,
+        "character_count": 1573
+      },
+      "matched_markdown": [
+        {
+          "source": "world/source/_posts/record/light/阳汇彼日.md",
+          "site": "world",
+          "sourcePath": "source/_posts/record/light/阳汇彼日.md",
+          "role": "entry",
+          "word_count": 1290,
+          "character_count": 1573
+        },
+        {
+          "source": "world/source/yanghui_days/index.md",
+          "site": "world",
+          "sourcePath": "source/yanghui_days/index.md",
+          "role": "entry",
+          "word_count": 0,
+          "character_count": 0
+        }
+      ]
+    },
+    {
+      "id": "bingjie-domain",
+      "name": "冰结明域",
+      "aliases": [
+        "bingjie_domain"
+      ],
+      "meaning": "网站、微信公众号等平台集合；已入库的介绍文字不等于所有平台内容总量。",
+      "primary_sites": [],
+      "supporting_sites": [
+        "world"
+      ],
+      "unindexed_resources": [
+        {
+          "site": "external",
+          "path": "各网站及微信公众号等平台内容",
+          "kind": "平台内容，未完整采集",
+          "counted": false
+        }
+      ],
+      "configured_markdown_scopes": [
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/record/light/冰结明域.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "world",
+          "sourcePath": "source/bingjie_domain/",
+          "role": "entry",
+          "prefix": true
+        }
+      ],
+      "coverage": "仅当前快照匹配到的公开 Markdown 文件，入口、配套文字和索引分别标注；不能作为完整内容总字数。HTML/PDF/站外正文未计入，同义条目或重复发布文件未进行作品级去重。",
+      "known_markdown_totals": {
+        "article_count": 2,
+        "word_count": 114,
+        "character_count": 122
+      },
+      "matched_markdown": [
+        {
+          "source": "world/source/_posts/record/light/冰结明域.md",
+          "site": "world",
+          "sourcePath": "source/_posts/record/light/冰结明域.md",
+          "role": "entry",
+          "word_count": 114,
+          "character_count": 122
+        },
+        {
+          "source": "world/source/bingjie_domain/index.md",
+          "site": "world",
+          "sourcePath": "source/bingjie_domain/index.md",
+          "role": "entry",
+          "word_count": 0,
+          "character_count": 0
+        }
+      ]
+    },
+    {
+      "id": "zero-core",
+      "name": "三大观点、金泽范式与火神契约",
+      "aliases": [
+        "人生观",
+        "世界观",
+        "自然观",
+        "金泽范式",
+        "火神契约"
+      ],
+      "meaning": "主要内容在 ZERO；WORLD 同名文件是入口。ZERO 的 core Markdown 也主要是资源索引。",
+      "primary_sites": [
+        "zero"
+      ],
+      "supporting_sites": [
+        "world"
+      ],
+      "unindexed_resources": [
+        {
+          "site": "zero",
+          "path": "source/download/第九边缘：人生行迹.pdf",
+          "kind": "核心内容 PDF",
+          "counted": false
+        },
+        {
+          "site": "zero",
+          "path": "source/download/第九边缘：宇宙基础.pdf",
+          "kind": "核心内容 PDF",
+          "counted": false
+        },
+        {
+          "site": "zero",
+          "path": "source/download/第九边缘：自然万态.pdf",
+          "kind": "核心内容 PDF",
+          "counted": false
+        },
+        {
+          "site": "zero",
+          "path": "source/download/第九边缘：火神契约.pdf",
+          "kind": "核心内容 PDF",
+          "counted": false
+        },
+        {
+          "site": "zero",
+          "path": "source/download/灵耀体系：金泽范式.pdf",
+          "kind": "核心内容 PDF",
+          "counted": false
+        }
+      ],
+      "configured_markdown_scopes": [
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/core/人生行迹.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/core/宇宙基础.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/core/自然万态.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/create/light/火神契约.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "world",
+          "sourcePath": "source/_posts/perception/light/金泽范式.md",
+          "role": "entry",
+          "prefix": false
+        },
+        {
+          "site": "zero",
+          "sourcePath": "source/core/",
+          "role": "primary-index",
+          "prefix": true
+        },
+        {
+          "site": "zero",
+          "sourcePath": "source/_posts/core.md",
+          "role": "primary-index",
+          "prefix": false
+        }
+      ],
+      "coverage": "仅当前快照匹配到的公开 Markdown 文件，入口、配套文字和索引分别标注；不能作为完整内容总字数。HTML/PDF/站外正文未计入，同义条目或重复发布文件未进行作品级去重。",
+      "known_markdown_totals": {
+        "article_count": 7,
+        "word_count": 290,
+        "character_count": 349
+      },
+      "matched_markdown": [
+        {
+          "source": "world/source/_posts/core/人生行迹.md",
+          "site": "world",
+          "sourcePath": "source/_posts/core/人生行迹.md",
+          "role": "entry",
+          "word_count": 15,
+          "character_count": 16
+        },
+        {
+          "source": "world/source/_posts/core/宇宙基础.md",
+          "site": "world",
+          "sourcePath": "source/_posts/core/宇宙基础.md",
+          "role": "entry",
+          "word_count": 11,
+          "character_count": 11
+        },
+        {
+          "source": "world/source/_posts/core/自然万态.md",
+          "site": "world",
+          "sourcePath": "source/_posts/core/自然万态.md",
+          "role": "entry",
+          "word_count": 11,
+          "character_count": 11
+        },
+        {
+          "source": "world/source/_posts/create/light/火神契约.md",
+          "site": "world",
+          "sourcePath": "source/_posts/create/light/火神契约.md",
+          "role": "entry",
+          "word_count": 11,
+          "character_count": 11
+        },
+        {
+          "source": "world/source/_posts/perception/light/金泽范式.md",
+          "site": "world",
+          "sourcePath": "source/_posts/perception/light/金泽范式.md",
+          "role": "entry",
+          "word_count": 11,
+          "character_count": 11
+        },
+        {
+          "source": "zero/source/_posts/core.md",
+          "site": "zero",
+          "sourcePath": "source/_posts/core.md",
+          "role": "primary-index",
+          "word_count": 123,
+          "character_count": 152
+        },
+        {
+          "source": "zero/source/core/index.md",
+          "site": "zero",
+          "sourcePath": "source/core/index.md",
+          "role": "primary-index",
+          "word_count": 108,
+          "character_count": 137
+        }
+      ]
+    }
+  ],
   "articles": [
     {
       "source": "blog/source/_posts/Hexo/Hexo-Butterfly 聊天界面魔改：DeepSeek 风格文字瞬间.md",
