@@ -24,6 +24,16 @@
     }
   ],
   "articles": {
+    "blog/source/_posts/GitHub Webhook 驱动多站点 RAG 知识库自动更新.md": {
+      "site": "blog",
+      "siteName": "BLOG",
+      "sourcePath": "source/_posts/GitHub Webhook 驱动多站点 RAG 知识库自动更新.md",
+      "sourceRepository": "schrolemons/schrolemons.github.io",
+      "sourceBranch": "source",
+      "sourceHash": "8ebd6c5fc893f3da7c3a73157aded45ee3e43417f947641d5048c79f31d0c6c4",
+      "url": "https://blog.sch-nie.com/posts/webhook-rag-sync.html",
+      "urlKind": "article"
+    },
     "blog/source/_posts/Hexo/Hexo-Butterfly 聊天界面魔改：DeepSeek 风格文字瞬间.md": {
       "site": "blog",
       "siteName": "BLOG",
@@ -52,66 +62,6 @@
       "sourceBranch": "source",
       "sourceHash": "7e8a78c95360b143105aac069eac637b77ff824dc437fc9ac427d798f00b5a63",
       "url": "https://blog.sch-nie.com/posts/null.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/三大规划/启辉计划.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/三大规划/启辉计划.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "cb30beebdc59b60e78a28decd9399bdcbc0e2d0ca44a4ec90ffbd3653381a184",
-      "url": "https://blog.sch-nie.com/posts/21a6620.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/三大规划/宏鳞企划.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/三大规划/宏鳞企划.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "53e23a05d70711d3536e9880a9fc7a087ce06d69c43b6dd762ef528ea86aa693",
-      "url": "https://blog.sch-nie.com/posts/da8bb061.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/三大规划/方舟规划.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/三大规划/方舟规划.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "588f114257e593e7742527d2e18866aebbdf4696aa0762068b2f2fabc4d84713",
-      "url": "https://blog.sch-nie.com/posts/e54e9606.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/三观/世界观.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/三观/世界观.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "398f3a52de64d6e58c8c706185e4d7a277294aa42b27fdfb1b30bb274ac70378",
-      "url": "https://blog.sch-nie.com/posts/610bf647.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/三观/人生观.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/三观/人生观.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "0afd386a5f26950932dc21b7e71bd739d38da6aaab5f84decf002d3685f0fa49",
-      "url": "https://blog.sch-nie.com/posts/643edcf1.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/三观/自然观.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/三观/自然观.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "d977e70f1153b94144f7cc09968a66db266f11292584eab473ba2a3d3a1bfef4",
-      "url": "https://blog.sch-nie.com/posts/7df83223.html",
       "urlKind": "article"
     },
     "blog/source/_posts/世界模型x边缘智能/世界模型与大语言模型：差异、边界与协同.md": {
@@ -164,66 +114,6 @@
       "url": "https://blog.sch-nie.com/posts/c3d4e5f6.html",
       "urlKind": "article"
     },
-    "blog/source/_posts/九虹重启/九虹重启.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/九虹重启/九虹重启.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "fa022f1bce1cfb9c841d8810d95411d6501e81c384fe76c609ff0cdf38df6722",
-      "url": "https://blog.sch-nie.com/posts/91de739.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/九虹重启/光沫浮影.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/九虹重启/光沫浮影.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "970430cecbfe23e539419058daa24280b23e33d619a43bdcc516a7c54a69cca5",
-      "url": "https://blog.sch-nie.com/posts/9060a028.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/九虹重启/昏昼合棋.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/九虹重启/昏昼合棋.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "95d88acf65a4a6e5c57a7f393d420531515bf3b987e331cf9c6ad7929e65fd2d",
-      "url": "https://blog.sch-nie.com/posts/814f9851.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/九虹重启/神子之树.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/九虹重启/神子之树.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "4742ae8cef328b4058fd3004846c1488d5844ece0e57bcb9e31c11698b4912db",
-      "url": "https://blog.sch-nie.com/posts/fafc2e5.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/九虹重启/落水宏鳞.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/九虹重启/落水宏鳞.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "6e991e2b72010d999033d250c139a1bac26d61a15f0b52f254ae4b2a74d537e8",
-      "url": "https://blog.sch-nie.com/posts/a8559b10.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/九虹重启/重返故都.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/九虹重启/重返故都.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "9ab1933491edda09b6ab167a15f2c554d682c47b364fbe11d88c76a5f3a9aa2b",
-      "url": "https://blog.sch-nie.com/posts/70a1a3ee.html",
-      "urlKind": "article"
-    },
     "blog/source/_posts/从向量数据库到安全对话：AI 知识库的前后端接入实践.md": {
       "site": "blog",
       "siteName": "BLOG",
@@ -242,136 +132,6 @@
       "sourceBranch": "source",
       "sourceHash": "beaaedb445cc22e07ebe3e03871ecd3ccc7813df1942967e7f339665874c9bb0",
       "url": "https://blog.sch-nie.com/posts/6b6b7c33.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/测试/IQ测试.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/测试/IQ测试.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "e11c0906814c31f725b0f3e29de9d1568bbe7eb16d768dd2cfa8af275a3ecf7e",
-      "url": "https://blog.sch-nie.com/posts/20c4e357.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/测试/标准化.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/测试/标准化.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "ad96a8f215cfb8c4d5882f4d4b4735816c1ac529429a884be8c6bd954ffc7b01",
-      "url": "https://blog.sch-nie.com/posts/ad70fb3e.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/光隐囚徒.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/光隐囚徒.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "f34ed47b2c888258254f28b47afa524455d44c4440c98dfacb5511d620b87b3f",
-      "url": "https://blog.sch-nie.com/posts/279c6dab.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/冰海艺术.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/冰海艺术.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "ce45a302ebceb0f8cb59f12934ccf5f0b5e6173002b4c89d60da3d5cdc518f0a",
-      "url": "https://blog.sch-nie.com/posts/247dd60b.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/创世前奏.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/创世前奏.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "469a887163efe8ac693cc134174f4d3f732c0e82fd408b65679be7dce5c2d2d0",
-      "url": "https://blog.sch-nie.com/posts/fb41cab8.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/循理之草.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/循理之草.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "712aa079e0cae1774a6e740ef9e8f7ebf5b23773999b278dc8dde43d0e038728",
-      "url": "https://blog.sch-nie.com/posts/42b8e642.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/水域纷战.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/水域纷战.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "e0f447ad23623bf756ee352adfe1ef82dabe1f5aaea3dc42253ad9e1601a285e",
-      "url": "https://blog.sch-nie.com/posts/4410ca7a.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/火神契约.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/火神契约.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "13a4d59fa465f1254304cd066cf384de18eb35f304b0965c74947b43ca1a8a12",
-      "url": "https://blog.sch-nie.com/posts/7b8ad67c.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/琢刻之木.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/琢刻之木.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "f358511179a395954bba800bab2fe883a55a598033d031077895c03fe926e1bc",
-      "url": "https://blog.sch-nie.com/posts/b4d080d0.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/金泽范式.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/金泽范式.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "cdb8e259cd1fe4a47d2fd84db9e709d8ab020d7c460d9aedce69da0af8c033f8",
-      "url": "https://blog.sch-nie.com/posts/cb16f805.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/阴行世界.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/阴行世界.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "fc0f3a16cbffe0abbb90678ed7476e05fd315bf0bd7236bfae6c33b45cdc6c63",
-      "url": "https://blog.sch-nie.com/posts/3d4b2011.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/雷云之梦.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/雷云之梦.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "2938ad7aa70b0f3f6f231b94162b5f50f96a828d82c6844cae4b415c5b486a2e",
-      "url": "https://blog.sch-nie.com/posts/5b1f7b53.html",
-      "urlKind": "article"
-    },
-    "blog/source/_posts/灵耀体系/风落琴璃.md": {
-      "site": "blog",
-      "siteName": "BLOG",
-      "sourcePath": "source/_posts/灵耀体系/风落琴璃.md",
-      "sourceRepository": "schrolemons/schrolemons.github.io",
-      "sourceBranch": "source",
-      "sourceHash": "ddd0bec71033a97452c373921cc1218a8a4cc84ee77f2a8203dadbbe6d2519e9",
-      "url": "https://blog.sch-nie.com/posts/ac42f935.html",
       "urlKind": "article"
     },
     "blog/source/_posts/程序设计/BM算法.md": {
