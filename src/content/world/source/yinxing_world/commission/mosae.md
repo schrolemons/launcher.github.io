@@ -7,6 +7,7 @@ date: 2025-11-17
 categories: 异世之篇
 reading_style: story
 reading_tone: blue
+updated: '2026-10-04T13:04:16+08:00'
 content_stats:
   schema: 1
   word_count: 1143
