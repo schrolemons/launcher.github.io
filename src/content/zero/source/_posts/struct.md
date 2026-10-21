@@ -1,6 +1,6 @@
 ---
 title: 构建介绍
-abbrlink: 120
+abbrlink: struct
 date: 2024-12-22 19:27:20
 categories: info
 tags:

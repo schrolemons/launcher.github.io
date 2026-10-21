@@ -1,7 +1,7 @@
 ---
 overview_schema: 1
-generated_at: '2026-10-21T10:45:11.874Z'
-revision: 02a2b31c210f105b042e7ee213907243e4d7b9c1a25b7bfe3ca00254672200aa
+generated_at: '2026-10-21T11:14:26.123Z'
+revision: 7846d5a05d429fa63ee7e040bbdbabb385b413233c8a4f3ee4ce61191a6fba45
 article_count: 128
 word_count: 280063
 character_count: 345679
@@ -48,8 +48,8 @@ content_locations 标注每个概念的入口、分散正文、配套文字和�
 ```json
 {
   "schema": 1,
-  "generated_at": "2026-10-21T10:45:11.874Z",
-  "revision": "02a2b31c210f105b042e7ee213907243e4d7b9c1a25b7bfe3ca00254672200aa",
+  "generated_at": "2026-10-21T11:14:26.123Z",
+  "revision": "7846d5a05d429fa63ee7e040bbdbabb385b413233c8a4f3ee4ce61191a6fba45",
   "scope": "launcher/src/content 中的公开 Markdown 副本；从 BLOG/WORLD/ZERO 的 source 分支或本地源码只读采集，保留网站及原路径；不是网页运行时动态内容统计",
   "counting": {
     "word_count": "汉字 Unicode 码点数 + 非汉字文字/数字词组数；英文缩写和连字符词算一个词",
@@ -3864,10 +3864,11 @@ content_locations 标注每个概念的入口、分散正文、配套文字和�
       "sourceRepository": "schrolemons/zero.github.io",
       "category": "zero",
       "title": "灵感探寻测试",
-      "url": "https://zero.sch-nie.com/",
+      "url": "https://zero.sch-nie.com/posts/IQ_test.html",
       "frontmatter": {
         "layout": "posts",
         "title": "灵感探寻测试",
+        "abbrlink": "IQ_test",
         "date": "2024-09-01T11:44:03.000Z",
         "categories": "tests",
         "tags": [
@@ -3919,11 +3920,12 @@ content_locations 标注每个概念的入口、分散正文、配套文字和�
       "sourceRepository": "schrolemons/zero.github.io",
       "category": "zero",
       "title": "第九边缘：测试",
-      "url": "https://zero.sch-nie.com/",
+      "url": "https://zero.sch-nie.com/posts/schnie_test.html",
       "frontmatter": {
         "layout": "posts",
         "title": "第九边缘：测试",
         "date": "2025-06-20T20:35:01.000Z",
+        "abbrlink": "schnie_test",
         "categories": "tests",
         "tags": [
           "intel",
@@ -3946,10 +3948,10 @@ content_locations 标注每个概念的入口、分散正文、配套文字和�
       "sourceRepository": "schrolemons/zero.github.io",
       "category": "zero",
       "title": "WHAT IS \"SCHNIE\"?",
-      "url": "https://zero.sch-nie.com/posts/47269.html",
+      "url": "https://zero.sch-nie.com/posts/SCHNIE.html",
       "frontmatter": {
         "title": "WHAT IS \"SCHNIE\"?",
-        "abbrlink": 47269,
+        "abbrlink": "SCHNIE",
         "date": "2025-10-08T16:11:25.000Z",
         "categories": "info",
         "tags": [
@@ -3973,10 +3975,10 @@ content_locations 标注每个概念的入口、分散正文、配套文字和�
       "sourceRepository": "schrolemons/zero.github.io",
       "category": "zero",
       "title": "构建介绍",
-      "url": "https://zero.sch-nie.com/posts/120.html",
+      "url": "https://zero.sch-nie.com/posts/struct.html",
       "frontmatter": {
         "title": "构建介绍",
-        "abbrlink": 120,
+        "abbrlink": "struct",
         "date": "2024-12-22T19:27:20.000Z",
         "categories": "info",
         "tags": [

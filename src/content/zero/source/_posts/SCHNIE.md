@@ -1,6 +1,6 @@
 ---
 title: WHAT IS "SCHNIE"?
-abbrlink: 47269
+abbrlink: SCHNIE
 date: 2025-10-08 16:11:25
 categories: info
 tags:

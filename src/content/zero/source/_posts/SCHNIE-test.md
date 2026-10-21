@@ -2,6 +2,7 @@
 layout: posts
 title: 第九边缘：测试
 date: 2025-06-20 20:35:01
+abbrlink: schnie_test
 categories: tests
 tags:
   - intel

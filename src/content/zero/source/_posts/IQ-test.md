@@ -1,6 +1,7 @@
 ---
 layout: posts
 title: 灵感探寻测试
+abbrlink: IQ_test
 date: 2024-09-01 11:44:03
 categories: tests
 tags: 

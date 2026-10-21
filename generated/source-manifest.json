@@ -1170,9 +1170,9 @@
       "sourcePath": "source/_posts/IQ-test.md",
       "sourceRepository": "schrolemons/zero.github.io",
       "sourceBranch": "source",
-      "sourceHash": "57a02548942fdaf7d3b6891a6106e745e3e12601d1e307571dc4caf206ce3e4d",
-      "url": "https://zero.sch-nie.com/",
-      "urlKind": "site-home"
+      "sourceHash": "f2c4a92475afb5945ebf32731024360de6e1e8cf08f44670682d7befb97aaa8f",
+      "url": "https://zero.sch-nie.com/posts/IQ_test.html",
+      "urlKind": "article"
     },
     "zero/source/_posts/schnie_web.md": {
       "site": "zero",
@@ -1190,9 +1190,9 @@
       "sourcePath": "source/_posts/SCHNIE-test.md",
       "sourceRepository": "schrolemons/zero.github.io",
       "sourceBranch": "source",
-      "sourceHash": "848ef2ce372b716ab7cc842e7cadf3ba907f332b100f55fd9afba702d615a45a",
-      "url": "https://zero.sch-nie.com/",
-      "urlKind": "site-home"
+      "sourceHash": "59364a8da1f5224203c915bc311079a9f06dc28df6939ff182642a0abb07733c",
+      "url": "https://zero.sch-nie.com/posts/schnie_test.html",
+      "urlKind": "article"
     },
     "zero/source/_posts/SCHNIE.md": {
       "site": "zero",
@@ -1200,8 +1200,8 @@
       "sourcePath": "source/_posts/SCHNIE.md",
       "sourceRepository": "schrolemons/zero.github.io",
       "sourceBranch": "source",
-      "sourceHash": "a98bfdaf7bd083332c595f69520f9c1cdd455f8905130af2854a1321d6e742c5",
-      "url": "https://zero.sch-nie.com/posts/47269.html",
+      "sourceHash": "d5c39b6b23c09f4d1350d53d5dfc9441a52366d5149b6fc2c027c0d5573476a4",
+      "url": "https://zero.sch-nie.com/posts/SCHNIE.html",
       "urlKind": "article"
     },
     "zero/source/_posts/struct.md": {
@@ -1210,8 +1210,8 @@
       "sourcePath": "source/_posts/struct.md",
       "sourceRepository": "schrolemons/zero.github.io",
       "sourceBranch": "source",
-      "sourceHash": "a0e11a78dff177b9ebe4d80bac8c25295768af0e7795d1d3e9d3dd2e294ed212",
-      "url": "https://zero.sch-nie.com/posts/120.html",
+      "sourceHash": "537c3672f04379546126307cafce2af631a47e685d1e4643c017e2f2ae2af29d",
+      "url": "https://zero.sch-nie.com/posts/struct.html",
       "urlKind": "article"
     },
     "zero/source/_posts/welcome.md": {
