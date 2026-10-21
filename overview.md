@@ -1,7 +1,7 @@
 ---
 overview_schema: 1
-generated_at: '2026-10-20T04:20:48.267Z'
-revision: 1109d5f8297b4f32c528c9f6eeaddf53ca1bacf47fe96a2025330a4c727f55dd
+generated_at: '2026-10-21T10:45:11.874Z'
+revision: 02a2b31c210f105b042e7ee213907243e4d7b9c1a25b7bfe3ca00254672200aa
 article_count: 128
 word_count: 280063
 character_count: 345679
@@ -48,8 +48,8 @@ content_locations 标注每个概念的入口、分散正文、配套文字和�
 ```json
 {
   "schema": 1,
-  "generated_at": "2026-10-20T04:20:48.267Z",
-  "revision": "1109d5f8297b4f32c528c9f6eeaddf53ca1bacf47fe96a2025330a4c727f55dd",
+  "generated_at": "2026-10-21T10:45:11.874Z",
+  "revision": "02a2b31c210f105b042e7ee213907243e4d7b9c1a25b7bfe3ca00254672200aa",
   "scope": "launcher/src/content 中的公开 Markdown 副本；从 BLOG/WORLD/ZERO 的 source 分支或本地源码只读采集，保留网站及原路径；不是网页运行时动态内容统计",
   "counting": {
     "word_count": "汉字 Unicode 码点数 + 非汉字文字/数字词组数；英文缩写和连字符词算一个词",
@@ -2572,7 +2572,7 @@ content_locations 标注每个概念的入口、分散正文、配套文字和�
         "title": "跨世：星源绘逢",
         "abbrlink": 30,
         "author": "schrolemons",
-        "updated": "2026-10-01T22:05:29+08:00",
+        "updated": "2026-10-21T18:44:04+08:00",
         "categories": [
           "九虹文明",
           "文明历程"
@@ -2590,7 +2590,7 @@ content_locations 标注每个概念的入口、分散正文、配套文字和�
           "han_characters": 13328,
           "non_han_words": 0,
           "character_count": 15402,
-          "content_hash": "6acfe3755e1af218a1dcfd4422138286baf57b0a09bf6c58efbde2055181bc2a"
+          "content_hash": "8f3912479a66978a96d813fdaa352b3b79ae14b3803c19c2999838919e74ea4e"
         }
       }
     },
