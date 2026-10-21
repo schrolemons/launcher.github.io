@@ -137,7 +137,7 @@ it('发送白名单过滤条件、来源和完整 UTF-8 响应', async () => {
   const payload = JSON.parse(fetcher.mock.calls[0][1].body);
   expect(payload.max_tokens).toBe(1200); expect(payload.messages.find(m => m.content.startsWith('当前分类：')).content).toContain('原文资料');
   expect(payload.messages[0].content).toContain('档案访客');
-  expect(payload.messages[0].content).toContain('affinity=43');
+  expect(payload.messages[0].content).not.toContain('affinity=43');
 });
 it('所有消息均检索向量资料，由 AI 通过 %status sources 字段控制展示', async () => {
   const req = request(); req.body.messages[0].content = '你好';
@@ -167,6 +167,23 @@ it('来源筛选排除跨站记录、重复文本和危险链接', () => {
   expect(output).toHaveLength(1);
   expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'javascript:alert(1)' } }], 'all')[0].url).toBe('https://launcher.sch-nie.com/');
   expect(selectSources([{ ...fixture, metadata: { ...fixture.metadata, url: 'https://docs.sch-nie.com/article', urlKind: 'article' } }], 'all')[0].url).toBe('https://docs.sch-nie.com/article');
+});
+it('明确点名的文章优先于向量分数稍高的无关资料', () => {
+  const unrelated = { ...fixture, score: .9, metadata: { ...fixture.metadata, title: '不相关的文章', text: '别的话题', articleId: 'other' } };
+  const named = { ...fixture, score: .75, metadata: { ...fixture.metadata, section: '终末阵列的运行', text: '目标文章正文' } };
+  expect(selectSources([unrelated, named], 'all', '终末阵列如何运作？')[0].title).toBe('终末阵列');
+});
+it('追问检索可携带历史，但标题优先排序只依据本轮问题', async () => {
+  const req = request();
+  req.body.category = 'all';
+  req.body.messages = [{ role: 'user', content: '终末阵列是什么？' }, { role: 'assistant', content: '这是终末阵列的简介。' }, { role: 'user', content: '继续推荐一篇 Hexo 教程' }];
+  services.index.query.mockResolvedValue([
+    { ...fixture, score: .36 },
+    { ...fixture, id: 'tutorial', score: .95, metadata: { ...fixture.metadata, articleId: 'tutorial', title: '主题配置指南', text: 'Hexo 配置原文' } },
+  ]);
+  const res = response(); await createChatHandler(() => services, fetcher)(req, res);
+  const context = JSON.parse(fetcher.mock.calls[0][1].body).messages[2].content;
+  expect(context.indexOf('主题配置指南')).toBeLessThan(context.indexOf('终末阵列'));
 });
 it('WORLD 解读文章里的 ZERO 条目不会作为 WORLD 来源返回', () => {
   const block = { ...fixture, metadata: { ...fixture.metadata, title: '灵耀体系：木缘桑庭', section: '主神时代Ⅰ TO:2096 / [金泽范式](https://world.sch-nie.com/posts/23.html)', headingPath: ['主神时代Ⅰ TO:2096', '[金泽范式](https://world.sch-nie.com/posts/23.html)'], url: 'https://world.sch-nie.com/' } };

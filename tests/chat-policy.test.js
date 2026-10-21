@@ -31,6 +31,15 @@ it('限制累计历史并保留追问检索上下文', () => {
   expect(() => validateChat({ messages: Array.from({ length: 9 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: '字'.repeat(1000) })) })).toThrow();
   expect(retrievalQuery([{ role: 'user', content: '终末阵列是什么' }, { role: 'assistant', content: '回答' }, { role: 'user', content: '那它如何运作？' }])).toContain('终末阵列');
 });
+it('明确切换话题时不把上一个问题拼进检索', () => {
+  expect(retrievalQuery([{ role: 'user', content: '终末阵列是什么？' }, { role: 'assistant', content: '一种设定。' }, { role: 'user', content: '如何配置 Hexo 主题？' }])).toBe('如何配置 Hexo 主题？');
+});
+it.each(['为什么 Hexo 构建失败？', '如何理解金泽范式？'])('带有独立对象的新问题不沿用旧话题：%s', latest => {
+  expect(retrievalQuery([{ role: 'user', content: '终末阵列是什么？' }, { role: 'assistant', content: '一种设定。' }, { role: 'user', content: latest }])).toBe(latest);
+});
+it('追问推荐文章时保留上轮回答中的明确对象', () => {
+  expect(retrievalQuery([{ role: 'user', content: '推荐一篇技术文章' }, { role: 'assistant', content: '推荐《Hexo 配置入门》。' }, { role: 'user', content: '它主要讲什么？' }])).toContain('Hexo 配置入门');
+});
 it('清理访客称呼并保留可调整的界面状态', () => {
   expect(validateChat(request('你好', { visitorName: '  档案访客\u0007  ', interactionState: { trust: 120, affinity: -4 } }))).toMatchObject({ visitorName: '档案访客', interactionState: { trust: 100, affinity: 0 } });
   expect(() => validateChat(request('你好', { visitorName: 'a'.repeat(21) }))).toThrow(/20/);
@@ -50,10 +59,9 @@ it('人格包含内容结构说明、来源控制协议和安全边界', () => {
   expect(prompt).not.toContain('金泽泛式');
   expect(prompt).toContain('文章推荐');
   expect(prompt).toContain('来源展示控制');
-  expect(prompt).toContain('affinity');
   expect(prompt).toContain('中文逗号');
-  expect(prompt).toContain('大 ASCII 表情');
-  expect(prompt).toContain('至少变化 8–15 点');
+  expect(prompt).toContain('trust=82 affinity=74');
+  expect(prompt).toContain('不将自评声称为经过校准的概率');
   expect(prompt).toContain('BLOG（经验分享与技术博客）');
   expect(prompt).not.toContain('WORLD（文明体系）');
   expect(buildPrompt('chat', 'all')).not.toBe(buildPrompt('chat', 'zero'));
@@ -105,10 +113,11 @@ it('三种模式具有不同且清晰的回答契约', () => {
   expect(scholar).toContain('逐项列出差异');
   expect(new Set([chat, tutor, scholar]).size).toBe(3);
 });
-it('轻松畅聊模式每次回复都在状态行后附加一个 ASCII 表情', () => {
+it('默认精简表达，推荐和来源展示取决于实际证据', () => {
   const chat = buildPrompt('chat', 'all');
-  expect(chat).toContain('每次回复都必须附加一个大 ASCII 表情');
-  expect(chat).toContain('即使只是问候、简短回答或严肃话题也不能省略');
-  expect(chat).toContain('状态行放在 ASCII 表情之前');
-  expect(chat.indexOf('%status')).toBeLessThan(chat.lastIndexOf('ASCII 表情'));
+  expect(chat).not.toContain('每次回复都必须附加');
+  expect(chat).toContain('不主动添加 ASCII 大表情');
+  expect(chat).toContain('不凑数量');
+  expect(chat).toContain('仅在本轮正文实际使用资料内容并带有有效角标');
+  expect(chat).toContain('不要把上一轮的来源编号沿用到本轮');
 });

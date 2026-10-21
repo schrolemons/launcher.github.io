@@ -91,7 +91,27 @@ describe('语义分片', () => {
   });
   it('推荐问题不会因条目同时有入口和解读段落而重复', () => {
     const base = { metadata: { category: 'zero', title: '金泽范式' } };
-    expect(recommendations([{ ...base, metadata: { ...base.metadata, articleId: 'entry' } }, { ...base, metadata: { ...base.metadata, articleId: 'overview' } }])).toHaveLength(1);
+    const prompts = recommendations([{ ...base, metadata: { ...base.metadata, articleId: 'entry' } }, { ...base, metadata: { ...base.metadata, articleId: 'overview' } }]);
+    expect(prompts).toHaveLength(3);
+    expect(new Set(prompts.map(p => p.mode)).size).toBe(3);
+  });
+  it('推荐保留物理网站和规范分类，不把技术博客套成虚构设定', () => {
+    const prompts = recommendations([
+      { metadata: { site: 'world', category: 'zero', title: '人生观' } },
+      { metadata: { site: 'blog', category: 'blog', title: 'Hexo 配置' } },
+    ]);
+    expect(prompts.filter(p => p.site === 'world')).toHaveLength(3);
+    expect(prompts.find(p => p.site === 'world')).toMatchObject({ category: 'zero', title: '人生观' });
+    expect(prompts.find(p => p.site === 'blog' && p.mode === 'chat').question).toBe('《Hexo 配置》主要讲什么？');
+    expect(prompts.every(p => !p.question.includes('核心设定'))).toBe(true);
+  });
+  it('各网站优先推荐本站主题的文章，跨分类入口仍保留正确归属', () => {
+    const prompts = recommendations([
+      { metadata: { site: 'world', category: 'zero', title: '人生观' } },
+      { metadata: { site: 'world', category: 'world', title: '终末阵列' } },
+    ]);
+    expect(prompts[0]).toMatchObject({ site: 'world', title: '终末阵列', mode: 'chat' });
+    expect(prompts.some(p => p.title === '人生观' && p.site === 'world' && p.category === 'zero')).toBe(true);
   });
   it('递归读取三类目录内任意层级的 Markdown，嵌套文件夹不改变分类', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'launcher-content-'));

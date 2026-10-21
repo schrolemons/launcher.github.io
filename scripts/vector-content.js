@@ -173,12 +173,20 @@ export function capacityPlan(info, additions, newCount, requestEstimate = 0) {
 
 export function recommendations(records) {
   const seen = new Set();
-  const articles = records.filter(r => {
-    const key = `${r.metadata.category}:${r.metadata.title}`;
-    if (seen.has(key)) return false;
+  const articles = records.filter(({ metadata: m }) => {
+    const key = `${m.site || m.category}:${m.category}:${m.title}`;
+    if (!m.title || seen.has(key)) return false;
     seen.add(key);
     return true;
   });
-  return categories.flatMap(category => articles.filter(r => r.metadata.category === category).slice(0, 6).map((r, i) => ({ category,
-    question: i % 2 ? `请用初学者能理解的方式解读《${r.metadata.title}》。` : `《${r.metadata.title}》的核心设定是什么？它们如何联系起来？` })));
+  const prompts = {
+    chat: title => `《${title}》主要讲什么？`,
+    tutor: title => `请结合《${title}》的原文，解释其中的关键概念。`,
+    scholar: title => `请核对《${title}》的主要内容，标明原文依据与资料边界。`,
+  };
+  return categories.flatMap(site => articles.filter(r => (r.metadata.site || r.metadata.category) === site)
+    .sort((a, b) => Number(b.metadata.category === site) - Number(a.metadata.category === site)).slice(0, 6)
+    .flatMap(({ metadata: m }) => Object.entries(prompts).map(([mode, question]) => ({
+      category: m.category, site, title: m.title, mode, question: question(m.title),
+    }))));
 }
