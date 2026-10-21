@@ -1,0 +1,10 @@
+.reports/
+.sources/
+.superpowers/
+.git/
+.idea/
+.astro/
+node_modules/
+dist/
+.env*
+!.env.example

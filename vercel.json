@@ -1,5 +1,6 @@
 {
   "functions": {
-    "api/chat.js": { "includeFiles": "overview.md" }
+    "api/chat.js": { "includeFiles": "overview.md" },
+    "api/knowledge.js": { "includeFiles": "overview.md" }
   }
 }
